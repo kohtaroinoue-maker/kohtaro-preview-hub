@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>golf-compe-app · デザインレビュー</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: #0e0e0e;
+    color: #eee;
+    font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .header {
+    padding: 14px 20px 12px;
+    border-bottom: 1px solid #2a2a2a;
+    background: #161616;
+    flex-shrink: 0;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .header h1 {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .header .hint {
+    font-size: 11px;
+    color: #888;
+  }
+  .header .hint kbd {
+    display: inline-block;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 10px;
+    background: #222;
+    margin: 0 2px;
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .tabs button {
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #333;
+    padding: 7px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .tabs button:hover { color: #fff; border-color: #666; }
+  .tabs button.active {
+    background: #fff;
+    color: #000;
+    border-color: #fff;
+  }
+  .tabs .divider {
+    width: 1px;
+    background: #333;
+    margin: 4px 4px;
+    align-self: stretch;
+  }
+  .frame-wrap {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    overflow: hidden;
+    padding: 16px;
+    min-height: 0;
+  }
+  .device {
+    width: 480px;
+    max-width: 100%;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  iframe {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+    border: 1px solid #2a2a2a;
+    border-radius: 12px;
+    background: #000;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+  @media (max-width: 520px) {
+    .frame-wrap { padding: 8px; }
+    iframe { border-radius: 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-top">
+    <h1>golf-compe-app · デザインレビュー</h1>
+    <div class="hint">キーボード <kbd>1</kbd>–<kbd>6</kbd> で切替</div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button data-src="v2-01-japanese-minimal.html" class="active">01 和モダン</button>
+    <button data-src="v2-02-bold-editorial.html">02 Bold Editorial</button>
+    <button data-src="v2-03-soft-pastel.html">03 Soft Pastel</button>
+    <button data-src="v2-04-brutalist-mono.html">04 Brutalist Mono</button>
+    <button data-src="v2-05-glassmorphism.html">05 Aurora Glass</button>
+    <div class="divider"></div>
+    <button data-src="v3-aurora-themes.html">+ Aurora 緑/青 5色</button>
+  </nav>
+</div>
+<div class="frame-wrap">
+  <div class="device">
+    <iframe id="preview" src="v2-01-japanese-minimal.html" title="design preview"></iframe>
+  </div>
+</div>
+<script>
+  const btns = document.querySelectorAll('.tabs button');
+  const frame = document.getElementById('preview');
+  btns.forEach((b, i) => b.addEventListener('click', () => {
+    btns.forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    frame.src = b.dataset.src;
+  }));
+  window.addEventListener('keydown', (e) => {
+    const idx = parseInt(e.key) - 1;
+    if (!isNaN(idx) && idx >= 0 && idx < btns.length) btns[idx].click();
+  });
+</script>
+</body>
+</html>

@@ -4,145 +4,114 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>golf-compe-app · デザインレビュー</title>
+<title>kohtaro preview hub</title>
 <style>
+  :root {
+    --bg: #0e0e0e;
+    --fg: #eee;
+    --mute: #888;
+    --line: #2a2a2a;
+    --accent: #6ee7d8;
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
   body {
-    background: #0e0e0e;
-    color: #eee;
+    background: var(--bg);
+    color: var(--fg);
     font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    min-height: 100vh;
+    padding: 60px 24px 80px;
   }
-  .header {
-    padding: 14px 20px 12px;
-    border-bottom: 1px solid #2a2a2a;
-    background: #161616;
-    flex-shrink: 0;
+  .wrap { max-width: 720px; margin: 0 auto; }
+  header { margin-bottom: 48px; }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
   }
-  .header-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 12px;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .header h1 {
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-  }
-  .header .hint {
-    font-size: 11px;
-    color: #888;
-  }
-  .header .hint kbd {
-    display: inline-block;
-    border: 1px solid #444;
-    border-radius: 4px;
+  .sub { color: var(--mute); font-size: 14px; line-height: 1.6; }
+  .sub code {
+    background: #1a1a1a;
     padding: 1px 6px;
-    font-size: 10px;
-    background: #222;
-    margin: 0 2px;
-  }
-  .tabs {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .tabs button {
-    background: transparent;
-    color: #aaa;
-    border: 1px solid #333;
-    padding: 7px 13px;
-    border-radius: 999px;
-    cursor: pointer;
+    border-radius: 4px;
     font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s;
-    white-space: nowrap;
-    font-family: inherit;
+    color: var(--accent);
   }
-  .tabs button:hover { color: #fff; border-color: #666; }
-  .tabs button.active {
-    background: #fff;
-    color: #000;
-    border-color: #fff;
+  .badge {
+    display: inline-block;
+    background: #1a1a1a;
+    border: 1px solid var(--line);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    color: var(--mute);
+    margin-top: 12px;
   }
-  .tabs .divider {
-    width: 1px;
-    background: #333;
-    margin: 4px 4px;
-    align-self: stretch;
+  .badge::before { content: '🔒 '; }
+  .grid {
+    display: grid;
+    gap: 14px;
+    margin-top: 32px;
   }
-  .frame-wrap {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-    overflow: hidden;
-    padding: 16px;
-    min-height: 0;
+  .card {
+    display: block;
+    background: #181818;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 22px;
+    text-decoration: none;
+    color: var(--fg);
+    transition: border-color 0.2s, transform 0.2s;
   }
-  .device {
-    width: 480px;
-    max-width: 100%;
-    height: 100%;
-    position: relative;
-    display: flex;
-    flex-direction: column;
+  .card:hover {
+    border-color: #555;
+    transform: translateY(-2px);
   }
-  iframe {
-    width: 100%;
-    height: 100%;
-    flex: 1;
-    border: 1px solid #2a2a2a;
-    border-radius: 12px;
-    background: #000;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  .card .num {
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 0.16em;
+    margin-bottom: 6px;
   }
-  @media (max-width: 520px) {
-    .frame-wrap { padding: 8px; }
-    iframe { border-radius: 8px; }
+  .card .ttl {
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 4px;
   }
+  .card .desc { color: var(--mute); font-size: 13px; line-height: 1.5; }
+  .card .arrow { color: var(--mute); font-size: 14px; margin-top: 8px; }
+  footer {
+    margin-top: 56px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+    color: var(--mute);
+    font-size: 11px;
+    line-height: 1.6;
+  }
+  footer a { color: var(--mute); }
 </style>
 </head>
 <body>
-<div class="header">
-  <div class="header-top">
-    <h1>golf-compe-app · デザインレビュー</h1>
-    <div class="hint">キーボード <kbd>1</kbd>–<kbd>6</kbd> で切替</div>
+<div class="wrap">
+  <header>
+    <h1>kohtaro preview hub</h1>
+    <p class="sub">各案件のテストページ置き場。各サブディレクトリで個別のレビュー用 URL を発行する。</p>
+    <span class="badge">noindex / robots.txt Disallow / demo データ抽象化済み</span>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="./golf-compe/">
+      <div class="num">PROJECT 06</div>
+      <div class="ttl">ゴルフコンペアプリ</div>
+      <div class="desc">デザイン5パターン（和モダン / Bold Editorial / Soft Pastel / Brutalist Mono / Aurora Glass）＋ Aurora 緑/青 5色テーマ切替</div>
+      <div class="arrow">→ /golf-compe/</div>
+    </a>
   </div>
-  <nav class="tabs" id="tabs">
-    <button data-src="v2-01-japanese-minimal.html" class="active">01 和モダン</button>
-    <button data-src="v2-02-bold-editorial.html">02 Bold Editorial</button>
-    <button data-src="v2-03-soft-pastel.html">03 Soft Pastel</button>
-    <button data-src="v2-04-brutalist-mono.html">04 Brutalist Mono</button>
-    <button data-src="v2-05-glassmorphism.html">05 Aurora Glass</button>
-    <div class="divider"></div>
-    <button data-src="v3-aurora-themes.html">+ Aurora 緑/青 5色</button>
-  </nav>
+
+  <footer>
+    GitHub: <a href="https://github.com/kohtaroinoue-maker/kohtaro-preview-hub">kohtaroinoue-maker/kohtaro-preview-hub</a><br>
+    新案件追加は本社スキル <code>publish-test-page</code> 参照。
+  </footer>
 </div>
-<div class="frame-wrap">
-  <div class="device">
-    <iframe id="preview" src="v2-01-japanese-minimal.html" title="design preview"></iframe>
-  </div>
-</div>
-<script>
-  const btns = document.querySelectorAll('.tabs button');
-  const frame = document.getElementById('preview');
-  btns.forEach((b, i) => b.addEventListener('click', () => {
-    btns.forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-    frame.src = b.dataset.src;
-  }));
-  window.addEventListener('keydown', (e) => {
-    const idx = parseInt(e.key) - 1;
-    if (!isNaN(idx) && idx >= 0 && idx < btns.length) btns[idx].click();
-  });
-</script>
 </body>
 </html>
