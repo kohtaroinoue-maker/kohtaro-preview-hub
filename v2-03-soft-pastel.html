@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>03 — Soft Pastel Sport</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #fff8ef;
+    --mint: #c8e9d5;
+    --mint-deep: #6cb791;
+    --peach: #ffb59a;
+    --coral: #ff7a5e;
+    --ink: #1f2a26;
+    --mute: rgba(31, 42, 38, 0.6);
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle 400px at 110% 5%, var(--peach) 0%, transparent 70%),
+      radial-gradient(circle 500px at -10% 30%, var(--mint) 0%, transparent 60%);
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell { max-width: 480px; margin: 0 auto; padding: 28px 22px 140px; }
+
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; }
+  .brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    letter-spacing: -0.01em;
+  }
+  .brand .emoji { font-size: 24px; margin-right: 4px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--peach); display: grid; place-items: center; font-weight: 700; color: var(--cream); font-size: 14px; }
+
+  .hero {
+    background: var(--card);
+    border-radius: 28px;
+    padding: 28px 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 20px 60px -30px rgba(31, 42, 38, 0.25);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    right: -40px; top: -40px;
+    width: 160px; height: 160px;
+    background: var(--mint);
+    border-radius: 50%;
+    opacity: 0.5;
+  }
+  .hero-greet { font-size: 12px; color: var(--mute); font-weight: 600; margin-bottom: 10px; position: relative; }
+  .hero-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 38px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    position: relative;
+  }
+  .hero-title .it { font-style: italic; color: var(--coral); }
+
+  .stats-pills { display: flex; gap: 10px; margin-bottom: 28px; }
+  .pill {
+    flex: 1;
+    background: var(--card);
+    border-radius: 22px;
+    padding: 18px 18px;
+    box-shadow: 0 10px 30px -20px rgba(31, 42, 38, 0.2);
+  }
+  .pill-label { font-size: 10px; color: var(--mute); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 8px; }
+  .pill-value { font-family: 'DM Serif Display', serif; font-size: 32px; letter-spacing: -0.02em; line-height: 1; }
+  .pill-delta { font-size: 11px; font-weight: 600; margin-top: 6px; }
+  .pill-delta.up { color: var(--mint-deep); }
+  .pill-delta.down { color: var(--coral); }
+
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; padding: 0 4px; }
+  .section-head .ttl { font-family: 'DM Serif Display', serif; font-size: 20px; }
+  .section-head .ttl .count { color: var(--coral); font-style: italic; }
+  .section-head .seeall { font-size: 12px; color: var(--mute); font-weight: 600; }
+
+  .card {
+    background: var(--card);
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 12px 35px -22px rgba(31, 42, 38, 0.22);
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.3, 1.4, 0.4, 1), box-shadow 0.4s;
+    display: grid;
+    grid-template-columns: 56px 1fr auto;
+    gap: 14px;
+    align-items: center;
+  }
+  .card:hover { transform: translateY(-3px) scale(1.005); box-shadow: 0 22px 50px -22px rgba(31, 42, 38, 0.3); }
+  .card-icon {
+    width: 56px; height: 56px;
+    border-radius: 20px;
+    background: var(--mint);
+    display: grid; place-items: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--mint-deep);
+  }
+  .card.premium .card-icon { background: var(--peach); color: var(--coral); }
+  .card.steady .card-icon { background: #e6e6f2; color: #7a7ac0; }
+  .card-body { min-width: 0; }
+  .card-title { font-family: 'DM Serif Display', serif; font-size: 19px; letter-spacing: -0.01em; margin-bottom: 4px; }
+  .card-meta { font-size: 12px; color: var(--mute); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .card-meta .dot { width: 3px; height: 3px; background: var(--mute); border-radius: 50%; }
+  .card-meta .badge {
+    background: var(--peach);
+    color: var(--coral);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 10px;
+    letter-spacing: 0.04em;
+  }
+  .card-next { text-align: right; }
+  .card-next .date { font-family: 'DM Serif Display', serif; font-size: 18px; }
+  .card-next .sub { font-size: 10px; color: var(--mute); font-weight: 600; }
+
+  .fab {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--cream);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14px; font-weight: 700;
+    padding: 16px 28px;
+    border: none;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 16px 40px -10px rgba(31, 42, 38, 0.4);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fab .plus {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    background: var(--coral);
+    color: var(--cream);
+    display: grid; place-items: center;
+    font-size: 16px;
+    line-height: 1;
+  }
+
+  @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .hero, .pill, .section-head, .card, .nav { animation: pop 0.55s cubic-bezier(0.3, 1.2, 0.4, 1) both; }
+  .nav { animation-delay: 0s; }
+  .hero { animation-delay: 0.08s; }
+  .pill:nth-child(1) { animation-delay: 0.18s; }
+  .pill:nth-child(2) { animation-delay: 0.23s; }
+  .section-head { animation-delay: 0.32s; }
+  .card:nth-of-type(1) { animation-delay: 0.4s; }
+  .card:nth-of-type(2) { animation-delay: 0.47s; }
+  .card:nth-of-type(3) { animation-delay: 0.54s; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="nav">
+    <div class="brand"><span class="emoji">🌿</span>greens</div>
+    <div class="avatar">K</div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-greet">おはよう、ゲストさん。</div>
+    <div class="hero-title">来月、<span class="it">三つの</span><br>コンペ。</div>
+  </section>
+
+  <div class="stats-pills">
+    <div class="pill">
+      <div class="pill-label">Handicap</div>
+      <div class="pill-value">12.4</div>
+      <div class="pill-delta up">▼ 0.2 nice!</div>
+    </div>
+    <div class="pill">
+      <div class="pill-label">Last Round</div>
+      <div class="pill-value">89</div>
+      <div class="pill-delta down">+3 over par</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <div class="ttl">所属する会 <span class="count">3</span></div>
+    <div class="seeall">並び替え ▾</div>
+  </div>
+
+  <article class="card">
+    <div class="card-icon">山</div>
+    <div class="card-body">
+      <div class="card-title">朝駆け会</div>
+      <div class="card-meta">14名<span class="dot"></span>5年目<span class="dot"></span>3位 ↑</div>
+    </div>
+    <div class="card-next">
+      <div class="date">4/12</div>
+      <div class="sub">Course Alpha</div>
+    </div>
+  </article>
+
+  <article class="card premium">
+    <div class="card-icon">湘</div>
+    <div class="card-body">
+      <div class="card-title">ベイサイドクラブ</div>
+      <div class="card-meta">8名<span class="dot"></span>2年目<span class="badge">PRO</span></div>
+    </div>
+    <div class="card-next">
+      <div class="date">4/26</div>
+      <div class="sub">Course Beta</div>
+    </div>
+  </article>
+
+  <article class="card steady">
+    <div class="card-icon">川</div>
+    <div class="card-body">
+      <div class="card-title">メトロオープン</div>
+      <div class="card-meta">22名<span class="dot"></span>8年目<span class="dot"></span>11位</div>
+    </div>
+    <div class="card-next">
+      <div class="date">5/3</div>
+      <div class="sub">Course Gamma</div>
+    </div>
+  </article>
+</div>
+<button class="fab"><span class="plus">+</span>新しい会</button>
+</body>
+</html>

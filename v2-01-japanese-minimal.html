@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>01 — 和モダン静謐</title>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&family=Noto+Sans+JP:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f3efe5;
+    --paper-2: #ebe6d8;
+    --sumi: #1a1816;
+    --sumi-2: rgba(26, 24, 22, 0.55);
+    --line: rgba(26, 24, 22, 0.14);
+    --shu: #b94a3a;
+    --matcha: #7d8b5e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--sumi);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 1200px 800px at 30% 0%, var(--paper-2) 0%, transparent 70%);
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='240' height='240' filter='url(%23n)' opacity='0.5'/></svg>");
+    opacity: 0.06; z-index: 99;
+  }
+  .shell { max-width: 480px; margin: 0 auto; padding: 36px 28px 120px; }
+
+  .nav { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 96px; }
+  .brand { font-family: 'Shippori Mincho', serif; font-size: 18px; font-weight: 600; letter-spacing: 0.04em; }
+  .brand .mark { color: var(--shu); margin-right: 4px; }
+  .nav-date { font-size: 11px; color: var(--sumi-2); letter-spacing: 0.12em; }
+
+  .hero { margin-bottom: 80px; }
+  .hero-greet { font-size: 11px; color: var(--sumi-2); letter-spacing: 0.2em; margin-bottom: 20px; }
+  .hero-title {
+    font-family: 'Shippori Mincho', serif;
+    font-size: 44px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0.04em;
+  }
+  .hero-title .small {
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--sumi-2);
+    display: block;
+    margin-top: 14px;
+    letter-spacing: 0.08em;
+  }
+  .hero-mark {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--shu);
+    border-radius: 50%;
+    margin-left: 6px;
+    transform: translateY(-22px);
+  }
+
+  .stats-row { display: flex; gap: 40px; margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); }
+  .stat-label { font-size: 10px; letter-spacing: 0.22em; color: var(--sumi-2); margin-bottom: 10px; }
+  .stat-value { font-family: 'Shippori Mincho', serif; font-size: 32px; font-weight: 600; line-height: 1; }
+  .stat-delta { font-size: 11px; color: var(--sumi-2); margin-top: 6px; }
+  .stat-delta.shu { color: var(--shu); }
+
+  .section-head { margin: 88px 0 28px; }
+  .section-head .ja { font-family: 'Shippori Mincho', serif; font-size: 22px; font-weight: 600; }
+  .section-head .en { font-size: 10px; letter-spacing: 0.24em; color: var(--sumi-2); margin-top: 6px; }
+
+  .card {
+    padding: 24px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    position: relative;
+    transition: padding-left 0.4s ease;
+  }
+  .card:first-of-type { border-top: 1px solid var(--line); }
+  .card:hover { padding-left: 12px; }
+  .card:hover::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 28px; bottom: 28px;
+    width: 2px;
+    background: var(--shu);
+  }
+  .card-row1 { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .card-title { font-family: 'Shippori Mincho', serif; font-size: 22px; font-weight: 600; letter-spacing: 0.02em; }
+  .card-rank { font-family: 'Shippori Mincho', serif; font-size: 28px; font-weight: 600; color: var(--shu); }
+  .card-rank .sub { font-size: 14px; color: var(--sumi-2); margin-left: 2px; }
+  .card-meta { font-size: 11px; color: var(--sumi-2); letter-spacing: 0.12em; margin-bottom: 14px; }
+  .card-meta .dot { color: var(--matcha); margin: 0 6px; }
+  .card-next { font-size: 13px; color: var(--sumi); }
+  .card-next .date { font-family: 'Shippori Mincho', serif; font-size: 15px; margin-right: 8px; }
+  .card-next .course { color: var(--sumi-2); }
+
+  .fab {
+    position: fixed; bottom: 36px; left: 50%; transform: translateX(-50%);
+    background: var(--sumi); color: var(--paper);
+    font-family: 'Shippori Mincho', serif;
+    font-size: 14px; font-weight: 600;
+    padding: 16px 36px;
+    border: none; cursor: pointer;
+    letter-spacing: 0.08em;
+  }
+  .fab::after {
+    content: ''; display: inline-block; width: 16px; height: 1px;
+    background: var(--paper); margin-left: 14px; vertical-align: middle;
+  }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .hero > *, .stats-row, .section-head, .card { animation: fadeUp 0.7s both; }
+  .hero-greet { animation-delay: 0.05s; }
+  .hero-title { animation-delay: 0.15s; }
+  .stats-row { animation-delay: 0.3s; }
+  .section-head { animation-delay: 0.45s; }
+  .card:nth-of-type(1) { animation-delay: 0.55s; }
+  .card:nth-of-type(2) { animation-delay: 0.62s; }
+  .card:nth-of-type(3) { animation-delay: 0.69s; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="nav">
+    <div class="brand"><span class="mark">●</span>結（むすび）</div>
+    <div class="nav-date">2026.05.20 火</div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-greet">おはようございます</div>
+    <h1 class="hero-title">
+      朝の支度<span class="hero-mark"></span>
+      <span class="small">三つの会、いずれも来月。</span>
+    </h1>
+    <div class="stats-row">
+      <div>
+        <div class="stat-label">ハンディキャップ</div>
+        <div class="stat-value">12.4</div>
+        <div class="stat-delta shu">前回 −0.2</div>
+      </div>
+      <div>
+        <div class="stat-label">直近スコア</div>
+        <div class="stat-value">89</div>
+        <div class="stat-delta">+3 over par</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-head">
+    <div class="ja">所属する会</div>
+    <div class="en">YOUR SOCIETIES — 03</div>
+  </div>
+
+  <article class="card">
+    <div class="card-row1">
+      <div class="card-title">朝駆け会</div>
+      <div class="card-rank">三<span class="sub">/十四</span></div>
+    </div>
+    <div class="card-meta">14名<span class="dot">·</span>運営5年目<span class="dot">·</span>幹事 幹事</div>
+    <div class="card-next"><span class="date">04月12日</span><span class="course">Course Alpha</span></div>
+  </article>
+
+  <article class="card">
+    <div class="card-row1">
+      <div class="card-title">ベイサイドクラブ</div>
+      <div class="card-rank">一<span class="sub">/八</span></div>
+    </div>
+    <div class="card-meta">8名<span class="dot">·</span>運営2年目<span class="dot">·</span>プレミアム</div>
+    <div class="card-next"><span class="date">04月26日</span><span class="course">Course Beta</span></div>
+  </article>
+
+  <article class="card">
+    <div class="card-row1">
+      <div class="card-title">メトロオープン</div>
+      <div class="card-rank">十一<span class="sub">/二十二</span></div>
+    </div>
+    <div class="card-meta">22名<span class="dot">·</span>運営8年目</div>
+    <div class="card-next"><span class="date">05月03日</span><span class="course">Course Gamma</span></div>
+  </article>
+</div>
+<button class="fab">新しい会を結ぶ</button>
+</body>
+</html>

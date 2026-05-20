@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>04 — Brutalist Mono</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Archivo+Black&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #ffffff;
+    --ink: #000000;
+    --hl: #ff3300;
+    --grid: rgba(0, 0, 0, 0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    min-height: 100vh;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell { max-width: 480px; margin: 0 auto; padding: 0; }
+
+  .header {
+    border-bottom: 2px solid var(--ink);
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg);
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+  .header .logo {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 16px;
+    letter-spacing: -0.02em;
+  }
+  .header .logo::after { content: ''; display: inline-block; width: 10px; height: 10px; background: var(--hl); margin-left: 6px; vertical-align: 1px; }
+  .header .meta { font-size: 10px; }
+
+  .hero {
+    padding: 32px 20px;
+    border-bottom: 2px solid var(--ink);
+    background: var(--bg);
+  }
+  .hero-cap { font-size: 10px; text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; margin-bottom: 16px; }
+  .hero-cap::before { content: '[ '; color: var(--hl); }
+  .hero-cap::after { content: ' ]'; color: var(--hl); }
+  .hero-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: clamp(54px, 16vw, 80px);
+    line-height: 0.88;
+    text-transform: uppercase;
+    letter-spacing: -0.035em;
+  }
+  .hero-title .hl { color: var(--hl); }
+  .hero-title .stk { text-decoration: line-through; text-decoration-thickness: 4px; text-decoration-color: var(--hl); }
+  .hero-sub {
+    margin-top: 20px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+  }
+  .hero-sub b { background: var(--ink); color: var(--bg); padding: 1px 6px; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border-bottom: 2px solid var(--ink);
+    background: var(--bg);
+  }
+  .stat { padding: 20px; }
+  .stat + .stat { border-left: 2px solid var(--ink); }
+  .stat-key { font-size: 10px; text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; }
+  .stat-key::before { content: '> '; color: var(--hl); }
+  .stat-val { font-family: 'Archivo Black', sans-serif; font-size: 44px; line-height: 1; margin-top: 12px; }
+  .stat-foot { margin-top: 10px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .sectionbar {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 12px 20px;
+    display: flex;
+    justify-content: space-between;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.16em;
+    font-weight: 700;
+  }
+  .sectionbar .count { color: var(--hl); }
+
+  .card {
+    padding: 20px;
+    border-bottom: 2px solid var(--ink);
+    background: var(--bg);
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: start;
+    transition: background 0.2s, color 0.2s;
+  }
+  .card:hover { background: var(--ink); color: var(--bg); }
+  .card:hover .card-id { background: var(--hl); color: var(--ink); }
+  .card:hover .card-tag { border-color: var(--bg); }
+  .card-id {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--bg);
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+  .card.alt .card-id { background: var(--hl); color: var(--ink); }
+  .card-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 26px;
+    line-height: 1;
+    text-transform: uppercase;
+    letter-spacing: -0.02em;
+    margin-bottom: 12px;
+  }
+  .card-rows { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.7; }
+  .card-rows .k { display: inline-block; width: 80px; color: var(--ink); opacity: 0.6; }
+  .card:hover .card-rows .k { opacity: 0.7; color: var(--bg); }
+  .card-tag {
+    border: 2px solid var(--ink);
+    padding: 4px 10px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    text-transform: uppercase;
+    align-self: start;
+    white-space: nowrap;
+  }
+  .card.alt .card-tag { background: var(--hl); border-color: var(--hl); color: var(--ink); }
+
+  .footer {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 32px 20px 120px;
+    text-align: center;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .footer .hl { color: var(--hl); }
+
+  .fab {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--hl); color: var(--ink);
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 14px;
+    padding: 16px 28px;
+    border: 2px solid var(--ink);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    box-shadow: 4px 4px 0 var(--ink);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .fab:hover { transform: translateX(-50%) translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+  .fab:active { transform: translateX(-50%) translate(2px, 2px); box-shadow: 0 0 0 var(--ink); }
+
+  @keyframes glitch { 0%, 100% { transform: none; } 50% { transform: translate(-1px, 0); } }
+  .header, .hero, .stats, .sectionbar, .card { animation: glitch 1.4s steps(2) both; animation-iteration-count: 1; }
+  .hero { animation-delay: 0.05s; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="header">
+    <div class="logo">SOCIETY/OS</div>
+    <div class="meta">2026.05.20 // TUE // V0.1</div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-cap">DISPATCH 047 / GOOD MORNING</div>
+    <h1 class="hero-title">
+      THREE<br>
+      <span class="hl">COMPS</span>.<br>
+      THIS <span class="stk">WEEK</span> MONTH.
+    </h1>
+    <div class="hero-sub">YOU ARE <b>LEADING</b> ONE, CHASING TWO.</div>
+  </section>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-key">HANDICAP</div>
+      <div class="stat-val">12.4</div>
+      <div class="stat-foot">DELTA −0.2</div>
+    </div>
+    <div class="stat">
+      <div class="stat-key">LAST RND</div>
+      <div class="stat-val">89</div>
+      <div class="stat-foot">+3 OVER PAR</div>
+    </div>
+  </div>
+
+  <div class="sectionbar">
+    <span>// SOCIETIES</span>
+    <span>COUNT <span class="count">03</span></span>
+  </div>
+
+  <article class="card">
+    <div>
+      <div class="card-id">SOC_001</div>
+      <div class="card-title">朝駆け会</div>
+      <div class="card-rows">
+        <div><span class="k">NEXT</span>04.12 / Course Alpha</div>
+        <div><span class="k">MEMBERS</span>14 / 5Y RUNNING</div>
+        <div><span class="k">RANK</span>3 / 14 ↑2</div>
+      </div>
+    </div>
+    <div class="card-tag">ACTIVE</div>
+  </article>
+
+  <article class="card alt">
+    <div>
+      <div class="card-id">SOC_002</div>
+      <div class="card-title">ベイサイドクラブ</div>
+      <div class="card-rows">
+        <div><span class="k">NEXT</span>04.26 / Course Beta</div>
+        <div><span class="k">MEMBERS</span>8 / 2Y RUNNING</div>
+        <div><span class="k">RANK</span>1 / 8 → LEAD</div>
+      </div>
+    </div>
+    <div class="card-tag">PREMIUM</div>
+  </article>
+
+  <article class="card">
+    <div>
+      <div class="card-id">SOC_003</div>
+      <div class="card-title">メトロオープン</div>
+      <div class="card-rows">
+        <div><span class="k">NEXT</span>05.03 / Course Gamma</div>
+        <div><span class="k">MEMBERS</span>22 / 8Y RUNNING</div>
+        <div><span class="k">RANK</span>11 / 22 STABLE</div>
+      </div>
+    </div>
+    <div class="card-tag">ACTIVE</div>
+  </article>
+
+  <div class="footer">
+    SOCIETY/OS · BUILT FOR <span class="hl">SERIOUS PLAY</span> · V0.1
+  </div>
+</div>
+<button class="fab">+ NEW SOC</button>
+</body>
+</html>

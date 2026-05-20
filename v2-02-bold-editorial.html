@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>02 — Bold Editorial Magazine</title>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;0,6..96,900;1,6..96,500&family=Inter+Tight:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ivory: #f7f1e1;
+    --black: #0d0d0d;
+    --red: #e8331e;
+    --mute: rgba(13, 13, 13, 0.6);
+    --line: rgba(13, 13, 13, 0.85);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--ivory);
+    color: var(--black);
+    font-family: 'Inter Tight', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell { max-width: 480px; margin: 0 auto; padding: 20px 20px 140px; }
+
+  .masthead { border-top: 6px solid var(--black); border-bottom: 1px solid var(--line); padding: 14px 0 10px; display: flex; justify-content: space-between; align-items: baseline; }
+  .masthead .title { font-family: 'Bodoni Moda', serif; font-size: 32px; font-weight: 900; letter-spacing: -0.03em; line-height: 1; }
+  .masthead .title em { font-style: italic; font-weight: 400; color: var(--red); }
+  .masthead .issue { font-size: 10px; letter-spacing: 0.18em; font-weight: 700; }
+  .masthead-sub { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; margin-top: 4px; color: var(--mute); }
+
+  .hero { padding: 40px 0 24px; border-bottom: 1px solid var(--line); position: relative; }
+  .hero-eyebrow { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 700; margin-bottom: 16px; }
+  .hero-eyebrow::before { content: '■ '; color: var(--red); }
+  .hero-title {
+    font-family: 'Bodoni Moda', serif;
+    font-size: clamp(56px, 16vw, 84px);
+    font-weight: 900;
+    line-height: 0.86;
+    letter-spacing: -0.045em;
+    font-variation-settings: 'opsz' 96;
+  }
+  .hero-title .it { font-style: italic; font-weight: 500; }
+  .hero-title .red { color: var(--red); }
+  .hero-pull {
+    font-family: 'Bodoni Moda', serif;
+    font-style: italic;
+    font-size: 16px;
+    color: var(--mute);
+    margin-top: 24px;
+    border-left: 2px solid var(--red);
+    padding-left: 14px;
+    line-height: 1.45;
+  }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; border-bottom: 1px solid var(--line); }
+  .stat { padding: 22px 0; }
+  .stat:first-child { border-right: 1px solid var(--line); padding-right: 20px; }
+  .stat:last-child { padding-left: 20px; }
+  .stat-num { font-family: 'Bodoni Moda', serif; font-size: 56px; font-weight: 900; line-height: 1; letter-spacing: -0.04em; }
+  .stat-cap { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 700; margin-bottom: 10px; }
+  .stat-foot { font-size: 11px; color: var(--mute); margin-top: 8px; }
+  .stat-foot.red { color: var(--red); font-weight: 700; }
+
+  .section-divider { display: flex; align-items: center; gap: 14px; margin: 36px 0 24px; }
+  .section-divider .label { font-family: 'Bodoni Moda', serif; font-size: 22px; font-weight: 900; font-style: italic; letter-spacing: -0.02em; }
+  .section-divider .label::after { content: '.'; color: var(--red); }
+  .section-divider .line { flex: 1; border-bottom: 1px solid var(--line); }
+  .section-divider .pageno { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; }
+
+  .card {
+    padding: 28px 0;
+    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 18px;
+    transition: background 0.3s;
+  }
+  .card:hover { background: rgba(232, 51, 30, 0.06); }
+  .card-num {
+    font-family: 'Bodoni Moda', serif;
+    font-size: 52px;
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+    color: var(--red);
+    font-style: italic;
+  }
+  .card-body { }
+  .card-kicker { font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; }
+  .card-title { font-family: 'Bodoni Moda', serif; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 10px; }
+  .card-meta { font-size: 12px; color: var(--mute); line-height: 1.6; }
+  .card-meta b { color: var(--black); font-weight: 700; }
+  .card-meta .sep { margin: 0 8px; color: var(--red); }
+
+  .colophon { text-align: center; margin-top: 64px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 10px; letter-spacing: 0.24em; text-transform: uppercase; color: var(--mute); }
+  .colophon .red { color: var(--red); font-weight: 700; }
+
+  .fab {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--black); color: var(--ivory);
+    font-family: 'Bodoni Moda', serif; font-style: italic; font-weight: 700;
+    font-size: 18px;
+    padding: 14px 32px;
+    border: 2px solid var(--black);
+    cursor: pointer;
+    letter-spacing: -0.01em;
+  }
+  .fab:hover { background: var(--red); border-color: var(--red); }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .masthead, .hero, .stats, .section-divider, .card, .colophon { animation: slideIn 0.6s both; }
+  .hero { animation-delay: 0.1s; }
+  .stats { animation-delay: 0.2s; }
+  .section-divider { animation-delay: 0.3s; }
+  .card:nth-of-type(1) { animation-delay: 0.4s; }
+  .card:nth-of-type(2) { animation-delay: 0.5s; }
+  .card:nth-of-type(3) { animation-delay: 0.6s; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="masthead">
+    <div>
+      <div class="title">The <em>Society</em></div>
+      <div class="masthead-sub">A Quarterly of Golf, Numbers, & Friends</div>
+    </div>
+    <div class="issue">№ 047<br>MAY 2026</div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-eyebrow">DISPATCH — TUESDAY MORNING</div>
+    <h1 class="hero-title">
+      Three <span class="it">competitions</span><br>
+      this <span class="red">month</span>.
+    </h1>
+    <p class="hero-pull">"幹事の朝は、ひと夜の数字を見渡すことから始まる。"</p>
+  </section>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-cap">Handicap Index</div>
+      <div class="stat-num">12.4</div>
+      <div class="stat-foot red">↓ 0.2 from April</div>
+    </div>
+    <div class="stat">
+      <div class="stat-cap">Last Round</div>
+      <div class="stat-num">89</div>
+      <div class="stat-foot">+3 over par · Sotetsu CC</div>
+    </div>
+  </div>
+
+  <div class="section-divider">
+    <span class="label">Your Societies</span>
+    <span class="line"></span>
+    <span class="pageno">PP. 03</span>
+  </div>
+
+  <article class="card">
+    <div class="card-num">01</div>
+    <div class="card-body">
+      <div class="card-kicker">FIVE YEARS RUNNING · 14 MEMBERS</div>
+      <div class="card-title">朝駆け会</div>
+      <div class="card-meta">
+        Next: <b>04.12</b> @ Course Alpha
+        <span class="sep">/</span>
+        Standing: <b>3rd of 14</b> · ↑ 2 places
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="card-num">02</div>
+    <div class="card-body">
+      <div class="card-kicker">PREMIUM · TWO YEARS · 8 MEMBERS</div>
+      <div class="card-title">ベイサイドクラブ</div>
+      <div class="card-meta">
+        Next: <b>04.26</b> @ Course Beta
+        <span class="sep">/</span>
+        Standing: <b>1st of 8</b> · LEADING
+      </div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="card-num">03</div>
+    <div class="card-body">
+      <div class="card-kicker">EIGHT YEARS RUNNING · 22 MEMBERS</div>
+      <div class="card-title">メトロオープン</div>
+      <div class="card-meta">
+        Next: <b>05.03</b> @ Course Gamma
+        <span class="sep">/</span>
+        Standing: <b>11th of 22</b> · steady
+      </div>
+    </div>
+  </article>
+
+  <div class="colophon">A publication of <span class="red">The Society</span> · est. 2026</div>
+</div>
+<button class="fab">Start a new society →</button>
+</body>
+</html>
