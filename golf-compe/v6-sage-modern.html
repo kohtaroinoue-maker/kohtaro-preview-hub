@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>09 — Sage Modern</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f6ee;
+    --surface: #ffffff;
+    --ink: #2a342c;
+    --ink-2: #687068;
+    --mute: #a0a59c;
+    --hair: #ece8d8;
+    --hair-2: #f1ede0;
+    --sage: #8ea076;
+    --sage-soft: #e2e6d0;
+    --sage-deep: #5d6e48;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-feature-settings: "cv11", "ss01", "tnum"; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', system-ui, -apple-system, sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.005em;
+  }
+  .shell { max-width: 480px; margin: 0 auto; padding: 24px 22px 130px; }
+
+  /* Nav */
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; }
+  .brand {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .brand-mark {
+    width: 8px; height: 8px;
+    background: var(--sage);
+    border-radius: 2px;
+    transform: rotate(45deg);
+  }
+  .avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--sage-soft);
+    color: var(--sage-deep);
+    display: grid; place-items: center;
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: 0;
+  }
+
+  /* Hero */
+  .hero { margin-bottom: 40px; }
+  .hero-eyebrow {
+    font-size: 12px;
+    color: var(--ink-2);
+    font-weight: 500;
+    margin-bottom: 14px;
+    letter-spacing: -0.01em;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 14px; height: 1px;
+    background: var(--sage);
+    margin-right: 8px;
+    vertical-align: 4px;
+  }
+  .hero-title {
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+  }
+  .hero-title .sage { color: var(--sage-deep); }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 32px 0 44px;
+  }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: var(--ink-2);
+    font-weight: 500;
+    margin-bottom: 10px;
+    letter-spacing: -0.005em;
+  }
+  .stat-value {
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-delta {
+    font-size: 12px;
+    color: var(--ink-2);
+    margin-top: 8px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .stat-delta.sage {
+    color: var(--sage-deep);
+  }
+  .stat-delta .icon {
+    display: inline-block;
+    width: 10px; height: 10px;
+    line-height: 10px;
+    margin-right: 4px;
+    font-size: 11px;
+  }
+
+  /* Section head */
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    padding: 0 2px;
+  }
+  .section-head .ttl {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .section-head .ttl .count {
+    color: var(--mute);
+    font-weight: 500;
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+  .section-head .sort {
+    font-size: 12px;
+    color: var(--ink-2);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .card:hover {
+    border-color: var(--sage);
+    background: var(--hair-2);
+  }
+  .card-mark {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--sage-soft);
+    color: var(--sage-deep);
+    display: grid; place-items: center;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .card.alt .card-mark { background: #ebebeb; color: #555; }
+  .card.dim .card-mark { background: #f0ece0; color: #8a7d4f; }
+  .card-body { min-width: 0; }
+  .card-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 1.2;
+  }
+  .card-meta {
+    font-size: 12px;
+    color: var(--ink-2);
+    margin-top: 3px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .card-meta .dot {
+    width: 2px; height: 2px;
+    background: var(--mute);
+    border-radius: 50%;
+  }
+  .card-meta .pill {
+    font-size: 10px;
+    background: var(--sage-soft);
+    color: var(--sage-deep);
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 600;
+    letter-spacing: 0;
+  }
+  .card-next {
+    text-align: right;
+  }
+  .card-date {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.015em;
+    font-variant-numeric: tabular-nums;
+  }
+  .card-sub {
+    font-size: 11px;
+    color: var(--mute);
+    margin-top: 4px;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+  }
+  .card-arrow {
+    color: var(--mute);
+    font-size: 18px;
+    margin-left: 2px;
+    align-self: center;
+    line-height: 1;
+  }
+  .card:hover .card-arrow { color: var(--sage-deep); }
+
+  /* FAB */
+  .fab {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--ink);
+    color: var(--bg);
+    font-family: 'Geist', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 13px 22px;
+    border: none;
+    cursor: pointer;
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 12px 28px -8px rgba(42, 52, 44, 0.32);
+    letter-spacing: -0.01em;
+    transition: transform 0.2s;
+  }
+  .fab:hover { transform: translateX(-50%) translateY(-2px); }
+  .fab .plus {
+    display: grid; place-items: center;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--sage);
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .nav, .hero, .stats, .section-head, .card { animation: fadeUp 0.5s ease-out both; }
+  .nav { animation-delay: 0s; }
+  .hero { animation-delay: 0.06s; }
+  .stats { animation-delay: 0.14s; }
+  .section-head { animation-delay: 0.22s; }
+  .card:nth-of-type(1) { animation-delay: 0.28s; }
+  .card:nth-of-type(2) { animation-delay: 0.34s; }
+  .card:nth-of-type(3) { animation-delay: 0.40s; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="nav">
+    <div class="brand"><span class="brand-mark"></span>Society</div>
+    <div class="avatar">G</div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-eyebrow">Tuesday · May 20</div>
+    <h1 class="hero-title">来月、<span class="sage">三つ</span>のコンペ。</h1>
+  </section>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Handicap</div>
+      <div class="stat-value">12.4</div>
+      <div class="stat-delta sage"><span class="icon">↓</span>0.2 from last</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Last round</div>
+      <div class="stat-value">89</div>
+      <div class="stat-delta"><span class="icon">+3</span>over par</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <div class="ttl">所属する会<span class="count">3</span></div>
+    <div class="sort">並び替え</div>
+  </div>
+
+  <article class="card">
+    <div class="card-mark">朝</div>
+    <div class="card-body">
+      <div class="card-title">朝駆け会</div>
+      <div class="card-meta">14名<span class="dot"></span>5年目<span class="dot"></span>3 / 14</div>
+    </div>
+    <div class="card-next">
+      <div class="card-date">4/12</div>
+      <div class="card-sub">Course α</div>
+    </div>
+    <div class="card-arrow">→</div>
+  </article>
+
+  <article class="card alt">
+    <div class="card-mark">湾</div>
+    <div class="card-body">
+      <div class="card-title">ベイサイドクラブ</div>
+      <div class="card-meta">8名<span class="dot"></span>2年目<span class="pill">Premium</span></div>
+    </div>
+    <div class="card-next">
+      <div class="card-date">4/26</div>
+      <div class="card-sub">Course β</div>
+    </div>
+    <div class="card-arrow">→</div>
+  </article>
+
+  <article class="card dim">
+    <div class="card-mark">都</div>
+    <div class="card-body">
+      <div class="card-title">メトロオープン</div>
+      <div class="card-meta">22名<span class="dot"></span>8年目<span class="dot"></span>11 / 22</div>
+    </div>
+    <div class="card-next">
+      <div class="card-date">5/3</div>
+      <div class="card-sub">Course γ</div>
+    </div>
+    <div class="card-arrow">→</div>
+  </article>
+</div>
+<button class="fab"><span class="plus">+</span>新しい会</button>
+</body>
+</html>
