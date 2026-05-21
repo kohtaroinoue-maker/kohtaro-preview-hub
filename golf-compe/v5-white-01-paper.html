@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>06 — Paper Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,800&family=IBM+Plex+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f1e8;
+    --paper-2: #ebe5d4;
+    --sumi: #1f2018;
+    --sumi-2: #4a4a3e;
+    --mute: rgba(31, 32, 24, 0.55);
+    --hair: rgba(31, 32, 24, 0.14);
+    --leaf: #4a7042;
+    --leaf-soft: #d8e3c8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--paper);
+    color: var(--sumi);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    background-image:
+      radial-gradient(circle at 30% 0%, var(--paper-2) 0%, transparent 50%);
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='240' height='240' filter='url(%23n)' opacity='0.5'/></svg>");
+    opacity: 0.08; z-index: 1; mix-blend-mode: multiply;
+  }
+  .shell { max-width: 480px; margin: 0 auto; padding: 28px 22px 130px; position: relative; z-index: 2; }
+
+  .nav { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 48px; border-bottom: 1px solid var(--hair); padding-bottom: 12px; }
+  .brand { font-family: 'Source Serif 4', serif; font-size: 18px; font-weight: 800; letter-spacing: 0.02em; }
+  .brand::before { content: '◆ '; color: var(--leaf); }
+  .nav-meta { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); font-weight: 700; }
+
+  .hero { margin-bottom: 40px; }
+  .hero-greet { font-size: 11px; color: var(--mute); letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; margin-bottom: 18px; }
+  .hero-greet::before { content: '— '; }
+  .hero-title {
+    font-family: 'Source Serif 4', serif;
+    font-size: 44px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+    font-variation-settings: 'opsz' 60;
+  }
+  .hero-title .leaf { color: var(--leaf); }
+  .hero-title .it { font-style: italic; font-weight: 400; color: var(--sumi-2); }
+  .hero-sub {
+    margin-top: 16px;
+    font-family: 'Source Serif 4', serif;
+    font-style: italic;
+    font-size: 14px;
+    color: var(--sumi-2);
+    line-height: 1.5;
+    padding-left: 14px;
+    border-left: 2px solid var(--leaf);
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 32px 0 48px;
+    border-top: 2px solid var(--sumi);
+    border-bottom: 1px solid var(--hair);
+  }
+  .stat { padding: 20px 0; }
+  .stat + .stat { padding-left: 20px; border-left: 1px solid var(--hair); }
+  .stat-key { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 700; color: var(--mute); margin-bottom: 10px; }
+  .stat-val { font-family: 'Source Serif 4', serif; font-size: 38px; line-height: 1; font-weight: 800; letter-spacing: -0.02em; }
+  .stat-foot { font-size: 11px; margin-top: 8px; color: var(--sumi-2); font-weight: 500; }
+  .stat-foot.leaf { color: var(--leaf); font-weight: 700; }
+
+  .section-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 18px;
+  }
+  .section-head .label {
+    font-family: 'Source Serif 4', serif; font-size: 22px; font-weight: 800; font-style: italic;
+  }
+  .section-head .label::after { content: '.'; color: var(--leaf); }
+  .section-head .num { font-family: 'Source Serif 4', serif; font-size: 14px; font-style: italic; color: var(--mute); }
+
+  .card {
+    padding: 18px 0;
+    border-bottom: 1px solid var(--hair);
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    gap: 14px;
+    align-items: start;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  .card:hover { background: var(--leaf-soft); padding-left: 8px; padding-right: 8px; margin-left: -8px; margin-right: -8px; border-radius: 4px; }
+  .card-num {
+    font-family: 'Source Serif 4', serif;
+    font-size: 32px;
+    font-weight: 800;
+    line-height: 0.9;
+    color: var(--leaf);
+    font-style: italic;
+  }
+  .card-body { min-width: 0; }
+  .card-kicker { font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute); font-weight: 700; margin-bottom: 4px; }
+  .card-title { font-family: 'Source Serif 4', serif; font-size: 20px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.15; margin-bottom: 6px; }
+  .card-meta { font-size: 11px; color: var(--sumi-2); line-height: 1.5; }
+  .card-meta b { color: var(--sumi); font-weight: 700; }
+  .card-right { text-align: right; padding-top: 4px; }
+  .card-date { font-family: 'Source Serif 4', serif; font-size: 16px; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
+  .card-sub { font-size: 10px; color: var(--mute); margin-top: 4px; letter-spacing: 0.04em; }
+
+  .colophon { text-align: center; margin-top: 56px; padding-top: 12px; border-top: 1px solid var(--hair); font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute); }
+  .colophon .leaf { color: var(--leaf); font-weight: 700; }
+
+  .fab {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--sumi); color: var(--paper);
+    font-family: 'Source Serif 4', serif;
+    font-style: italic; font-weight: 700;
+    font-size: 16px;
+    padding: 12px 28px;
+    border: none; cursor: pointer;
+    letter-spacing: -0.01em;
+    box-shadow: 0 8px 24px rgba(31, 32, 24, 0.2);
+  }
+  .fab:hover { background: var(--leaf); }
+
+  @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .nav, .hero, .stats, .section-head, .card, .colophon { animation: slideIn 0.6s both; }
+  .hero { animation-delay: 0.08s; }
+  .stats { animation-delay: 0.16s; }
+  .section-head { animation-delay: 0.24s; }
+  .card:nth-of-type(1) { animation-delay: 0.32s; }
+  .card:nth-of-type(2) { animation-delay: 0.4s; }
+  .card:nth-of-type(3) { animation-delay: 0.48s; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="nav">
+    <div class="brand">Society Quarterly</div>
+    <div class="nav-meta">№ 047 / MAY 2026</div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-greet">DISPATCH — Tuesday morning</div>
+    <h1 class="hero-title">Three <span class="it">competitions</span><br>this <span class="leaf">month</span>.</h1>
+    <p class="hero-sub">三つの会、いずれも来月。幹事の朝は、ひと夜の数字を見渡すことから始まる。</p>
+  </section>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-key">Handicap Index</div>
+      <div class="stat-val">12.4</div>
+      <div class="stat-foot leaf">↓ 0.2 from April</div>
+    </div>
+    <div class="stat">
+      <div class="stat-key">Last Round</div>
+      <div class="stat-val">89</div>
+      <div class="stat-foot">+3 over par</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <span class="label">Your Societies</span>
+    <span class="num">03 active</span>
+  </div>
+
+  <article class="card">
+    <div class="card-num">01</div>
+    <div class="card-body">
+      <div class="card-kicker">FIVE YEARS · 14 MEMBERS</div>
+      <div class="card-title">朝駆け会</div>
+      <div class="card-meta">Standing: <b>3rd of 14</b> · ↑ 2 places</div>
+    </div>
+    <div class="card-right">
+      <div class="card-date">4 / 12</div>
+      <div class="card-sub">Course Alpha</div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="card-num">02</div>
+    <div class="card-body">
+      <div class="card-kicker">PREMIUM · TWO YEARS · 8 MEMBERS</div>
+      <div class="card-title">ベイサイドクラブ</div>
+      <div class="card-meta">Standing: <b>1st of 8</b> · LEADING</div>
+    </div>
+    <div class="card-right">
+      <div class="card-date">4 / 26</div>
+      <div class="card-sub">Course Beta</div>
+    </div>
+  </article>
+
+  <article class="card">
+    <div class="card-num">03</div>
+    <div class="card-body">
+      <div class="card-kicker">EIGHT YEARS · 22 MEMBERS</div>
+      <div class="card-title">メトロオープン</div>
+      <div class="card-meta">Standing: <b>11th of 22</b> · steady</div>
+    </div>
+    <div class="card-right">
+      <div class="card-date">5 / 03</div>
+      <div class="card-sub">Course Gamma</div>
+    </div>
+  </article>
+
+  <div class="colophon">A publication of <span class="leaf">The Society</span> · est. 2026</div>
+</div>
+<button class="fab">Start a new society →</button>
+</body>
+</html>

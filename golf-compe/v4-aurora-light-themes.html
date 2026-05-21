@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="mist">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>Aurora Light · 白×緑 3テーマ</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root[data-theme="mist"] {
+    --ink: #f7f9f4;
+    --bone: #1a221c;
+    --aqua: #6dbe8a;
+    --pink: #94c4a1;
+    --gold: #d0d8b8;
+    --glow-1: rgba(109, 190, 138, 0.22);
+    --glow-2: rgba(148, 196, 161, 0.22);
+    --glow-3: rgba(208, 216, 184, 0.18);
+    --glow-4: rgba(140, 200, 160, 0.20);
+    --orb-a-end: #c8e0d0;
+    --orb-b-end: #d6e6da;
+    --orb-c-end: #e2e0c8;
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(26, 34, 28, 0.08);
+    --line: rgba(26, 34, 28, 0.10);
+  }
+  :root[data-theme="meadow"] {
+    --ink: #f4f8ef;
+    --bone: #243023;
+    --aqua: #7eaf78;
+    --pink: #9bbf6e;
+    --gold: #cfdeb0;
+    --glow-1: rgba(126, 175, 120, 0.25);
+    --glow-2: rgba(155, 191, 110, 0.22);
+    --glow-3: rgba(207, 222, 176, 0.20);
+    --glow-4: rgba(140, 180, 110, 0.22);
+    --orb-a-end: #c5d8b8;
+    --orb-b-end: #d2dcaa;
+    --orb-c-end: #e0e5c2;
+    --glass-bg: rgba(255, 255, 255, 0.55);
+    --glass-border: rgba(36, 48, 35, 0.08);
+    --line: rgba(36, 48, 35, 0.10);
+  }
+  :root[data-theme="sage"] {
+    --ink: #f8f6ee;
+    --bone: #2e3a30;
+    --aqua: #9eae84;
+    --pink: #b0b890;
+    --gold: #d8d2b0;
+    --glow-1: rgba(158, 174, 132, 0.22);
+    --glow-2: rgba(176, 184, 144, 0.22);
+    --glow-3: rgba(216, 210, 176, 0.18);
+    --glow-4: rgba(160, 175, 130, 0.20);
+    --orb-a-end: #d0d4b6;
+    --orb-b-end: #d8d8b8;
+    --orb-c-end: #e2dcb4;
+    --glass-bg: rgba(255, 254, 247, 0.58);
+    --glass-border: rgba(46, 58, 48, 0.08);
+    --line: rgba(46, 58, 48, 0.10);
+  }
+  :root {
+    --mute: color-mix(in srgb, var(--bone) 56%, transparent);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--ink);
+    color: var(--bone);
+    font-family: 'Sora', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background 0.6s ease, color 0.6s ease;
+  }
+  .aurora {
+    position: fixed; inset: -10%; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(circle at 20% 10%, var(--glow-1), transparent 50%),
+      radial-gradient(circle at 80% 30%, var(--glow-2), transparent 55%),
+      radial-gradient(circle at 60% 80%, var(--glow-3), transparent 50%),
+      radial-gradient(circle at 10% 90%, var(--glow-4), transparent 55%);
+    filter: blur(60px) saturate(1.05);
+    animation: drift 22s ease-in-out infinite alternate;
+    transition: background 0.6s ease;
+  }
+  @keyframes drift {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(-2%, 2%) scale(1.06); }
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='2'/></filter><rect width='200' height='200' filter='url(%23n)' opacity='0.5'/></svg>");
+    opacity: 0.07; mix-blend-mode: multiply; pointer-events: none; z-index: 1;
+  }
+
+  .switcher {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 100;
+    display: flex; gap: 4px;
+    padding: 4px;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    font-family: 'Sora', sans-serif;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  }
+  .switcher button {
+    background: transparent;
+    color: var(--bone);
+    border: none;
+    padding: 7px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    transition: all 0.3s;
+    white-space: nowrap;
+    opacity: 0.55;
+  }
+  .switcher button:hover { opacity: 1; }
+  .switcher button.active {
+    background: var(--bone);
+    color: var(--ink);
+    opacity: 1;
+  }
+
+  .shell { position: relative; z-index: 2; max-width: 480px; margin: 0 auto; padding: 88px 22px 140px; }
+
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    border: 1px solid var(--glass-border);
+    border-radius: 22px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.04);
+  }
+
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; padding: 12px 18px; border-radius: 999px; }
+  .brand { font-family: 'Instrument Serif', serif; font-size: 22px; letter-spacing: -0.01em; }
+  .brand .it { font-style: italic; color: var(--aqua); }
+  .avatar-ring {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: conic-gradient(from 180deg, var(--pink), var(--aqua), var(--gold), var(--pink));
+    padding: 2px;
+  }
+  .avatar-ring > div {
+    width: 100%; height: 100%; border-radius: 50%;
+    background: var(--ink);
+    display: grid; place-items: center;
+    font-weight: 500; font-size: 13px;
+    color: var(--bone);
+  }
+
+  .hero { padding: 30px 26px; margin-bottom: 16px; position: relative; overflow: hidden; }
+  .hero-shimmer {
+    position: absolute; inset: 0; border-radius: 22px; pointer-events: none;
+    background: linear-gradient(135deg, rgba(255,255,255,0.5), transparent 50%);
+  }
+  .hero-cap { font-size: 11px; color: var(--mute); letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 14px; }
+  .hero-cap::before { content: '✦ '; color: var(--aqua); }
+  .hero-title {
+    font-family: 'Instrument Serif', serif;
+    font-size: 46px;
+    line-height: 1.02;
+    letter-spacing: -0.015em;
+    font-weight: 400;
+  }
+  .hero-title .it { font-style: italic; }
+  .hero-title .grad {
+    background: linear-gradient(120deg, var(--aqua), var(--pink) 60%, var(--gold));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stats { display: flex; gap: 12px; margin-bottom: 28px; }
+  .stat { flex: 1; padding: 18px; }
+  .stat-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--mute); margin-bottom: 10px; }
+  .stat-value { font-family: 'Instrument Serif', serif; font-size: 36px; line-height: 1; letter-spacing: -0.02em; }
+  .stat-delta { font-size: 11px; margin-top: 6px; font-weight: 500; }
+  .stat-delta.aqua { color: var(--aqua); }
+  .stat-delta.pink { color: var(--pink); }
+
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin: 0 6px 14px; }
+  .section-head .ttl { font-family: 'Instrument Serif', serif; font-size: 22px; font-style: italic; }
+  .section-head .count {
+    font-size: 11px; padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--glass-bg);
+    border: 1px solid var(--line);
+    letter-spacing: 0.1em;
+  }
+
+  .card {
+    padding: 20px 22px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.4s, border-color 0.3s;
+  }
+  .card::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.4), transparent 50%);
+    pointer-events: none;
+  }
+  .card:hover {
+    transform: translateY(-3px);
+  }
+  .card-row { display: flex; justify-content: space-between; align-items: center; position: relative; }
+  .card-left { display: flex; gap: 14px; align-items: center; }
+  .card-orb {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.6s;
+  }
+  .card-orb.a {
+    background: radial-gradient(circle at 30% 30%, var(--aqua), var(--orb-a-end) 80%);
+  }
+  .card-orb.b {
+    background: radial-gradient(circle at 30% 30%, var(--pink), var(--orb-b-end) 80%);
+  }
+  .card-orb.c {
+    background: radial-gradient(circle at 30% 30%, var(--gold), var(--orb-c-end) 80%);
+  }
+  .card-title { font-family: 'Instrument Serif', serif; font-size: 20px; letter-spacing: -0.01em; line-height: 1.1; }
+  .card-meta { font-size: 11px; color: var(--mute); margin-top: 4px; letter-spacing: 0.04em; }
+  .card-right { text-align: right; }
+  .card-date { font-family: 'Instrument Serif', serif; font-size: 22px; font-style: italic; line-height: 1; }
+  .card-sub { font-size: 10px; color: var(--mute); margin-top: 4px; letter-spacing: 0.08em; text-transform: uppercase; }
+
+  .fab {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    padding: 14px 28px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--bone);
+    font-family: 'Sora', sans-serif;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(1.2);
+    -webkit-backdrop-filter: blur(20px) saturate(1.2);
+    display: flex; align-items: center; gap: 10px;
+    z-index: 50;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    transition: transform 0.3s, box-shadow 0.6s;
+  }
+  .fab::before { content: '✦'; color: var(--aqua); font-size: 16px; }
+  .fab:hover { transform: translateX(-50%) translateY(-3px); box-shadow: 0 18px 40px rgba(0,0,0,0.08); }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  .nav, .hero, .stats, .section-head, .card { animation: fadeUp 0.7s both; }
+  .nav { animation-delay: 0s; }
+  .hero { animation-delay: 0.08s; }
+  .stats { animation-delay: 0.2s; }
+  .section-head { animation-delay: 0.3s; }
+  .card:nth-of-type(1) { animation-delay: 0.4s; }
+  .card:nth-of-type(2) { animation-delay: 0.48s; }
+  .card:nth-of-type(3) { animation-delay: 0.56s; }
+</style>
+</head>
+<body>
+<div class="aurora"></div>
+
+<nav class="switcher">
+  <button data-set="mist" class="active">A · ミスト</button>
+  <button data-set="meadow">B · 草原</button>
+  <button data-set="sage">C · セージ</button>
+</nav>
+
+<div class="shell">
+  <div class="nav glass">
+    <div class="brand">aurora <span class="it">society</span></div>
+    <div class="avatar-ring"><div>G</div></div>
+  </div>
+
+  <section class="hero glass">
+    <div class="hero-shimmer"></div>
+    <div class="hero-cap">TUESDAY · MAY 20 · 2026</div>
+    <h1 class="hero-title">
+      Three <span class="it grad">competitions</span><br>
+      on the <span class="it">horizon</span>.
+    </h1>
+  </section>
+
+  <div class="stats">
+    <div class="stat glass">
+      <div class="stat-label">Handicap</div>
+      <div class="stat-value">12.4</div>
+      <div class="stat-delta aqua">↓ 0.2 trending</div>
+    </div>
+    <div class="stat glass">
+      <div class="stat-label">Last Round</div>
+      <div class="stat-value">89</div>
+      <div class="stat-delta pink">+3 over par</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <div class="ttl">your societies</div>
+    <div class="count">03 ACTIVE</div>
+  </div>
+
+  <article class="card glass">
+    <div class="card-row">
+      <div class="card-left">
+        <div class="card-orb a"></div>
+        <div>
+          <div class="card-title">朝駆け会</div>
+          <div class="card-meta">14 members · 5Y · 3rd of 14</div>
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-date">4/12</div>
+        <div class="card-sub">Course Alpha</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="card glass">
+    <div class="card-row">
+      <div class="card-left">
+        <div class="card-orb b"></div>
+        <div>
+          <div class="card-title">ベイサイドクラブ</div>
+          <div class="card-meta">8 members · 2Y · LEADING ✦</div>
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-date">4/26</div>
+        <div class="card-sub">Course Beta</div>
+      </div>
+    </div>
+  </article>
+
+  <article class="card glass">
+    <div class="card-row">
+      <div class="card-left">
+        <div class="card-orb c"></div>
+        <div>
+          <div class="card-title">メトロオープン</div>
+          <div class="card-meta">22 members · 8Y · 11th</div>
+        </div>
+      </div>
+      <div class="card-right">
+        <div class="card-date">5/3</div>
+        <div class="card-sub">Course Gamma</div>
+      </div>
+    </div>
+  </article>
+</div>
+<button class="fab">new society</button>
+
+<script>
+  const btns = document.querySelectorAll('.switcher button');
+  const html = document.documentElement;
+  btns.forEach(b => b.addEventListener('click', () => {
+    btns.forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    html.setAttribute('data-theme', b.dataset.set);
+  }));
+  window.addEventListener('keydown', (e) => {
+    const map = { '1':'mist','2':'meadow','3':'sage' };
+    if (map[e.key]) {
+      const btn = document.querySelector(`[data-set="${map[e.key]}"]`);
+      btn && btn.click();
+    }
+  });
+</script>
+</body>
+</html>

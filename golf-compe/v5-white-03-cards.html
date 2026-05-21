@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>08 — Cards on White</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fbfbf9;
+    --card: #ffffff;
+    --ink: #1a1f1a;
+    --ink-2: #6b736b;
+    --mute: #9aa19a;
+    --hair: #ececea;
+    --leaf: #4a9968;
+    --leaf-soft: #e6f3ec;
+    --shadow: 0 1px 2px rgba(26, 31, 26, 0.04), 0 10px 30px -16px rgba(26, 31, 26, 0.16);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Geist', system-ui, sans-serif;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  .shell { max-width: 480px; margin: 0 auto; padding: 26px 20px 130px; }
+
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+  .brand {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .brand-dot {
+    width: 10px; height: 10px;
+    background: var(--leaf);
+    border-radius: 50%;
+  }
+  .avatar {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: var(--leaf-soft);
+    color: var(--leaf);
+    display: grid; place-items: center;
+    font-weight: 600; font-size: 13px;
+  }
+
+  .hero {
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    right: -30px; top: -30px;
+    width: 140px; height: 140px;
+    background: var(--leaf-soft);
+    border-radius: 50%;
+    opacity: 0.7;
+  }
+  .hero-eyebrow { font-size: 11px; color: var(--mute); font-weight: 500; letter-spacing: 0.06em; margin-bottom: 8px; position: relative; }
+  .hero-title {
+    font-family: 'Fraunces', serif;
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    position: relative;
+  }
+  .hero-title .leaf { color: var(--leaf); font-style: italic; font-weight: 500; }
+
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 26px; }
+  .stat {
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 18px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+  .stat-label { font-size: 10px; color: var(--mute); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .stat-value {
+    font-family: 'Fraunces', serif;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+  .stat-delta { font-size: 11px; font-weight: 600; margin-top: 6px; }
+  .stat-delta.leaf { color: var(--leaf); }
+  .stat-delta.mute { color: var(--ink-2); }
+
+  .section-head { display: flex; justify-content: space-between; align-items: baseline; margin: 0 4px 12px; }
+  .section-head .ttl { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; }
+  .section-head .ttl .count { color: var(--leaf); font-style: italic; font-weight: 500; }
+  .section-head .sort { font-size: 11px; color: var(--ink-2); font-weight: 500; cursor: pointer; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--hair);
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 44px 1fr auto;
+    gap: 14px;
+    align-items: center;
+    transition: transform 0.3s cubic-bezier(0.3, 1.2, 0.4, 1), border-color 0.3s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: var(--leaf); }
+  .card-icon {
+    width: 44px; height: 44px;
+    border-radius: 14px;
+    background: var(--leaf-soft);
+    color: var(--leaf);
+    display: grid; place-items: center;
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 700;
+  }
+  .card.alt .card-icon { background: #fff3e6; color: #d97c3f; }
+  .card.dim .card-icon { background: #f0eef9; color: #7868c9; }
+  .card-title { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; letter-spacing: -0.01em; }
+  .card-meta { font-size: 11px; color: var(--ink-2); margin-top: 3px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  .card-meta .dot { width: 3px; height: 3px; background: var(--mute); border-radius: 50%; }
+  .card-meta .badge {
+    background: var(--leaf-soft);
+    color: var(--leaf);
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 9px;
+    letter-spacing: 0.04em;
+  }
+  .card.alt .card-meta .badge { background: #fff3e6; color: #d97c3f; }
+  .card-next { text-align: right; }
+  .card-date { font-family: 'Fraunces', serif; font-size: 17px; font-weight: 700; line-height: 1; letter-spacing: -0.01em; }
+  .card-sub { font-size: 10px; color: var(--mute); margin-top: 3px; }
+
+  .fab {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: white;
+    font-family: 'Geist', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 14px 22px;
+    border: none; cursor: pointer;
+    border-radius: 999px;
+    display: flex; align-items: center; gap: 8px;
+    box-shadow: 0 14px 32px -8px rgba(26, 31, 26, 0.32);
+  }
+  .fab .plus {
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: var(--leaf);
+    color: var(--ink);
+    display: grid; place-items: center;
+    font-size: 14px;
+    line-height: 1;
+    font-weight: 600;
+  }
+
+  @keyframes pop { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .nav, .hero, .stat, .section-head, .card { animation: pop 0.55s cubic-bezier(0.3, 1.2, 0.4, 1) both; }
+  .nav { animation-delay: 0s; }
+  .hero { animation-delay: 0.08s; }
+  .stat:nth-child(1) { animation-delay: 0.16s; }
+  .stat:nth-child(2) { animation-delay: 0.22s; }
+  .section-head { animation-delay: 0.3s; }
+  .card:nth-of-type(1) { animation-delay: 0.38s; }
+  .card:nth-of-type(2) { animation-delay: 0.45s; }
+  .card:nth-of-type(3) { animation-delay: 0.52s; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="nav">
+    <div class="brand"><span class="brand-dot"></span>greens</div>
+    <div class="avatar">G</div>
+  </div>
+
+  <section class="hero">
+    <div class="hero-eyebrow">2026 · 05 · 20 · Tuesday</div>
+    <h1 class="hero-title">来月、<span class="leaf">三つの</span>コンペ。</h1>
+  </section>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Handicap</div>
+      <div class="stat-value">12.4</div>
+      <div class="stat-delta leaf">▼ 0.2 nice!</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Last Round</div>
+      <div class="stat-value">89</div>
+      <div class="stat-delta mute">+3 over par</div>
+    </div>
+  </div>
+
+  <div class="section-head">
+    <div class="ttl">所属する会 <span class="count">3</span></div>
+    <div class="sort">並び替え ▾</div>
+  </div>
+
+  <article class="card">
+    <div class="card-icon">朝</div>
+    <div>
+      <div class="card-title">朝駆け会</div>
+      <div class="card-meta">14名<span class="dot"></span>5年目<span class="dot"></span>3位 ↑</div>
+    </div>
+    <div class="card-next">
+      <div class="card-date">4/12</div>
+      <div class="card-sub">Course α</div>
+    </div>
+  </article>
+
+  <article class="card alt">
+    <div class="card-icon">湾</div>
+    <div>
+      <div class="card-title">ベイサイドクラブ</div>
+      <div class="card-meta">8名<span class="dot"></span>2年目<span class="badge">PREMIUM</span></div>
+    </div>
+    <div class="card-next">
+      <div class="card-date">4/26</div>
+      <div class="card-sub">Course β</div>
+    </div>
+  </article>
+
+  <article class="card dim">
+    <div class="card-icon">都</div>
+    <div>
+      <div class="card-title">メトロオープン</div>
+      <div class="card-meta">22名<span class="dot"></span>8年目<span class="dot"></span>11位</div>
+    </div>
+    <div class="card-next">
+      <div class="card-date">5/3</div>
+      <div class="card-sub">Course γ</div>
+    </div>
+  </article>
+</div>
+<button class="fab"><span class="plus">+</span>新しい会</button>
+</body>
+</html>
