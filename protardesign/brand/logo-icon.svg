@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ProtarDesign — confirmed logo icon (large / primary)
+  ============================================================
+  仕様: 角丸スクエア・白地・"Protar" / "Design" の2段・左揃え・中央に横罫線（区切り線）
+  フォント: Fraunces（Google Fonts）。文字色: グラファイト→ティールのグラデ（#g-text）
+  出典: logo-square-type.html セクション B「2段・左揃え／罫線区切り」白地グラデ文字・角丸版
+  配色・フォントの正: proto-h14-graphite-teal-rose2.html
+
+  ※ テキストはパス化していません。正しい字形で表示するには
+    Fraunces ウェブフォントの読み込みが必要です（下の @import 参照）。
+    フォント未読込環境では Georgia / serif にフォールバックします。
+    印刷・アイコン埋め込み等で確実に字形を固定したい場合は、
+    別途このSVGのテキストをアウトライン化してください。
+
+  viewBox は 100x100（logo-square-type.html と同一座標系）。
+  width/height=512 で 512x512 想定の実寸描画。
+-->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100" role="img" aria-label="ProtarDesign">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..500&amp;display=swap');
+      .pd-text{font-family:"Fraunces",Georgia,serif;}
+    </style>
+    <!-- グラファイト→ティール グラデ（proto-h14 の #g-text 相当） -->
+    <linearGradient id="g-text" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a4853"/>
+      <stop offset=".55" stop-color="#0c8aa0"/>
+      <stop offset="1" stop-color="#0099b2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 角丸スクエア・白地（rx 18 / うっすら枠線） -->
+  <rect x="1" y="1" width="98" height="98" rx="18" ry="18" fill="#ffffff" stroke="rgba(30,50,70,.10)" stroke-width="1"/>
+
+  <!-- 2段・左揃え（anchorX=20, baseY=50, lineGap=5） -->
+  <text class="pd-text" x="20" y="40.50" text-anchor="start" dominant-baseline="central"
+        font-weight="500" font-size="17" letter-spacing=".2" fill="url(#g-text)">Protar</text>
+  <text class="pd-text" x="20" y="59.50" text-anchor="start" dominant-baseline="central"
+        font-weight="400" font-size="17" letter-spacing=".4" fill="url(#g-text)">Design</text>
+
+  <!-- 中央 区切り罫線（y=50） -->
+  <line x1="20" y1="50" x2="80" y2="50" stroke="rgba(12,138,160,.5)" stroke-width="1" stroke-linecap="round"/>
+</svg>

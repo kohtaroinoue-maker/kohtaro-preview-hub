@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>ProtarDesign — ロゴ確定版 & SNSアイコン展開</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,400&family=Hanken+Grotesk:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a2730;
+    --ink-soft:#46535c;
+    --ink-faint:#79858d;
+    --paper:#eef0f2;
+    --glass:rgba(255,255,255,.6);
+    --border:rgba(255,255,255,.7);
+    --c-blue:#0099b2;
+    --c-teal:#3fc0c4;
+    --c-pink:#d693a8;
+    --c-amber:#ced4da;
+    --c-graphite:#34414b;
+    --shadow:0 24px 60px -28px rgba(30,50,70,.32);
+    --r:24px;
+    --maxw:1180px;
+    --font-disp:"Fraunces",Georgia,serif;
+    --font-sans:"Hanken Grotesk","Zen Kaku Gothic New",sans-serif;
+    --font-jp:"Zen Kaku Gothic New","Hanken Grotesk",sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font-jp);color:var(--ink);background:var(--paper);line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;letter-spacing:.01em;}
+
+  /* ====== Aurora background ====== */
+  .aurora{position:fixed;inset:0;z-index:-2;overflow:hidden;background:linear-gradient(180deg,#eef0f2 0%,#e7eaed 50%,#f1f3f5 100%);}
+  .orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:.4;mix-blend-mode:multiply;}
+  .orb.b1{width:46vw;height:46vw;background:radial-gradient(circle at 30% 30%,var(--c-blue),transparent 70%);top:-10vw;left:-6vw;}
+  .orb.b2{width:40vw;height:40vw;background:radial-gradient(circle at 50% 50%,var(--c-teal),transparent 70%);top:24vh;right:-8vw;}
+  .orb.b3{width:38vw;height:38vw;background:radial-gradient(circle at 40% 60%,var(--c-pink),transparent 72%);bottom:-12vw;left:18vw;opacity:.5;}
+  .grain{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+
+  /* ====== Layout ====== */
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px;}
+  .eyebrow{font-family:var(--font-sans);font-size:.78rem;font-weight:600;letter-spacing:.22em;text-transform:uppercase;color:var(--c-blue);display:inline-flex;align-items:center;gap:.6em;}
+  .eyebrow::before{content:"";width:26px;height:1px;background:linear-gradient(90deg,var(--c-blue),var(--c-teal));}
+  .glass{background:var(--glass);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);}
+
+  .page-head{padding:96px 0 30px;text-align:center;}
+  .page-head h1{font-family:var(--font-disp);font-weight:400;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.1;letter-spacing:-.02em;margin:22px 0 16px;}
+  .page-head h1 em{font-style:italic;}
+  .page-head p{color:var(--ink-soft);max-width:640px;margin:0 auto;font-size:1.02rem;}
+  .page-head .eyebrow{justify-content:center;}
+
+  section.block{padding:54px 0 10px;}
+  .sec-head{margin-bottom:34px;max-width:760px;}
+  .sec-head h2{font-family:var(--font-disp);font-weight:400;font-size:clamp(1.6rem,3.2vw,2.3rem);line-height:1.2;letter-spacing:-.015em;margin:14px 0 10px;}
+  .sec-head p{color:var(--ink-soft);font-size:.98rem;}
+
+  /* ====== Section 1: main logo hero panels ====== */
+  .hero-logos{display:grid;grid-template-columns:1fr 1fr;gap:22px;}
+  @media(max-width:760px){.hero-logos{grid-template-columns:1fr;}}
+  .logo-panel{border-radius:var(--r);min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:50px 30px;position:relative;}
+  .logo-panel.light{background:var(--glass);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);border:1px solid var(--border);box-shadow:var(--shadow);}
+  .logo-panel.dark{background:linear-gradient(160deg,#23303a,#141c22);border:1px solid rgba(255,255,255,.08);box-shadow:0 24px 60px -28px rgba(0,0,0,.6);}
+  .panel-tag{font-family:var(--font-sans);font-size:.7rem;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);position:absolute;top:20px;left:24px;}
+  .logo-panel.dark .panel-tag{color:#8794a0;}
+
+  /* vertical lockup */
+  .lockup-v{display:inline-flex;flex-direction:column;align-items:center;gap:.85rem;}
+  .wordmark{font-family:var(--font-disp);font-weight:600;letter-spacing:.005em;line-height:1;color:var(--ink);}
+  .wordmark.big{font-size:2.05rem;}
+  .wordmark.knockout{color:#fff;}
+  .tagline{font-family:var(--font-sans);font-size:.66rem;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--c-blue);}
+  .logo-panel.dark .tagline{color:var(--c-teal);}
+
+  /* ====== icon grid (sec2) ====== */
+  .icon-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  @media(max-width:960px){.icon-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:680px){.icon-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:440px){.icon-grid{grid-template-columns:1fr;}}
+  .icard{padding:26px 20px 16px;display:flex;flex-direction:column;align-items:center;gap:16px;transition:transform .3s cubic-bezier(.2,.7,.3,1),box-shadow .3s;}
+  .icard:hover{transform:translateY(-6px);box-shadow:0 36px 70px -28px rgba(30,50,70,.4);}
+  /* preview row: big icon + 32px mini */
+  .prev-row{display:flex;align-items:flex-end;gap:14px;}
+  .ico{width:160px;height:160px;overflow:hidden;}
+  .ico.mini{width:32px;height:32px;flex:0 0 32px;}
+  .mini-wrap{display:flex;flex-direction:column;align-items:center;gap:5px;}
+  .mini-cap{font-family:var(--font-sans);font-size:.56rem;color:var(--ink-faint);letter-spacing:.04em;}
+  /* circle crop preview */
+  .crop-circle{border-radius:50%;}
+  .crop-sq{border-radius:22%;}
+  .ico.mini.crop-sq{border-radius:24%;}
+  .ilabel{font-family:var(--font-sans);font-size:.74rem;font-weight:600;color:var(--ink-soft);text-align:center;}
+  .ilabel small{display:block;font-weight:400;color:var(--ink-faint);font-size:.66rem;margin-top:2px;}
+
+  svg{display:block;}
+
+  /* ====== favicon row (sec3) ====== */
+  .fav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  @media(max-width:900px){.fav-grid{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:480px){.fav-grid{grid-template-columns:1fr;}}
+  .fcard{padding:28px 20px 18px;display:flex;flex-direction:column;align-items:center;gap:18px;}
+  .fav-sizes{display:flex;align-items:flex-end;gap:18px;}
+  .fav-item{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .fav-item .px{font-family:var(--font-sans);font-size:.6rem;color:var(--ink-faint);}
+  .fav16{width:16px;height:16px;}
+  .fav32{width:32px;height:32px;}
+  .fav48{width:48px;height:48px;}
+
+  footer{padding:64px 0;text-align:center;font-family:var(--font-sans);font-size:.85rem;color:var(--ink-faint);}
+  .note{font-size:.8rem;margin-top:8px;}
+</style>
+</head>
+<body>
+
+<div class="aurora">
+  <div class="orb b1"></div><div class="orb b2"></div><div class="orb b3"></div>
+</div>
+<div class="grain"></div>
+
+<!-- ============ SHARED SVG DEFS ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- graphite -> teal diagonal -->
+    <linearGradient id="g-main" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3a4853"/><stop offset=".5" stop-color="#0c8aa0"/><stop offset="1" stop-color="#3fc0c4"/>
+    </linearGradient>
+    <!-- conic-like via radial fallback for marks -->
+    <linearGradient id="g-tri" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0099b2"/><stop offset=".55" stop-color="#3fc0c4"/><stop offset="1" stop-color="#d693a8"/>
+    </linearGradient>
+    <linearGradient id="g-teal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0099b2"/><stop offset="1" stop-color="#3fc0c4"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<header class="page-head wrap">
+  <span class="eyebrow">Logo & SNS Icons</span>
+  <h1>ProtarDesign<br><em>ロゴ確定版 & SNSアイコン展開</em></h1>
+  <p>確定したメインロゴ（縦組み・センター揃え：マーク上／ワードマーク下）と、SNSプロフィール用のマーク単体アイコン候補をまとめたボードです。配色・フォントは proto-h14 に準拠。</p>
+</header>
+
+<main>
+
+<!-- ============ 1. MAIN LOGO ============ -->
+<section class="block wrap">
+  <div class="sec-head">
+    <span class="eyebrow">01 — Main Logo</span>
+    <h2>メインロゴ（縦組み・センター）</h2>
+    <p>マークを上、ワードマーク「ProtarDesign」を下に置いたセンター揃え。これを基本形とします。ライト背景版とダーク背景（白抜き）版。</p>
+  </div>
+  <div class="hero-logos">
+    <!-- LIGHT -->
+    <div class="logo-panel light">
+      <span class="panel-tag">Light</span>
+      <span class="lockup-v">
+        <!-- conic abstract mark, rounded square -->
+        <svg width="96" height="96" viewBox="0 0 100 100">
+          <rect x="4" y="4" width="92" height="92" rx="24" fill="url(#g-tri)"/>
+          <rect x="24" y="24" width="52" height="52" rx="13" fill="#ffffff"/>
+        </svg>
+        <span class="wordmark big">ProtarDesign</span>
+        <span class="tagline">Creative Studio</span>
+      </span>
+    </div>
+    <!-- DARK -->
+    <div class="logo-panel dark">
+      <span class="panel-tag">Dark / Knockout</span>
+      <span class="lockup-v">
+        <svg width="96" height="96" viewBox="0 0 100 100">
+          <rect x="4" y="4" width="92" height="92" rx="24" fill="url(#g-tri)"/>
+          <rect x="24" y="24" width="52" height="52" rx="13" fill="#172026"/>
+        </svg>
+        <span class="wordmark big knockout">ProtarDesign</span>
+        <span class="tagline">Creative Studio</span>
+      </span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 2. SNS ICONS ============ -->
+<section class="block wrap">
+  <div class="sec-head">
+    <span class="eyebrow">02 — SNS Icons</span>
+    <h2>SNSアイコン候補（マーク単体）</h2>
+    <p>プロフィール画像は小さく・円形にクロップされる前提。ワードマーク無しの「マーク単体」で、円形と角丸スクエアの両方を用意。各案の右下に 32px の極小プレビューを添えています（小さくしても読めるか確認用）。円形でも切れないよう要素はセーフエリア内に。</p>
+  </div>
+
+  <div class="icon-grid">
+
+    <!-- ===== Monogram P : full-color gradient ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="url(#g-main)"/>
+          <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#fff">P</text>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="url(#g-main)"/>
+            <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#fff">P</text>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・モノグラムP<small>グラファイト→ティール地・白</small></div>
+    </div>
+
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-sq" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="url(#g-main)"/>
+          <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#fff">P</text>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-sq" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="url(#g-main)"/>
+            <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#fff">P</text>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">角丸スクエア・モノグラムP<small>グラデ地・白</small></div>
+    </div>
+
+    <!-- ===== Monogram P : teal solid ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#0099b2"/>
+          <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#fff">P</text>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#0099b2"/>
+            <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#fff">P</text>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・モノグラムP<small>ティール単色地・白</small></div>
+    </div>
+
+    <!-- ===== Monogram P : white ground, teal mark ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-sq" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#ffffff"/>
+          <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#0099b2">P</text>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-sq" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#ffffff"/>
+            <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#0099b2">P</text>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">角丸スクエア・モノグラムP<small>白地・ティールマーク</small></div>
+    </div>
+
+    <!-- ===== Ligature PD : gradient circle ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="url(#g-main)"/>
+          <text x="50" y="55" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="38" letter-spacing="-1" fill="#fff">PD</text>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="url(#g-main)"/>
+            <text x="50" y="55" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="38" letter-spacing="-1" fill="#fff">PD</text>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・組み文字PD<small>グラデ地・白（小では潰れ注意）</small></div>
+    </div>
+
+    <!-- ===== Ligature PD : white ground ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-sq" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#ffffff"/>
+          <text x="50" y="55" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="38" letter-spacing="-1" fill="url(#g-tri)">PD</text>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-sq" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#ffffff"/>
+            <text x="50" y="55" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="38" letter-spacing="-1" fill="url(#g-tri)">PD</text>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">角丸スクエア・組み文字PD<small>白地・グラデ文字</small></div>
+    </div>
+
+    <!-- ===== Conic abstract mark : gradient circle ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="url(#g-main)"/>
+          <rect x="32" y="32" width="36" height="36" rx="10" fill="#fff"/>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="url(#g-main)"/>
+            <rect x="32" y="32" width="36" height="36" rx="10" fill="#fff"/>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・抽象マーク<small>proto-h14 の入れ子スクエア</small></div>
+    </div>
+
+    <!-- ===== Conic abstract : square ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-sq" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="url(#g-main)"/>
+          <rect x="32" y="32" width="36" height="36" rx="10" fill="#fff"/>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-sq" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="url(#g-main)"/>
+            <rect x="32" y="32" width="36" height="36" rx="10" fill="#fff"/>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">角丸スクエア・抽象マーク<small>白抜きコア</small></div>
+    </div>
+
+    <!-- ===== Abstract symbol: overlapping rounded squares (tsunagu) ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#0099b2"/>
+          <rect x="28" y="28" width="30" height="30" rx="8" fill="#fff"/>
+          <rect x="44" y="44" width="30" height="30" rx="8" fill="#fff" opacity=".62"/>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#0099b2"/>
+            <rect x="28" y="28" width="30" height="30" rx="8" fill="#fff"/>
+            <rect x="44" y="44" width="30" height="30" rx="8" fill="#fff" opacity=".62"/>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・重なる四角<small>「つなぐ」・ティール地に白</small></div>
+    </div>
+
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-sq" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#0099b2"/>
+          <rect x="28" y="28" width="30" height="30" rx="8" fill="#fff"/>
+          <rect x="44" y="44" width="30" height="30" rx="8" fill="#fff" opacity=".62"/>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-sq" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#0099b2"/>
+            <rect x="28" y="28" width="30" height="30" rx="8" fill="#fff"/>
+            <rect x="44" y="44" width="30" height="30" rx="8" fill="#fff" opacity=".62"/>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">角丸スクエア・重なる四角<small>「つなぐ」</small></div>
+    </div>
+
+    <!-- ===== Abstract symbol: upward steps (tsukuru/grow) ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="url(#g-main)"/>
+          <rect x="29" y="58" width="13" height="16" rx="3.5" fill="#fff"/>
+          <rect x="44" y="46" width="13" height="28" rx="3.5" fill="#fff"/>
+          <rect x="59" y="32" width="13" height="42" rx="3.5" fill="#fff"/>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="url(#g-main)"/>
+            <rect x="29" y="58" width="13" height="16" rx="3.5" fill="#fff"/>
+            <rect x="44" y="46" width="13" height="28" rx="3.5" fill="#fff"/>
+            <rect x="59" y="32" width="13" height="42" rx="3.5" fill="#fff"/>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・上向きステップ<small>「小さく速く育つ」・白</small></div>
+    </div>
+
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-sq" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#ffffff"/>
+          <rect x="29" y="58" width="13" height="16" rx="3.5" fill="#d693a8"/>
+          <rect x="44" y="46" width="13" height="28" rx="3.5" fill="#3fc0c4"/>
+          <rect x="59" y="32" width="13" height="42" rx="3.5" fill="#0099b2"/>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-sq" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#ffffff"/>
+            <rect x="29" y="58" width="13" height="16" rx="3.5" fill="#d693a8"/>
+            <rect x="44" y="46" width="13" height="28" rx="3.5" fill="#3fc0c4"/>
+            <rect x="59" y="32" width="13" height="42" rx="3.5" fill="#0099b2"/>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">角丸スクエア・上向きステップ<small>白地・3色フル</small></div>
+    </div>
+
+    <!-- ===== Abstract symbol: P-as-arc (rising path) ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="url(#g-main)"/>
+          <path d="M36 74 V32 h16 a14 14 0 0 1 0 28 H36" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="url(#g-main)"/>
+            <path d="M36 74 V32 h16 a14 14 0 0 1 0 28 H36" fill="none" stroke="#fff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・線画P<small>太線で小さくても残る</small></div>
+    </div>
+
+    <!-- ===== Knockout: dark ground, white P ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#172026"/>
+          <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#fff">P</text>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#172026"/>
+            <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#fff">P</text>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・白抜きP<small>ダーク地・白</small></div>
+    </div>
+
+    <!-- ===== Knockout: dark ground, teal accent P ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-sq" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#172026"/>
+          <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#3fc0c4">P</text>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-sq" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#172026"/>
+            <text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="58" fill="#3fc0c4">P</text>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">角丸スクエア・ダーク地P<small>ティールアクセント</small></div>
+    </div>
+
+    <!-- ===== Linked nodes (connect) ===== -->
+    <div class="icard glass">
+      <div class="prev-row">
+        <svg class="ico crop-circle" viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#ffffff"/>
+          <line x1="34" y1="38" x2="66" y2="38" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/>
+          <line x1="34" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/>
+          <line x1="66" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/>
+          <circle cx="34" cy="38" r="9" fill="#0099b2"/>
+          <circle cx="66" cy="38" r="9" fill="#0099b2"/>
+          <circle cx="50" cy="66" r="9" fill="#d693a8"/>
+        </svg>
+        <div class="mini-wrap">
+          <svg class="ico mini crop-circle" viewBox="0 0 100 100">
+            <rect width="100" height="100" fill="#ffffff"/>
+            <line x1="34" y1="38" x2="66" y2="38" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/>
+            <line x1="34" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/>
+            <line x1="66" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/>
+            <circle cx="34" cy="38" r="9" fill="#0099b2"/>
+            <circle cx="66" cy="38" r="9" fill="#0099b2"/>
+            <circle cx="50" cy="66" r="9" fill="#d693a8"/>
+          </svg>
+          <span class="mini-cap">32px</span>
+        </div>
+      </div>
+      <div class="ilabel">円・結ぶノード<small>「つなぐ」・白地（小では細部消失）</small></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ 3. FAVICON ============ -->
+<section class="block wrap">
+  <div class="sec-head">
+    <span class="eyebrow">03 — Favicon</span>
+    <h2>ファビコン想定（超小サイズ比較）</h2>
+    <p>16px / 32px / 48px で並べ、どのマークが極小でも生き残るかを比較。線が太く面で見えるマークほど小サイズに強いです。</p>
+  </div>
+  <div class="fav-grid">
+
+    <!-- Monogram P gradient -->
+    <div class="fcard glass">
+      <div class="fav-sizes">
+        <div class="fav-item"><svg class="fav48" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="60" fill="#fff">P</text></svg><span class="px">48</span></div>
+        <div class="fav-item"><svg class="fav32" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="60" fill="#fff">P</text></svg><span class="px">32</span></div>
+        <div class="fav-item"><svg class="fav16" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="60" fill="#fff">P</text></svg><span class="px">16</span></div>
+      </div>
+      <div class="ilabel">モノグラムP<small>グラデ地・最有力</small></div>
+    </div>
+
+    <!-- Monogram P teal -->
+    <div class="fcard glass">
+      <div class="fav-sizes">
+        <div class="fav-item"><svg class="fav48" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#0099b2"/><text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="60" fill="#fff">P</text></svg><span class="px">48</span></div>
+        <div class="fav-item"><svg class="fav32" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#0099b2"/><text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="60" fill="#fff">P</text></svg><span class="px">32</span></div>
+        <div class="fav-item"><svg class="fav16" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#0099b2"/><text x="50" y="54" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="60" fill="#fff">P</text></svg><span class="px">16</span></div>
+      </div>
+      <div class="ilabel">モノグラムP<small>ティール単色</small></div>
+    </div>
+
+    <!-- Abstract nested square -->
+    <div class="fcard glass">
+      <div class="fav-sizes">
+        <div class="fav-item"><svg class="fav48" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><rect x="32" y="32" width="36" height="36" rx="9" fill="#fff"/></svg><span class="px">48</span></div>
+        <div class="fav-item"><svg class="fav32" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><rect x="32" y="32" width="36" height="36" rx="9" fill="#fff"/></svg><span class="px">32</span></div>
+        <div class="fav-item"><svg class="fav16" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><rect x="32" y="32" width="36" height="36" rx="9" fill="#fff"/></svg><span class="px">16</span></div>
+      </div>
+      <div class="ilabel">抽象マーク<small>入れ子スクエア</small></div>
+    </div>
+
+    <!-- Upward steps -->
+    <div class="fcard glass">
+      <div class="fav-sizes">
+        <div class="fav-item"><svg class="fav48" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><rect x="29" y="58" width="13" height="16" rx="3" fill="#fff"/><rect x="44" y="46" width="13" height="28" rx="3" fill="#fff"/><rect x="59" y="32" width="13" height="42" rx="3" fill="#fff"/></svg><span class="px">48</span></div>
+        <div class="fav-item"><svg class="fav32" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><rect x="29" y="58" width="13" height="16" rx="3" fill="#fff"/><rect x="44" y="46" width="13" height="28" rx="3" fill="#fff"/><rect x="59" y="32" width="13" height="42" rx="3" fill="#fff"/></svg><span class="px">32</span></div>
+        <div class="fav-item"><svg class="fav16" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><rect x="29" y="58" width="13" height="16" rx="3" fill="#fff"/><rect x="44" y="46" width="13" height="28" rx="3" fill="#fff"/><rect x="59" y="32" width="13" height="42" rx="3" fill="#fff"/></svg><span class="px">16</span></div>
+      </div>
+      <div class="ilabel">上向きステップ<small>小さくても判読可</small></div>
+    </div>
+
+    <!-- PD ligature (weak at small) -->
+    <div class="fcard glass">
+      <div class="fav-sizes">
+        <div class="fav-item"><svg class="fav48" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><text x="50" y="55" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="38" letter-spacing="-1" fill="#fff">PD</text></svg><span class="px">48</span></div>
+        <div class="fav-item"><svg class="fav32" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><text x="50" y="55" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="38" letter-spacing="-1" fill="#fff">PD</text></svg><span class="px">32</span></div>
+        <div class="fav-item"><svg class="fav16" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="url(#g-main)"/><text x="50" y="55" text-anchor="middle" dominant-baseline="central" font-family="Fraunces,Georgia,serif" font-weight="600" font-size="38" letter-spacing="-1" fill="#fff">PD</text></svg><span class="px">16</span></div>
+      </div>
+      <div class="ilabel">組み文字PD<small>16pxでは潰れやすい</small></div>
+    </div>
+
+    <!-- Linked nodes (weak at small) -->
+    <div class="fcard glass">
+      <div class="fav-sizes">
+        <div class="fav-item"><svg class="fav48" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#fff"/><line x1="34" y1="38" x2="66" y2="38" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><line x1="34" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><line x1="66" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><circle cx="34" cy="38" r="9" fill="#0099b2"/><circle cx="66" cy="38" r="9" fill="#0099b2"/><circle cx="50" cy="66" r="9" fill="#d693a8"/></svg><span class="px">48</span></div>
+        <div class="fav-item"><svg class="fav32" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#fff"/><line x1="34" y1="38" x2="66" y2="38" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><line x1="34" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><line x1="66" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><circle cx="34" cy="38" r="9" fill="#0099b2"/><circle cx="66" cy="38" r="9" fill="#0099b2"/><circle cx="50" cy="66" r="9" fill="#d693a8"/></svg><span class="px">32</span></div>
+        <div class="fav-item"><svg class="fav16" viewBox="0 0 100 100"><rect width="100" height="100" rx="22" fill="#fff"/><line x1="34" y1="38" x2="66" y2="38" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><line x1="34" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><line x1="66" y1="38" x2="50" y2="66" stroke="#3fc0c4" stroke-width="6" stroke-linecap="round"/><circle cx="34" cy="38" r="9" fill="#0099b2"/><circle cx="66" cy="38" r="9" fill="#0099b2"/><circle cx="50" cy="66" r="9" fill="#d693a8"/></svg><span class="px">16</span></div>
+      </div>
+      <div class="ilabel">結ぶノード<small>16pxでは細部が消失</small></div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>ProtarDesign — Logo & SNS Icons / 見比べ用ボード（noindex）</p>
+  <p class="note">配色・フォントは本命デザイン proto-h14 に準拠 / © 2026 ProtarDesign · 井上浩太郎</p>
+</footer>
+
+</body>
+</html>
