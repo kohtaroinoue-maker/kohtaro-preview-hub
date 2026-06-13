@@ -25,6 +25,7 @@
 | project | 内容 | URL |
 |---|---|---|
 | `golf-compe/` | 副業 06 ゴルフコンペアプリ — デザイン5パターン + Aurora 色違い | [/golf-compe/](https://kohtaroinoue-maker.github.io/kohtaro-preview-hub/golf-compe/) |
+| `protardesign/` | ProtarDesign 事業紹介 LP（制作メモ: [protardesign/README.md](protardesign/README.md)） | [/protardesign/](https://kohtaroinoue-maker.github.io/kohtaro-preview-hub/protardesign/) |
 
 ## 公開ポリシー
 

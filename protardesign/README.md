@@ -19,3 +19,8 @@ ProtarDesign（プロターデザイン／代表 井上浩太郎・神奈川県�
 `index.html` がデザイン案セレクト画面。A〜H の方向比較と各カラバリ、ロゴ探索ページ（logo-explorations / logo-sns-icons / logo-pd-variations / logo-square-type）を残してある。確定までの検討過程の記録。
 
 スタイル素材は本社リポ `kohtaro-anything/memo/topics/design-stock/` にも `graphite-teal-rose.css` として保存済み。
+
+## 制作ログ（_handover/logs/）
+
+- [2026-05-28-protardesign-site-logo.md](_handover/logs/2026-05-28-protardesign-site-logo.md) — サイト＆ロゴ制作ログ
+- [2026-06-01-protardesign-logo-png-outline.md](_handover/logs/2026-06-01-protardesign-logo-png-outline.md) — ロゴ PNG 化／アウトライン化（未完了）
