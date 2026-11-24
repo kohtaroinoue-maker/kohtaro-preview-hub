@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>山ギア 見た目の磨き込み</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#FAFAF6; --ink:#141414; --mute:#5A5A55; --faint:#A8A8A0; --line:#D8D8D0; --hair:#E6E6DE;
+  --blue:#1F5FBF; --warn:#A8461A; --tint:#E4ECF7; --press:#F0F0EA;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:'Noto Sans JP',sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:1120px;margin:0 auto;padding:28px 16px 80px}
+h1{font-family:'Noto Serif JP',serif;font-weight:900;font-size:30px;margin:6px 0 8px;letter-spacing:.03em}
+h2{font-family:'Noto Serif JP',serif;font-weight:700;font-size:21px;margin:44px 0 6px}
+.label{font-size:11px;letter-spacing:.24em;color:var(--mute)}
+p.lead,p.note{color:var(--mute);font-size:14px;line-height:1.8;margin:6px 0;max-width:760px}
+
+/* 切り替え */
+.controls{position:sticky;top:0;z-index:5;background:var(--paper);border-bottom:2px solid var(--ink);padding:12px 0;margin-top:20px;display:flex;flex-wrap:wrap;gap:14px 24px}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.ctl .ttl{font-size:12px;font-weight:700}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{font:inherit;font-size:13px;min-height:40px;padding:0 14px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:700}
+
+/* 案の説明カード */
+.sets{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:14px}
+.setcard{border:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:6px;background:#fff}
+.setcard b{font-family:'Noto Serif JP',serif;font-size:16px}
+.setcard span{font-size:13px;color:var(--mute);line-height:1.7}
+.setcard .row{display:flex;gap:10px;margin-top:6px}
+
+/* アイコン一覧の表 */
+.tablebox{overflow-x:auto;margin-top:14px;border-top:2px solid var(--ink)}
+table{border-collapse:collapse;width:100%;min-width:520px}
+th,td{border-bottom:1px solid var(--line);padding:10px 6px;text-align:center;vertical-align:middle}
+th{font-size:12px;font-weight:700;background:var(--paper);position:sticky;top:0}
+td.name{text-align:left;font-size:13px;white-space:nowrap}
+td.name small{display:block;color:var(--mute);font-size:10px;letter-spacing:.16em}
+td.sel,th.sel{background:#F2F2EC}
+.glyph{font-size:22px;line-height:1;color:var(--ink)}
+.none{font-size:11px;color:var(--faint)}
+
+.sizes{display:flex;align-items:flex-end;gap:22px;flex-wrap:wrap;margin-top:14px;padding:18px;border:1px solid var(--line);background:#fff}
+.sizes figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.sizes figcaption{font-size:11px;color:var(--mute)}
+
+/* スマホの画面 */
+.phones{display:flex;flex-wrap:wrap;gap:28px;margin-top:16px;align-items:flex-start}
+.phone{width:375px;max-width:100%;border:2px solid var(--ink);background:var(--paper);display:flex;flex-direction:column;overflow:hidden}
+.phone .cap{font-size:12px;color:var(--mute);padding:8px 2px 0}
+.ph-head{padding:22px 20px 0;border-bottom:2px solid var(--ink);display:flex;flex-direction:column;gap:12px;position:relative}
+.ph-title{display:flex;justify-content:space-between;align-items:flex-end}
+.ph-title h3{margin:0;font-family:'Noto Serif JP',serif;font-weight:900;font-size:30px}
+.ph-count{text-align:right}
+.ph-count .n{font-family:'Noto Serif JP',serif;font-size:26px;font-weight:700;line-height:1}
+.ph-count .s{font-size:11px;color:var(--mute)}
+.ph-search{display:flex;gap:10px;align-items:center}
+.ph-search .in{flex:1;height:42px;border-bottom:1px solid var(--ink);display:flex;align-items:center;gap:8px;color:var(--faint);font-size:14px}
+.ph-btn{height:42px;padding:0 14px;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;border:none;font-family:inherit}
+.tabs3{display:grid;grid-template-columns:repeat(3,1fr);margin:0 -20px}
+.tabs3 span{height:44px;display:flex;align-items:center;justify-content:center;gap:5px;font-size:14px;color:var(--mute);border-bottom:3px solid transparent}
+.tabs3 span.on{color:var(--ink);font-weight:700;border-bottom-color:var(--ink)}
+.chips{display:flex;gap:6px;padding:12px 20px 4px;overflow-x:auto;white-space:nowrap}
+.chips span{flex-shrink:0;height:34px;padding:0 12px;border:1px solid var(--ink);display:flex;align-items:center;gap:5px;font-size:13px}
+.chips span.on{background:var(--ink);color:var(--paper);font-weight:700}
+.list{padding:0 20px 8px}
+.sec{display:flex;align-items:baseline;gap:10px;padding:16px 0 6px}
+.sec h4{margin:0;font-family:'Noto Serif JP',serif;font-size:18px;font-weight:700}
+.sec .en{font-size:10px;letter-spacing:.2em;color:var(--mute)}
+.sec .sum{margin-left:auto;font-size:11px;color:var(--mute);display:none}
+.item{display:flex;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);cursor:pointer}
+.item .txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.item .nm{font-size:15px;font-weight:500}
+.item .sub{font-size:11px;color:var(--mute);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.star{width:44px;height:44px;border:none;background:transparent;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer;font-size:20px;color:var(--ink)}
+.star.off{color:var(--faint)}
+.wt{font-family:'Noto Serif JP',serif;font-size:22px;font-weight:700;width:64px;text-align:right}
+.wt small{font-size:11px;margin-left:2px}
+.badge{font-size:10px;padding:0 5px;line-height:16px}
+.b-ai{border:1px solid var(--blue);color:var(--blue)}
+.b-ok{background:var(--ink);color:var(--paper)}
+.b-un{border:1px dashed var(--warn);color:var(--warn)}
+.chev{display:none}
+.tabbar{height:70px;display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--ink);margin-top:auto}
+.tabbar span{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:11px;color:var(--mute)}
+.tabbar span.on{color:var(--ink);font-weight:700}
+
+/* ギア詳細（上だけ） */
+.det{padding:20px;display:flex;flex-direction:column;gap:14px}
+.det .kicker{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.2em;color:var(--mute)}
+.det .nmrow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.det h3{margin:0;font-family:'Noto Serif JP',serif;font-size:24px;font-weight:700;line-height:1.35}
+.det .brand{font-size:13px;color:var(--mute)}
+.det .big{font-family:'Noto Serif JP',serif;font-size:52px;font-weight:900;line-height:1}
+.det .big small{font-size:18px;margin-left:4px}
+.det .segs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.det .segs span{min-height:44px;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:14px}
+.det .segs span.on{background:var(--ink);color:var(--paper);font-weight:700}
+.det .rows{border-top:1px solid var(--line)}
+.det .r{display:flex;align-items:center;gap:12px;min-height:52px;border-bottom:1px solid var(--line);font-size:15px}
+.det .r .v{margin-left:auto;color:var(--mute);font-size:13px}
+.det .favbtn{height:40px;padding:0 12px;border:1.5px solid var(--ink);background:transparent;display:flex;align-items:center;gap:6px;font:inherit;font-size:13px;white-space:nowrap}
+
+/* ===== 細部を磨いた版 ===== */
+.polish .item{padding:13px 0;border-top:none;position:relative;gap:14px;transition:background .12s}
+.polish .item::before{content:"";position:absolute;top:0;left:40px;right:0;border-top:1px solid var(--hair)}
+.polish .sec + .item::before{left:0;border-top-color:var(--line)}
+.polish .item:active{background:var(--press)}
+.polish .item .nm{font-size:15.5px;font-weight:700;letter-spacing:.01em}
+.polish .item .sub{font-size:12px;gap:0}
+.polish .item .sub .dot::before{content:"・";color:var(--faint);padding:0 2px}
+.polish .b-ok{display:none}
+.polish .badge{font-size:10px;line-height:15px;padding:0 4px}
+.polish .wt{font-size:20px;font-variant-numeric:tabular-nums;width:60px}
+.polish .wt small{color:var(--mute);font-family:'Noto Sans JP',sans-serif;font-weight:500;font-size:11px}
+.polish .sec{padding:20px 0 8px}
+.polish .sec .sum{display:block;font-variant-numeric:tabular-nums}
+.polish .star{width:40px}
+.polish .chev{display:block}
+.polish .ph-count .n{font-variant-numeric:tabular-nums}
+.polish .det .big{font-variant-numeric:tabular-nums}
+.polish .det .r{gap:14px}
+.polish .chips span{border-color:var(--line)}
+.polish .chips span.on{border-color:var(--ink)}
+
+.foot{margin-top:56px;padding-top:14px;border-top:1px solid var(--line);font-size:12px;color:var(--mute);line-height:1.8}
+.phones > div{min-width:0;max-width:100%}
+@media (max-width:420px){ .phones > div{width:100%} .phone{width:100%}
+  .controls{gap:8px 16px;padding:8px 0} .seg{gap:4px} .seg button{min-height:36px;padding:0 9px;font-size:12px} .ctl{gap:4px} .ph-head{padding:20px 16px 0} .tabs3{margin:0 -16px} .list,.det{padding-left:16px;padding-right:16px} .chips{padding-left:16px;padding-right:16px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="label">YAMA-GEAR ・ DESIGN CHECK</div>
+  <h1>見た目の磨き込み</h1>
+  <p class="lead">アイコンと細部だけを比べるページです。色・書体・紙面の雰囲気（白地・黒インク・明朝・等高線）は今のままにしています。画面の並び方は、まだ今のアプリのままです。</p>
+
+  <div class="controls" role="group" aria-label="表示の切り替え">
+    <div class="ctl">
+      <span class="ttl" id="lbl-set">アイコン</span>
+      <div class="seg" id="set-seg" aria-labelledby="lbl-set"></div>
+    </div>
+    <div class="ctl">
+      <span class="ttl" id="lbl-pol">細部</span>
+      <div class="seg" id="pol-seg" aria-labelledby="lbl-pol">
+        <button type="button" data-p="0" aria-pressed="false">今のまま</button>
+        <button type="button" data-p="1" aria-pressed="true">磨いた版</button>
+      </div>
+    </div>
+  </div>
+
+  <h2>1. アイコンの案</h2>
+  <p class="note">案1〜3は同じ形の描き直しで、線の太さと塗りだけが違います。形は「小さくても何の道具か分かる」ことを優先しました。</p>
+  <div class="sets" id="setcards"></div>
+
+  <h2>2. 全アイコンを並べて比べる</h2>
+  <p class="note">上で選んでいる案の列に色が付きます。今の★・＋・✕・→ は文字の記号なので、端末やフォントで形が変わります。案1〜3では、これらも同じ線で描いています。</p>
+  <div class="tablebox"><table id="itable"></table></div>
+
+  <h2>3. 大きさを変えて見る</h2>
+  <p class="note">16px は一覧の小さい印、26px は MyGear の行、44px は押せるボタンの大きさです。</p>
+  <div class="sizes" id="sizes"></div>
+
+  <h2>4. 画面に入れてみる</h2>
+  <p class="note">上の「アイコン」と「細部」を切り替えると、両方の画面に反映されます。「磨いた版」でやっていること: 区切り線をアイコンの右から始める／いつもの「確定」バッジは出さず、確かめてほしい「AI推定」「未確認」だけ出す／数字の幅を揃える／カテゴリごとの点数と合計を見出しの右に出す／押したときに行がうっすら沈む（スマホで行を押してみてください）。</p>
+  <div class="phones">
+    <div>
+      <div class="phone" id="ph1"></div>
+      <div class="cap">MyGear（持っている）</div>
+    </div>
+    <div>
+      <div class="phone" id="ph2"></div>
+      <div class="cap">ギア詳細の上の部分（見た目の参考。並び方はこれから相談）</div>
+    </div>
+  </div>
+
+  <div class="foot">テスト用ページです（検索エンジンには出ません）。ギア名は架空の例です。</div>
+</div>
+
+<script>
+// 24px グリッドの線画。f はアイコン案3で薄く塗る面
+const CUR = {
+  tent:'<path d="M3 20 L12 4 L21 20 Z"/><path d="M12 4 V20"/><path d="M9 20 L12 14 L15 20"/>',
+  sleep:'<rect x="6" y="3" width="12" height="18" rx="6"/><path d="M9 8 H15"/>',
+  backpack:'<path d="M7 9 A5 5 0 0 1 17 9 V19 A2 2 0 0 1 15 21 H9 A2 2 0 0 1 7 19 Z"/><path d="M10 5 V3 H14 V5"/><path d="M9 14 H15"/>',
+  cook:'<path d="M4 10 H20 V15 A5 5 0 0 1 15 20 H9 A5 5 0 0 1 4 15 Z"/><path d="M2 10 H4 M20 10 H22"/><path d="M9 6 C9 5 10 5 10 4 M14 6 C14 5 15 5 15 4"/>',
+  clothing:'<path d="M8 3 L4 6 L6 10 L8 9 V21 H16 V9 L18 10 L20 6 L16 3 A4 4 0 0 1 8 3 Z"/>',
+  rain:'<path d="M3 12 A9 7 0 0 1 21 12 Z"/><path d="M12 12 V19 A2 2 0 0 1 8 19"/>',
+  footwear:'<path d="M5 4 H10 V12 L18 14 A3 3 0 0 1 21 17 V19 H4 Z"/><path d="M4 16 H21"/>',
+  light:'<circle cx="12" cy="13" r="4"/><path d="M12 3 V5 M4.5 6.5 L6 8 M19.5 6.5 L18 8 M3 13 H5 M19 13 H21"/>',
+  safety:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M9 6 V4 H15 V6"/><path d="M12 10 V16 M9 13 H15"/>',
+  electronics:'<rect x="7" y="4" width="10" height="17" rx="2"/><path d="M10 2 H14"/><path d="M13 8 L10 13 H14 L11 18"/>',
+  food:'<path d="M12 3 L20 17 A2 2 0 0 1 18 20 H6 A2 2 0 0 1 4 17 Z"/><path d="M8 14 H16 V20 H8 Z"/>',
+  water:'<path d="M10 2 H14 V5 L16 8 V20 A2 2 0 0 1 14 22 H10 A2 2 0 0 1 8 20 V8 L10 5 Z"/><path d="M8 12 H16"/>',
+  other:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12 H16 M12 8 V16"/>',
+  tab_gear:'<path d="M7 9 A5 5 0 0 1 17 9 V19 A2 2 0 0 1 15 21 H9 A2 2 0 0 1 7 19 Z"/><path d="M9 14 H15"/>',
+  tab_list:'<path d="M4 6 L5.5 7.5 L8 5"/><path d="M11 6 H20"/><path d="M4 12 L5.5 13.5 L8 11"/><path d="M11 12 H20"/><path d="M11 18 H20"/><circle cx="6" cy="18" r="1.2"/>',
+  tab_set:'<circle cx="12" cy="12" r="3"/><path d="M12 2 V5 M12 19 V22 M2 12 H5 M19 12 H22 M4.9 4.9 L7 7 M17 17 L19.1 19.1 M4.9 19.1 L7 17 M17 7 L19.1 4.9"/>'
+};
+// 今は文字で出している UI の記号
+const CUR_GLYPH = { star:'☆', star_on:'★', plus:'＋', minus:'－', close:'✕', chev:'→', check:'✓' };
+
+const NEW = {
+  tent:'<path class="f" d="M3.5 19 C3.5 12.5 7.4 8 12 8 C16.6 8 20.5 12.5 20.5 19 Z"/><path d="M9.6 19 C9.6 15.6 10.6 13 12 13 C13.4 13 14.4 15.6 14.4 19"/><path d="M2 19 H22"/><path d="M12 8 V5.5"/>',
+  sleep:'<path class="f" d="M8.2 3.5 H15.8 C17.3 3.5 18.5 4.7 18.5 6.2 V16.8 C18.5 19.4 16.2 21 12 21 C7.8 21 5.5 19.4 5.5 16.8 V6.2 C5.5 4.7 6.7 3.5 8.2 3.5 Z"/><path d="M8.6 7.2 C8.6 5.9 15.4 5.9 15.4 7.2 C15.4 8.6 8.6 8.6 8.6 7.2 Z"/><path d="M5.6 12.5 H18.4 M5.8 16.5 H18.2"/>',
+  backpack:'<path class="f" d="M7 9 C7 6.3 9.2 4.5 12 4.5 C14.8 4.5 17 6.3 17 9 V19 C17 19.8 16.3 20.5 15.5 20.5 H8.5 C7.7 20.5 7 19.8 7 19 Z"/><path d="M10 4.8 V3.5 H14 V4.8"/><path d="M9.5 13 H14.5 V17.5 H9.5 Z"/><path d="M7 11 H5 V17 H7 M17 11 H19 V17 H17"/>',
+  cook:'<path class="f" d="M5 11.5 H19 V16.5 C19 18.4 17.4 20 15.5 20 H8.5 C6.6 20 5 18.4 5 16.5 Z"/><path d="M4 11.5 H20"/><path d="M8 11.5 C8 9.8 9.8 9 12 9 C14.2 9 16 9.8 16 11.5"/><path d="M3 14 H5 M19 14 H21"/><path d="M10 6.5 C9.4 5.6 10.6 5 10 4 M14 6.5 C13.4 5.6 14.6 5 14 4"/>',
+  clothing:'<path class="f" d="M9 3.5 L4.6 5.8 L3 12 L6 12.6 V20.5 H18 V12.6 L21 12 L19.4 5.8 L15 3.5 C14.3 4.8 13.3 5.5 12 5.5 C10.7 5.5 9.7 4.8 9 3.5 Z"/><path d="M12 5.5 V20.5"/><path d="M8.5 14.5 H10.5"/>',
+  rain:'<path class="f" d="M3 12 C3 7.6 7 4 12 4 C17 4 21 7.6 21 12 C19.6 10.9 17.9 10.9 16.5 12 C15.1 10.9 13.4 10.9 12 12 C10.6 10.9 8.9 10.9 7.5 12 C6.1 10.9 4.4 10.9 3 12 Z"/><path d="M12 12 V18.6 C12 19.9 11 21 9.7 21 C8.5 21 7.6 20.1 7.6 19"/><path d="M12 4 V2.8"/>',
+  footwear:'<path class="f" d="M6.2 3.5 H11 V9.5 L17.2 11.8 C19.3 12.6 20.5 14.2 20.5 16.2 V17.5 H4.5 V7 C4.5 5 5.2 3.5 6.2 3.5 Z"/><path d="M4 17.5 H21 V20.5 H4 Z"/><path d="M7.5 7 H10 M7.5 10 H11"/>',
+  light:'<path class="f" d="M8.5 9 H15.5 C16.3 9 17 9.7 17 10.5 V14.5 C17 15.3 16.3 16 15.5 16 H8.5 C7.7 16 7 15.3 7 14.5 V10.5 C7 9.7 7.7 9 8.5 9 Z"/><circle cx="12" cy="12.5" r="1.9"/><path d="M7 11 H3.5 M7 14 H3.5 M17 11 H20.5 M17 14 H20.5"/><path d="M9.8 6.4 L9.2 4.8 M12 6 V4.2 M14.2 6.4 L14.8 4.8"/>',
+  safety:'<rect class="f" x="3.5" y="7" width="17" height="13" rx="2.5"/><path d="M9 7 V5.6 C9 4.7 9.7 4 10.6 4 H13.4 C14.3 4 15 4.7 15 5.6 V7"/><path d="M12 10.5 V16.5 M9 13.5 H15"/>',
+  electronics:'<rect class="f" x="6.5" y="4" width="11" height="17" rx="2.5"/><path d="M10.2 2.5 H13.8"/><path d="M12.9 8 L10.1 12.8 H13.9 L11.1 17.6"/>',
+  food:'<path class="f" d="M12 4 C13.1 4 13.9 4.6 14.5 5.6 L20.1 15.5 C21.2 17.5 19.8 20 17.6 20 H6.4 C4.2 20 2.8 17.5 3.9 15.5 L9.5 5.6 C10.1 4.6 10.9 4 12 4 Z"/><path d="M8.8 20 V14.8 H15.2 V20"/>',
+  water:'<path d="M10 2.5 H14 V5 H10 Z"/><path class="f" d="M10 5 C10 6.6 7.5 7.6 7.5 10 V19 C7.5 20.4 8.6 21.5 10 21.5 H14 C15.4 21.5 16.5 20.4 16.5 19 V10 C16.5 7.6 14 6.6 14 5 Z"/><path d="M12 11.5 C12 11.5 10 14 10 15.3 C10 16.4 10.9 17.3 12 17.3 C13.1 17.3 14 16.4 14 15.3 C14 14 12 11.5 12 11.5 Z"/>',
+  other:'<rect class="f" x="4" y="4" width="16" height="16" rx="4"/><circle cx="8.5" cy="12" r=".9" class="dotf"/><circle cx="12" cy="12" r=".9" class="dotf"/><circle cx="15.5" cy="12" r=".9" class="dotf"/>',
+  star:'<path d="M12 3.8 L14.5 9 L20.2 9.7 L16 13.6 L17.1 19.3 L12 16.5 L6.9 19.3 L8 13.6 L3.8 9.7 L9.5 9 Z"/>',
+  star_on:'<path class="solid" d="M12 3.8 L14.5 9 L20.2 9.7 L16 13.6 L17.1 19.3 L12 16.5 L6.9 19.3 L8 13.6 L3.8 9.7 L9.5 9 Z"/>',
+  plus:'<path d="M12 5 V19 M5 12 H19"/>',
+  minus:'<path d="M5 12 H19"/>',
+  close:'<path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5"/>',
+  chev:'<path d="M9.5 5.5 L16 12 L9.5 18.5"/>',
+  check:'<path d="M5 12.5 L9.8 17.2 L19 7"/>',
+  search:'<circle class="f" cx="10.5" cy="10.5" r="6"/><path d="M15 15 L20 20"/>',
+  camera:'<path class="f" d="M4 8 H7.5 L9 5.5 H15 L16.5 8 H20 C20.6 8 21 8.4 21 9 V18 C21 18.6 20.6 19 20 19 H4 C3.4 19 3 18.6 3 18 V9 C3 8.4 3.4 8 4 8 Z"/><circle cx="12" cy="13.2" r="3.4"/>',
+  ai:'<path class="f" d="M11 3.5 C11.6 8.2 13.3 9.9 18 10.5 C13.3 11.1 11.6 12.8 11 17.5 C10.4 12.8 8.7 11.1 4 10.5 C8.7 9.9 10.4 8.2 11 3.5 Z"/><path d="M18 15 C18.2 16.6 18.8 17.2 20.4 17.4 C18.8 17.6 18.2 18.2 18 19.8 C17.8 18.2 17.2 17.6 15.6 17.4 C17.2 17.2 17.8 16.6 18 15 Z"/>',
+  weight:'<path d="M9 9 C9 6.8 10.3 5 12 5 C13.7 5 15 6.8 15 9"/><circle class="f" cx="12" cy="14.5" r="5.8"/><path d="M12 12.5 V14.5 L13.4 15.6"/>',
+  tab_gear:'<path class="f" d="M7 9 C7 6.3 9.2 4.5 12 4.5 C14.8 4.5 17 6.3 17 9 V19 C17 19.8 16.3 20.5 15.5 20.5 H8.5 C7.7 20.5 7 19.8 7 19 Z"/><path d="M10 4.8 V3.5 H14 V4.8"/><path d="M9.5 13 H14.5 V17.5 H9.5 Z"/>',
+  tab_list:'<path d="M4 6.5 L5.4 7.9 L7.8 5.2 M4 12.5 L5.4 13.9 L7.8 11.2"/><path d="M10.5 6.5 H20 M10.5 12.5 H20 M10.5 18.5 H20"/><circle cx="5.9" cy="18.5" r="1.3"/>',
+  tab_set:'<path d="M4 7.5 H20 M4 16.5 H20"/><circle class="knob" cx="9" cy="7.5" r="2.3"/><circle class="knob" cx="15" cy="16.5" r="2.3"/>'
+};
+
+const SETS = [
+  { id:'cur', name:'今', sw:1.3, fill:false, desc:'細い 1.3 の線。今アプリに入っている形。★・＋・✕・→ は文字の記号。' },
+  { id:'a', name:'案1 線を整える', sw:1.6, fill:false, desc:'少しだけ太い 1.6 の線で、形を描き直し。等高線や明朝の細さと合わせた、紙面に溶け込む方向。' },
+  { id:'b', name:'案2 太くやわらかく', sw:2.0, fill:false, desc:'2.0 の線。iPhone 標準の記号に近い太さで、下のタブとも揃う。小さくても潰れにくい。' },
+  { id:'c', name:'案3 線＋うすい面', sw:1.6, fill:true, desc:'案1の線に、地図の青のごく薄い面を敷く。奥行きが出る。目立たせたい所にだけ使う使い方もできる。' }
+];
+
+const CATS = [
+  ['tent','シェルター','SHELTER'],['sleep','睡眠','SLEEP'],['backpack','ザック・収納','PACK'],['cook','調理・水まわり','COOK'],
+  ['clothing','ウェア','WEAR'],['rain','レイン','RAIN'],['footwear','足まわり','FOOTWEAR'],['light','ライト','LIGHT'],
+  ['safety','安全・緊急','SAFETY'],['electronics','電子機器','ELECTRONICS'],['food','食料','FOOD'],['water','水','WATER'],['other','その他','OTHER']
+];
+const UI = [
+  ['star','お気に入り（外）'],['star_on','お気に入り'],['plus','増やす・追加'],['minus','減らす'],['close','閉じる・外す'],
+  ['chev','次へ'],['check','チェック'],['search','検索'],['camera','撮影'],['ai','AI'],['weight','重さ'],
+  ['tab_gear','タブ: MyGear'],['tab_list','タブ: リスト'],['tab_set','タブ: 設定']
+];
+
+let cur = 'a', pol = true;
+
+function icon(id, setId, size, color, dashed){
+  const s = SETS.find(x => x.id === setId);
+  const src = setId === 'cur' ? CUR : NEW;
+  color = color || 'var(--ink)';
+  if (!src[id]) {
+    if (setId === 'cur' && CUR_GLYPH[id]) return '<span class="glyph" style="font-size:'+Math.round(size*0.82)+'px">'+CUR_GLYPH[id]+'</span>';
+    return '<span class="none">なし</span>';
+  }
+  let inner = src[id];
+  const fillCol = s.fill ? 'var(--tint)' : 'none';
+  inner = inner.replace(/class="f"/g, 'fill="'+fillCol+'"')
+               .replace(/class="solid"/g, 'fill="'+color+'"')
+               .replace(/class="dotf"/g, 'fill="'+color+'" stroke="none"')
+               .replace(/class="knob"/g, 'fill="var(--paper)"');
+  const dash = dashed ? ' stroke-dasharray="2 2"' : '';
+  return '<svg aria-hidden="true" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="'+s.sw+'" stroke-linecap="round" stroke-linejoin="round"'+dash+'>'+inner+'</svg>';
+}
+
+function segButtons(){
+  const el = document.getElementById('set-seg');
+  el.innerHTML = SETS.map(s => '<button type="button" data-s="'+s.id+'" aria-pressed="'+(s.id===cur)+'">'+s.name+'</button>').join('');
+  el.querySelectorAll('button').forEach(b => b.onclick = () => { cur = b.dataset.s; render(); });
+  document.querySelectorAll('#pol-seg button').forEach(b => b.onclick = () => { pol = b.dataset.p === '1'; render(); });
+}
+
+function renderCards(){
+  document.getElementById('setcards').innerHTML = SETS.map(s =>
+    '<div class="setcard"><b>'+s.name+'</b><span>'+s.desc+'</span><div class="row">'+
+    ['tent','sleep','backpack','food','star','chev'].map(i => icon(i, s.id, 28)).join('')+'</div></div>').join('');
+}
+
+function renderTable(){
+  const head = '<tr><th style="text-align:left">名前</th>'+SETS.map(s => '<th class="'+(s.id===cur?'sel':'')+'">'+s.name+'</th>').join('')+'</tr>';
+  const row = (id, jp, en) => '<tr><td class="name">'+jp+(en?'<small>'+en+'</small>':'')+'</td>'+
+    SETS.map(s => '<td class="'+(s.id===cur?'sel':'')+'">'+icon(id, s.id, 28)+'</td>').join('')+'</tr>';
+  const sub = t => '<tr><td colspan="5" style="text-align:left;font-weight:700;font-size:12px;padding-top:18px">'+t+'</td></tr>';
+  document.getElementById('itable').innerHTML = head + sub('カテゴリ') + CATS.map(c => row(c[0], c[1], c[2])).join('') + sub('操作・タブ') + UI.map(u => row(u[0], u[1])).join('');
+}
+
+function renderSizes(){
+  const ids = ['backpack','sleep','food','star_on','chev'];
+  document.getElementById('sizes').innerHTML = [16,20,26,44].map(px =>
+    '<figure><div style="display:flex;gap:10px;align-items:center">'+ids.map(i => icon(i, cur, px)).join('')+'</div><figcaption>'+px+'px</figcaption></figure>').join('') +
+    '<figure><div style="display:flex;gap:10px;align-items:center">'+icon('backpack', cur, 26, 'var(--ink)', true)+icon('sleep', cur, 26, 'var(--ink)', true)+'</div><figcaption>欲しい（破線）</figcaption></figure>';
+}
+
+const GEAR = [
+  { cat:'tent', sec:'シェルター', en:'SHELTER', items:[
+    { nm:'シングルウォールテント 2P', ty:'テント', br:'[ブランド]', b:'ai', fav:true, g:504 },
+    { nm:'ツェルト', ty:'ツェルト', br:'[ブランド]', b:'ok', fav:false, g:280 } ]},
+  { cat:'sleep', sec:'睡眠', en:'SLEEP', items:[
+    { nm:'ダウン寝袋 0℃', ty:'寝袋', br:'[ブランド]', b:'ok', fav:true, g:620 },
+    { nm:'エアマット レギュラー', ty:null, br:'[ブランド]', b:'un', fav:false, g:340 } ]},
+  { cat:'food', sec:'食料', en:'FOOD', items:[
+    { nm:'行動食セット 1日分', ty:'行動食', br:null, b:'ok', fav:false, g:450 } ]}
+];
+const BADGE = { ai:'<span class="badge b-ai">AI推定</span>', ok:'<span class="badge b-ok">確定</span>', un:'<span class="badge b-un">未確認</span>' };
+
+function renderPhone1(){
+  const st = id => icon(id, cur, 22, id==='star'?'var(--faint)':'var(--ink)');
+  const starHtml = on => cur === 'cur'
+    ? '<button class="star '+(on?'':'off')+'" aria-label="'+(on?'お気に入りから外す':'お気に入りにする')+'">'+(on?'★':'☆')+'</button>'
+    : '<button class="star" aria-label="'+(on?'お気に入りから外す':'お気に入りにする')+'">'+(on?icon('star_on',cur,22):icon('star',cur,22,'var(--faint)'))+'</button>';
+  let total = 0, n = 0;
+  GEAR.forEach(s => s.items.forEach(i => { total += i.g; n++; }));
+  const list = GEAR.map(s => {
+    const sum = s.items.reduce((a,i) => a+i.g, 0);
+    return '<div class="sec"><h4>'+s.sec+'</h4><span class="en">'+s.en+'</span><span class="sum">'+s.items.length+' 点 ・ '+sum.toLocaleString()+' g</span></div>' +
+      s.items.map(i => '<div class="item" tabindex="0">'+icon(s.cat, cur, 26)+
+        '<div class="txt"><span class="nm">'+i.nm+'</span><span class="sub">'+
+        [ i.ty ? i.ty : '<span style="border-bottom:1px dashed var(--mute)">種類未設定</span>',
+          i.br,
+          (pol && i.b === 'ok') ? null : BADGE[i.b] ]
+          .filter(Boolean).map((p, k) => '<span'+(k ? ' class="dot"' : '')+'>'+(k && !pol ? ' ・ ' : '')+p+'</span>').join('') +
+        '</span></div>'+
+        starHtml(i.fav)+'<span class="wt">'+i.g+'<small>g</small></span></div>').join('');
+  }).join('');
+  const searchIco = cur==='cur' ? '' : icon('search', cur, 18, 'var(--faint)');
+  const plusIco = cur==='cur' ? '' : icon('plus', cur, 16, 'var(--paper)');
+  const tab = (id, label, on) => '<span class="'+(on?'on':'')+'">'+icon(id, cur, 24, on?'var(--ink)':'var(--mute)')+label+'</span>';
+  document.getElementById('ph1').innerHTML =
+    '<div class="ph-head"><div class="label">MY GEAR</div><div class="ph-title"><h3>MyGear</h3><div class="ph-count"><div class="n">'+n+'</div><div class="s">点 ・ '+(total/1000).toFixed(2)+' kg</div></div></div>'+
+    '<div class="ph-search"><div class="in">'+searchIco+'名前・ブランドで検索</div><button class="ph-btn">'+plusIco+'登録</button></div>'+
+    '<div class="tabs3"><span class="on">持っている 5</span><span>欲しい 2</span><span>手放した 1</span></div></div>'+
+    '<div class="chips"><span class="on">すべて</span><span>シェルター</span><span>睡眠</span><span>食料</span><span>'+(cur==='cur'?'★ ':icon('star_on',cur,14))+'お気に入りだけ</span></div>'+
+    '<div class="list">'+list+'</div>'+
+    '<div class="tabbar">'+tab('tab_gear','MyGear',true)+tab('tab_list','リスト',false)+tab('tab_set','設定',false)+'</div>';
+}
+
+function renderPhone2(){
+  const chev = cur==='cur' ? '<span style="color:var(--mute)">→</span>' : icon('chev', cur, 18, 'var(--mute)');
+  const fav = cur==='cur' ? '★ お気に入り' : icon('star_on', cur, 18)+'お気に入り';
+  const r = (ico, label, v) => '<div class="r">'+icon(ico, cur, 22)+'<span>'+label+'</span><span class="v">'+v+'</span>'+chev+'</div>';
+  document.getElementById('ph2').innerHTML =
+    '<div class="det"><div class="kicker">'+icon('sleep', cur, 22)+'SLEEP ・ 睡眠</div>'+
+    '<div class="nmrow"><div><h3>ダウン寝袋 0℃</h3><div class="brand">[ブランド]</div></div><button class="favbtn">'+fav+'</button></div>'+
+    '<div class="big">620<small>g</small></div>'+
+    '<div class="segs"><span class="on">持っている</span><span>欲しい</span><span>手放した</span></div>'+
+    '<div class="rows">'+r('weight','重さの内訳','本体 580 g ・ 袋 40 g')+r('sleep','種類・カテゴリ','寝袋 ・ 睡眠')+r('tab_list','山行で使った','5 回中 4 回')+r('ai','別の選択肢を探す','')+'</div></div>';
+}
+
+function render(){
+  document.querySelectorAll('#set-seg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.s === cur));
+  document.querySelectorAll('#pol-seg button').forEach(b => b.setAttribute('aria-pressed', (b.dataset.p === '1') === pol));
+  document.querySelectorAll('.phone').forEach(p => p.classList.toggle('polish', pol));
+  renderCards(); renderTable(); renderSizes(); renderPhone1(); renderPhone2();
+}
+segButtons(); render();
+</script>
+</body>
+</html>
