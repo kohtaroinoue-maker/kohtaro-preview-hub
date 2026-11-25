@@ -373,6 +373,12 @@ input{font:inherit;color:inherit}
 .winfo{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center}
 .mini.addg{margin-left:auto;display:inline-flex;align-items:center;gap:4px}
 
+.wline.none{display:none}
+.wtag{margin-left:6px;font-size:10.5px;padding:0 6px;border:1px solid var(--line);color:var(--mute);line-height:1.6;vertical-align:1px}
+.wtag.t-worn{border-color:var(--blue);color:var(--blue)}
+.wtag.t-cons{border-color:var(--warn);color:var(--warn)}
+.wtag:active{background:var(--press)}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -599,9 +605,9 @@ const SEED = {
     g('r1','ザック 50L（旧）','backpack','ザック',1680,'ok',{status:'retired',retiredAt:'2025-04'})
   ],
   lists: [
-    { id:'L1', photos:[], name:'テント泊 2泊3日', status:'plan', date:'2026-12-06', days:3, packed:['g1','g3','g5','g7','g13'], unused:[], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2]] },
+    { id:'L1', photos:[], name:'テント泊 2泊3日', status:'plan', date:'2026-12-06', days:3, packed:['g1','g3','g5','g7','g13'], unused:[], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2],['g12',1]] },
     { id:'L3', photos:[], name:'雪の小屋泊 1泊', status:'plan', date:'2027-01-10', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] },
-    { id:'L2', photos:['ph1','ph2','ph3'], name:'日帰り ハイク', status:'done', date:'2026-10-12', days:1, packed:[], unused:['g16'], items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1]] },
+    { id:'L2', photos:['ph1','ph2','ph3'], name:'日帰り ハイク', status:'done', date:'2026-10-12', days:1, packed:[], unused:['g16'], items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1],['g12',1]] },
     { id:'L4', photos:['ph4','ph5'], name:'テント泊 1泊2日', status:'done', date:'2026-09-20', days:2, packed:[], unused:['g4','g6'], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g10',1],['g13',1],['g14',1],['g16',2],['g17',1]] },
     { id:'L5', photos:['ph6'], name:'冬の小屋泊', status:'done', date:'2026-02-08', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] }
   ]
@@ -1020,7 +1026,7 @@ function openWeight(id, back){
       '<p class="small" style="line-height:1.8">'+srcTxt+'</p></div>'+
       '<div class="group">'+
         '<div class="gr static"><span class="gt">出典</span><span class="gv">'+(x.src === 'ai' ? 'AI 推定（型番タグ）' : x.src === 'ok' ? '自分で量った' : '不明')+'</span></div>'+
-        '<div class="gr static"><span class="gt">いつもの重量タグ</span><span class="gv">ベース重量</span></div>'+
+        '<div class="gr" data-gtag><span class="gt">いつもの数え方<small>山行の重さで、ベース・身につける物・消耗品のどれに入れるか</small></span><span class="gv">'+WTAG[defaultTag(x)]+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
       '</div>'+
       '<div class="btnrow">'+(x.src !== 'ok' ? '<button type="button" class="btn primary block" data-confirm>この重さで確定にする</button>' : '')+
       '<button type="button" class="btn secondary block" data-reweigh>量った重さを入れる</button></div></div>';
@@ -1028,6 +1034,8 @@ function openWeight(id, back){
     const x = byId(id);
     if (e.target.closest('[data-confirm]')) { x.src = 'ok'; refreshAll(); toast('確定にしました'); }
     if (e.target.closest('[data-reweigh]')) openEdit(id, true);
+    if (e.target.closest('[data-gtag]')) actionSheet([{ label:'ベース（装備）', value:'base' }, { label:'身につける（靴・着ている服など）', value:'worn' }, { label:'消耗品（食料・水・燃料など）', value:'cons' }])
+      .then(r => { if (!r) return; x.tag = r; refreshAll(); toast('いつもの数え方を「' + WTAG[r] + '」にしました'); });
   });
 }
 function openType(id, back){
@@ -1219,9 +1227,15 @@ function openViewer(ids, idx, onDelete, ptags){
 const BAR = ['#141414','#1F5FBF','#5A5A55','#8FA9D6','#A8A8A0','#C9C9C0','#D8D8D0'];
 const listTotal = l => l.items.reduce((a, [gid, q]) => { const x = byId(gid); return a + (x ? x.w * q : 0); }, 0);
 const listCount = l => l.items.reduce((a, it) => a + it[1], 0);
-// 消耗品（食料・水）。ベースウェイト＝消耗品を除いた重さ、パックウェイト＝ザックに入る全部
-const CONSUMABLE = ['food', 'water'];
-const listBase = l => l.items.reduce((a, [gid, q]) => { const x = byId(gid); return a + (x && !CONSUMABLE.includes(x.cat) ? x.w * q : 0); }, 0);
+// 重さの数え方: base＝装備（ベース）、cons＝消耗品（食料・水・燃料）、worn＝身につける物（靴・着ている服）
+// ギアごとに「いつもの数え方」（無ければカテゴリから）、山行ごとに上書きできる（l.wtag）
+const WTAG = { base:'ベース', worn:'身につける', cons:'消耗品' };
+const defaultTag = x => x.tag || (['food', 'water'].includes(x.cat) ? 'cons' : x.cat === 'footwear' ? 'worn' : 'base');
+const tagIn = (l, gid) => ((l.wtag || {})[gid]) || defaultTag(byId(gid));
+const sumBy = (l, f) => l.items.reduce((a, [gid, q]) => { const x = byId(gid); return a + (x && f(tagIn(l, gid)) ? x.w * q : 0); }, 0);
+const listBase = l => sumBy(l, t => t === 'base');   // ベースウェイト＝消耗品と身につける物を除く
+const listPack = l => sumBy(l, t => t !== 'worn');   // パックウェイト＝ザックに入る全部（消耗品込み）
+const listWorn = l => sumBy(l, t => t === 'worn');   // 身につける物
 const TODAY = new Date('2026-11-25T00:00:00');
 const dObj = d => new Date(d + 'T00:00:00');
 const daysLeft = d => Math.round((dObj(d) - TODAY) / 864e5);
@@ -1253,7 +1267,7 @@ function renderLists(){
     const [n, u] = fmtW(listBase(next)), pc = packedCount(next), all = next.items.length;
     hero = '<div class="hero" data-list="'+next.id+'"><div class="label">NEXT ・ '+leftTxt(next.date)+'</div>'+
       '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+'</div>'+
-      '<div class="hrow"><div><div class="small">ベースウェイト</div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+'</span><div class="small">パックウェイト '+wTxt(listTotal(next))+' ・ '+listCount(next)+' 点</div></div>'+
+      '<div class="hrow"><div><div class="small">ベースウェイト</div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+'</span><div class="small">パックウェイト '+wTxt(listPack(next))+' ・ '+listCount(next)+' 点</div></div>'+
       '<div class="hp"><div class="small">パッキング '+pc+' / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div></div></div>';
   }
   p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+'<div class="titleRow"><div><div class="label">山行計画</div><h1 class="title">Trip</h1></div>'+
@@ -1315,7 +1329,7 @@ function openList(lid){
     const byCat = CATS.map(c => ({ c, its:items.filter(([gid]) => byId(gid).cat === c.id) })).filter(v => v.its.length);
     const catW = CATS.map(c => ({ c, w:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id).reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).filter(v => v.w).sort((a, b) => b.w - a.w);
     const pc = packedCount(l), all = l.items.length;
-    const base = listBase(l), [bn, bu] = fmtW(base);
+    const base = listBase(l), [bn, bu] = fmtW(base), pack = listPack(l), [pn, pu] = fmtW(pack), worn = listWorn(l);
     const posts = tripPosts(l);
     const rows = byCat.map(v => '<div class="sec"><span class="h">'+v.c.label+'</span><span class="label">'+v.c.en+'</span></div>'+
       v.its.map(([gid, q]) => {
@@ -1325,7 +1339,8 @@ function openList(lid){
           : '<button type="button" class="ck'+(packed ? ' on' : '')+'" data-pack="'+gid+'" aria-label="パッキング済み">'+(packed ? icon('check', 14, 'var(--paper)') : '')+'</button>';
         const dim = done ? unused : packed;
         return '<div class="swipe" data-row="'+gid+'"><button type="button" class="del" data-rm="'+gid+'">外す</button><div class="fg'+(dim ? ' dim' : '')+'">'+ck+
-          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(q > 1 ? ' × ' + q : '')+(x.status === 'wish' ? ' ・ 気になる' : '')+(done && unused ? ' ・ 使わなかった' : '')+'</div></div>'+
+          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(q > 1 ? ' × ' + q : '')+(x.status === 'wish' ? ' ・ 気になる' : '')+(done && unused ? ' ・ 使わなかった' : '')+
+            '<button type="button" class="wtag t-'+tagIn(l, gid)+'" data-wtag="'+gid+'" aria-label="この山行での数え方">'+WTAG[tagIn(l, gid)]+'</button></div></div>'+
           (done ? '' : '<div class="step"><button type="button" data-q="-1" data-g="'+gid+'" aria-label="減らす">'+icon('minus', 16)+'</button><span class="q">'+q+'</span><button type="button" data-q="1" data-g="'+gid+'" aria-label="増やす">'+icon('plus', 16)+'</button></div>')+
           '<span class="lw2 num" style="font-size:15px">'+wTxt(x.w * q)+'</span></div></div>';
       }).join('')).join('');
@@ -1334,7 +1349,8 @@ function openList(lid){
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
         '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
         '<div class="wbox"><div class="wline main"><span class="wl">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button></span><span class="wv"><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
-        '<div class="wline"><span class="wl">パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+tot+'">'+n+'</span><span class="u">'+u+'</span></span></div>'+
+        '<div class="wline"><span class="wl">パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+pack+'">'+pn+'</span><span class="u">'+pu+'</span></span></div>'+
+        '<div class="wline'+(worn ? '' : ' none')+'" id="l-wornline"><span class="wl">身につける物</span><span class="wv"><span class="num" id="l-worn" data-v="'+worn+'">'+fmtW(worn)[0]+'</span><span class="u">'+fmtW(worn)[1]+'</span></span></div>'+
         '<div class="small" style="margin-top:4px" id="l-cnt">'+listCount(l)+' 点</div></div></div>'+
       '<div class="ghead" style="padding-top:18px"><b>写真</b><span class="label">PHOTOS</span><span class="small" style="margin-left:auto">'+l.photos.length+' 枚</span></div>'+
       '<div class="pstrip"><button type="button" class="ptile add" data-addph style="width:76px;height:76px">'+icon('camera', 22)+'<span>追加</span></button>'+l.photos.map(id => phTile(id, 76)).join('')+'</div>'+
@@ -1379,16 +1395,31 @@ async function onListClick(e, s, lid, setLeft){
   }
   if (e.target.closest('[data-left]')) return setLeft();
   if (e.target.closest('[data-winfo]')) {
-    const base = listBase(l), tot = listTotal(l);
-    const cons = CONSUMABLE.map(c => ({ c:CAT[c], w:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c).reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).filter(v => v.w);
-    return openSheet({ title:'重さの見方', left:'閉じる', body:'<div class="dhead" style="padding-top:2px">'+
-      '<p style="font-size:14px;line-height:1.85;margin:0 0 6px"><b>ベースウェイト</b>は、食料・水のように山行中に減っていくものを除いた重さ。装備そのものの重さなので、山行どうしを比べやすい数字です。</p>'+
-      '<p style="font-size:14px;line-height:1.85;margin:0"><b>パックウェイト</b>は、食料・水も入れた、ザックに入るものすべての重さ。出発する時に背負う重さです。</p></div>'+
-      '<div class="group"><div class="gr static"><span class="gt">ベースウェイト</span><span class="gv num" style="color:var(--ink)">'+wTxt(base)+'</span></div>'+
-      cons.map(v => '<div class="gr static"><span class="gt">＋ '+v.c.label+'</span><span class="gv">'+wTxt(v.w)+'</span></div>').join('')+
-      '<div class="gr static"><span class="gt"><b>＝ パックウェイト</b></span><span class="gv num" style="color:var(--ink)">'+wTxt(tot)+'</span></div></div>'+
-      '<p class="hint" style="margin-top:12px">どれを食料・水として数えるかは、ギアのカテゴリで決めています。</p>' });
+    const base = listBase(l), pack = listPack(l), worn = listWorn(l), tot = listTotal(l);
+    const consRows = l.items.filter(([gid]) => byId(gid) && tagIn(l, gid) === 'cons').map(([gid, q]) => '<div class="gr static"><span class="gt">＋ '+esc(byId(gid).name)+'</span><span class="gv">'+wTxt(byId(gid).w * q)+'</span></div>').join('');
+    return openSheet({ title:'重さの見方', left:'閉じる', tall:true, body:'<div class="dhead" style="padding-top:2px">'+
+      '<p style="font-size:14px;line-height:1.85;margin:0 0 6px"><b>ベースウェイト</b>は、装備そのものの重さ。食料・水のように減っていく<b>消耗品</b>と、靴や着ている服のような<b>身につける物</b>は入れません。山行どうしを比べやすい数字です。</p>'+
+      '<p style="font-size:14px;line-height:1.85;margin:0"><b>パックウェイト</b>は、消耗品も入れた、ザックに入るものすべて。出発する時に背負う重さです。</p></div>'+
+      '<div class="group"><div class="gr static"><span class="gt"><b>ベースウェイト</b></span><span class="gv num" style="color:var(--ink)">'+wTxt(base)+'</span></div>'+consRows+
+      '<div class="gr static"><span class="gt"><b>＝ パックウェイト</b></span><span class="gv num" style="color:var(--ink)">'+wTxt(pack)+'</span></div>'+
+      '<div class="gr static"><span class="gt">＋ 身につける物</span><span class="gv">'+wTxt(worn)+'</span></div>'+
+      '<div class="gr static"><span class="gt">＝ 全部（身につける物も入れて）</span><span class="gv">'+wTxt(tot)+'</span></div></div>'+
+      '<p class="hint" style="margin-top:12px">持ち物の行にある「ベース」「身につける」「消耗品」を押すと、この山行での数え方を変えられます。ギアのいつもの数え方は、ギアの「重さ・出典」で決めます。</p>' });
   }
+  const wt = e.target.closest('[data-wtag]');
+  if (wt) {
+    const gid = wt.dataset.wtag, x = byId(gid);
+    const r = await actionSheet([{ label:'ベース（装備）', value:'base' }, { label:'身につける（靴・着ている服など）', value:'worn' }, { label:'消耗品（食料・水・燃料など）', value:'cons' }]);
+    if (!r || r === tagIn(l, gid)) return;
+    const ob = listBase(l), op = listPack(l), ow = listWorn(l);
+    l.wtag = l.wtag || {};
+    if (r === defaultTag(x)) delete l.wtag[gid]; else l.wtag[gid] = r;
+    s._render(); renderLists();
+    [['#l-base', ob, listBase(l)], ['#l-tot', op, listPack(l)], ['#l-worn', ow, listWorn(l)]].forEach(([q, o, n]) => { const el2 = s.querySelector(q); if (el2) { el2.dataset.v = o; countTo(el2, n); } });
+    toast('「' + x.name + '」を' + WTAG[r] + 'として数えます（この山行だけ）');
+    return;
+  }
+
   if (e.target.closest('[data-addph]')) {
     const r = await actionSheet([{ label:'写真を撮る', value:1 }, { label:'ライブラリから選ぶ（3 枚）', value:3 }]);
     if (!r) return;
@@ -1467,8 +1498,10 @@ function openFinish(s, l){
 }
 function updateListHead(s, l){
   const tot = listTotal(l);
-  countTo(s.querySelector('#l-tot'), tot);
+  countTo(s.querySelector('#l-tot'), listPack(l));
   countTo(s.querySelector('#l-base'), listBase(l));
+  countTo(s.querySelector('#l-worn'), listWorn(l));
+  const wl = s.querySelector('#l-wornline'); if (wl) wl.classList.toggle('none', !listWorn(l));
   s.querySelector('#l-cnt').textContent = listCount(l) + ' 点';
   const catW = CATS.map(c => ({ c, w:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id).reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).filter(v => v.w).sort((a, b) => b.w - a.w);
   const bars = s.querySelectorAll('#l-bar i');
@@ -1526,7 +1559,7 @@ function openAddGear(s, l){
         sel.forEach(id => l.items.push([id, 1]));
         close(); s._render(); renderLists();
         setTimeout(() => sel.forEach(id => { const r = s.querySelector('[data-row="'+id+'"] .fg'); if (r) r.classList.add('flash'); }), 200);
-        const tot = s.querySelector('#l-tot'); if (tot) { const v = listTotal(l); tot.dataset.v = v; }
+        const tot = s.querySelector('#l-tot'); if (tot) { const v = listPack(l); tot.dataset.v = v; }
         toast(sel.size + ' 件を追加しました');
       };
     } });
