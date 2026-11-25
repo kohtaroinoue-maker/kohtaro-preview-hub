@@ -274,6 +274,28 @@ input{font:inherit;color:inherit}
 .pact{padding:14px 20px 0}
 .pact .btn{min-height:38px;font-size:14px}
 
+/* Trip */
+.hero{margin:16px 20px 4px;padding:16px;border:1.5px solid var(--ink);cursor:pointer;transition:background .12s,transform .12s;position:relative}
+.hero:active{background:var(--press);transform:scale(.99)}
+.hero .hn{font-family:var(--serif);font-weight:900;font-size:22px;margin:4px 0 2px}
+.hrow{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:12px}
+.hp{flex:1;max-width:150px}
+.pbar{height:5px;background:var(--hair);margin-top:5px;overflow:hidden}
+.pbar i{display:block;height:100%;background:var(--blue);transition:width .4s var(--ease)}
+.dblk{flex:none;width:44px;text-align:center;display:flex;flex-direction:column;align-items:center;line-height:1.1;border:1px solid var(--ink);padding:3px 0 4px}
+.dblk .m{font-size:10px;color:var(--mute)}
+.dblk .d{font-size:19px}
+.dblk .w{font-size:10px;color:var(--mute)}
+.dblk.muted{border-color:var(--line)}
+.dblk.muted .d{color:var(--mute)}
+.lcard .ln{font-size:16px}
+.packhead{display:flex;align-items:center;gap:14px;padding:18px 20px 2px}
+.ck{flex:none;width:26px;height:26px;border-radius:50%;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;transition:background .15s}
+.ck.on{background:var(--ink)}
+.ck.off{border-color:var(--faint);border-style:dashed}
+.fg.dim .nm{color:var(--mute)}
+.fg.dim .lw2{color:var(--mute)}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -498,9 +520,11 @@ const SEED = {
     g('r1','ザック 50L（旧）','backpack','ザック',1680,'ok',{status:'retired',retiredAt:'2025-04'})
   ],
   lists: [
-    { id:'L1', name:'テント泊 2泊3日', status:'plan', items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2]] },
-    { id:'L2', name:'日帰り ハイク', status:'done', wentAt:'2026-10-12', items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1]] },
-    { id:'L3', name:'冬の小屋泊', status:'plan', items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] }
+    { id:'L1', name:'テント泊 2泊3日', status:'plan', date:'2026-12-06', days:3, packed:['g1','g3','g5','g7','g13'], unused:[], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2]] },
+    { id:'L3', name:'雪の小屋泊 1泊', status:'plan', date:'2027-01-10', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] },
+    { id:'L2', name:'日帰り ハイク', status:'done', date:'2026-10-12', days:1, packed:[], unused:['g16'], items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1]] },
+    { id:'L4', name:'テント泊 1泊2日', status:'done', date:'2026-09-20', days:2, packed:[], unused:['g4','g6'], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g10',1],['g13',1],['g14',1],['g16',2],['g17',1]] },
+    { id:'L5', name:'冬の小屋泊', status:'done', date:'2026-02-08', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] }
   ]
 };
 let S = JSON.parse(JSON.stringify(SEED));
@@ -1039,60 +1063,162 @@ function openCamera(onDone){
   };
 }
 
-/* ---------- パックリスト ---------- */
+/* ---------- Trip（山行計画） ---------- */
 const BAR = ['#141414','#1F5FBF','#5A5A55','#8FA9D6','#A8A8A0','#C9C9C0','#D8D8D0'];
 const listTotal = l => l.items.reduce((a, [gid, q]) => { const x = byId(gid); return a + (x ? x.w * q : 0); }, 0);
 const listCount = l => l.items.reduce((a, it) => a + it[1], 0);
+const TODAY = new Date('2026-11-25T00:00:00');
+const dObj = d => new Date(d + 'T00:00:00');
+const daysLeft = d => Math.round((dObj(d) - TODAY) / 864e5);
+const WD = '日月火水木金土';
+const jpDate = d => { const x = dObj(d); return (x.getMonth() + 1) + '月' + x.getDate() + '日（' + WD[x.getDay()] + '）'; };
+const daysTxt = n => n <= 1 ? '日帰り' : (n - 1) + '泊' + n + '日';
+const leftTxt = d => { const n = daysLeft(d); return n > 1 ? 'あと ' + n + ' 日' : n === 1 ? 'あした' : n === 0 ? 'きょう' : '予定日を過ぎました'; };
+const packedCount = l => l.items.filter(it => (l.packed || []).includes(it[0])).length;
+const tripPosts = l => S.posts.filter(po => po.trip === l.id);
+function dblk(d, muted){
+  const x = dObj(d);
+  return '<div class="dblk'+(muted ? ' muted' : '')+'"><span class="m">'+(x.getMonth() + 1)+'月</span><span class="d num">'+x.getDate()+'</span><span class="w">（'+WD[x.getDay()]+'）</span></div>';
+}
+function tripCard(l){
+  const done = l.status === 'done', [n, u] = fmtW(listTotal(l));
+  const sub = done ? (l.unused && l.unused.length ? '使わなかった ' + l.unused.length + ' 点' : '全部使った') + ' ・ ' + (tripPosts(l).length ? '投稿あり' : '未投稿')
+    : daysTxt(l.days) + ' ・ ' + leftTxt(l.date);
+  return '<div class="lcard" data-list="'+l.id+'">'+dblk(l.date, done)+'<div style="min-width:0"><div class="ln">'+esc(l.name)+'</div><div class="small" style="margin-top:3px">'+sub+'</div></div>'+
+    '<div class="lw"><span class="num">'+n+'</span><small class="small"> '+u+'</small></div>'+icon('chev', 16, 'var(--faint)')+'</div>';
+}
 function renderLists(){
   const p = $('#tp-plan');
   const sc = p.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
+  const plans = S.lists.filter(l => l.status === 'plan').sort((a, b) => a.date.localeCompare(b.date));
+  const done = S.lists.filter(l => l.status === 'done').sort((a, b) => b.date.localeCompare(a.date));
+  const next = plans[0];
+  let hero = '';
+  if (next) {
+    const tot = listTotal(next), [n, u] = fmtW(tot), pc = packedCount(next), all = next.items.length;
+    hero = '<div class="hero" data-list="'+next.id+'"><div class="label">NEXT ・ '+leftTxt(next.date)+'</div>'+
+      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+'</div>'+
+      '<div class="hrow"><div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+' ・ '+listCount(next)+' 点</span></div>'+
+      '<div class="hp"><div class="small">パッキング '+pc+' / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div></div></div>';
+  }
   p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+'<div class="titleRow"><div><div class="label">山行計画</div><h1 class="title">Trip</h1></div>'+
-    '<button type="button" class="btn primary" data-newlist>'+icon('plus', 16, 'var(--paper)')+'新規</button></div></header>'+
-    S.lists.map(l => { const [n, u] = fmtW(listTotal(l)); return '<div class="lcard" data-list="'+l.id+'"><div><div class="ln">'+esc(l.name)+'</div><div class="small" style="margin-top:4px">'+
-      '<span class="tag'+(l.status === 'done' ? ' done' : '')+'">'+(l.status === 'done' ? '山行済み' : '計画中')+'</span>'+listCount(l)+' 点'+(l.wentAt ? ' ・ ' + l.wentAt : '')+'</div></div>'+
-      '<div class="lw"><span class="num">'+n+'</span><small class="small"> '+u+'</small></div>'+icon('chev', 16, 'var(--faint)')+'</div>'; }).join('')+
+    '<button type="button" class="btn primary" data-newlist>'+icon('plus', 16, 'var(--paper)')+'計画する</button></div></header>'+
+    (hero || '<div class="empty">次の山行の計画はまだありません。「計画する」から作りましょう。</div>')+
+    (plans.length > 1 ? '<div class="ghead"><b>これから</b><span class="label">UPCOMING</span></div><div class="group" style="margin-top:0">'+plans.slice(1).map(tripCard).join('')+'</div>' : '')+
+    (done.length ? '<div class="ghead"><b>行った山行</b><span class="label">DONE</span><span class="small" style="margin-left:auto">'+done.length+' 回</span></div><div class="group" style="margin-top:0">'+done.map(tripCard).join('')+'</div>' : '')+
     '<div style="height:100px"></div></div>';
   p.querySelector('.scroll').scrollTop = top;
 }
 $('#tp-plan').addEventListener('click', e => {
   const c = e.target.closest('[data-list]'); if (c) return openList(c.dataset.list);
-  if (e.target.closest('[data-newlist]')) openSheet({ title:'新しいリスト', right:'作成', body:'<div style="height:8px"></div><label class="field"><span>リスト名</span><input id="l-name" placeholder="例: テント泊 1泊2日"></label>',
-    onMount:(sh, close) => {
-      const i = sh.querySelector('#l-name'), b = sh.querySelector('[data-r]');
-      b.disabled = true; i.addEventListener('input', () => b.disabled = !i.value.trim());
-      setTimeout(() => i.focus(), 420);
-      b.onclick = () => { const l = { id:'L' + (seq++), name:i.value.trim(), status:'plan', items:[] }; S.lists.unshift(l); close(); renderLists(); setTimeout(() => openList(l.id), 350); };
-    } });
+  if (e.target.closest('[data-newlist]')) openNewTrip();
 });
 
+/* 新しい計画（前の山行からコピーできる） */
+function openNewTrip(){
+  const DATES = [['2026-11-28', '今週末'], ['2026-12-05', '来週末'], ['2026-12-12', '再来週末']];
+  let date = DATES[0][0], days = 2, from = '';
+  const done = S.lists.filter(l => l.status === 'done').sort((a, b) => b.date.localeCompare(a.date));
+  openSheet({ title:'新しい計画', right:'作成', tall:true,
+    body:'<div style="height:6px"></div><label class="field"><span>名前</span><input id="t-name" placeholder="例: テント泊 1泊2日"></label>'+
+      '<div class="field" style="margin-bottom:6px"><span>いつ？</span></div><div class="catpick">'+DATES.map(([d, l]) => '<button type="button" class="chip'+(d === date ? ' on' : '')+'" data-d="'+d+'">'+l+' '+jpDate(d).replace(/^\d+月/, m => m)+'</button>').join('')+'</div>'+
+      '<div class="field" style="margin-bottom:6px"><span>日程</span></div><div class="catpick">'+[1, 2, 3].map(n => '<button type="button" class="chip'+(n === days ? ' on' : '')+'" data-days="'+n+'">'+daysTxt(n)+'</button>').join('')+'</div>'+
+      '<div class="field" style="margin-bottom:6px"><span>持ち物</span></div><p class="hint" style="margin:-4px 0 8px">前の山行の持ち物をそのまま使えます。あとから足したり外したりできます。</p>'+
+      '<div class="group" style="margin-top:0"><div class="gr check" data-from=""><span class="gt">空から始める</span><span class="gv">'+icon('check', 18, 'var(--blue)')+'</span></div>'+
+      done.map(l => '<div class="gr" data-from="'+l.id+'"><span class="gt">'+esc(l.name)+'<small>'+jpDate(l.date)+' ・ '+l.items.length+' 点 ・ '+wTxt(listTotal(l))+'</small></span><span class="gv"></span></div>').join('')+'</div>',
+    onMount:(sh, close) => {
+      const name = sh.querySelector('#t-name'), b = sh.querySelector('[data-r]');
+      const sync = () => b.disabled = !name.value.trim(); sync(); name.addEventListener('input', sync);
+      sh.addEventListener('click', e => {
+        const d = e.target.closest('[data-d]'); if (d) { date = d.dataset.d; sh.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('on', x === d)); }
+        const n = e.target.closest('[data-days]'); if (n) { days = +n.dataset.days; sh.querySelectorAll('[data-days]').forEach(x => x.classList.toggle('on', x === n)); }
+        const f = e.target.closest('[data-from]');
+        if (f) {
+          from = f.dataset.from;
+          sh.querySelectorAll('[data-from]').forEach(x => { const on = x === f; x.classList.toggle('check', on); x.querySelector('.gv').innerHTML = on ? icon('check', 18, 'var(--blue)') : ''; });
+          if (from && !name.value.trim()) { name.value = listById(from).name; sync(); }
+        }
+      });
+      b.onclick = () => {
+        const src = from ? listById(from) : null;
+        const l = { id:'L' + (seq++), name:name.value.trim(), status:'plan', date, days, items:src ? src.items.map(it => [it[0], it[1]]).filter(it => byId(it[0])) : [], packed:[], unused:[] };
+        S.lists.push(l); close(); renderLists();
+        setTimeout(() => { openList(l.id); toast(src ? '「' + src.name + '」の持ち物をコピーしました' : '計画を作りました'); }, 350);
+      };
+    } });
+}
+
+/* 山行の詳細 */
 function openList(lid){
+  let onlyLeft = false;
   const s = push(() => {
-    const l = listById(lid); if (!l) return nav('Trip', '') + '<div class="scroll"></div>';
+    const l = listById(lid); if (!l) return nav('Trip', '') + '<div class="scroll"><div class="empty">この計画は削除されました。</div></div>';
+    l.packed = l.packed || []; l.unused = l.unused || [];
+    const done = l.status === 'done';
     const tot = listTotal(l), [n, u] = fmtW(tot);
-    const byCat = CATS.map(c => ({ c, its:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id) })).filter(v => v.its.length);
-    const catW = byCat.map(v => ({ c:v.c, w:v.its.reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).sort((a, b) => b.w - a.w);
-    return nav('Trip', l.name) + '<div class="scroll"><div class="dhead"><div class="label">PACK LIST ・ '+(l.status === 'done' ? '山行済み ' + (l.wentAt || '') : '計画中')+'</div>'+
-      '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
-      '<div class="bigw"><span class="num" id="l-tot" data-v="'+tot+'">'+n+'</span><span class="u">'+u+'</span><span class="small" style="margin-left:8px" id="l-cnt">'+listCount(l)+' 点</span></div></div>'+
+    const items = l.items.filter(it => byId(it[0]) && (!onlyLeft || done || !l.packed.includes(it[0])));
+    const byCat = CATS.map(c => ({ c, its:items.filter(([gid]) => byId(gid).cat === c.id) })).filter(v => v.its.length);
+    const catW = CATS.map(c => ({ c, w:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id).reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).filter(v => v.w).sort((a, b) => b.w - a.w);
+    const pc = packedCount(l), all = l.items.length;
+    const food = l.items.filter(([gid]) => ['food', 'water'].includes(byId(gid) && byId(gid).cat)).reduce((a, [gid, q]) => a + byId(gid).w * q, 0);
+    const posts = tripPosts(l);
+    const rows = byCat.map(v => '<div class="sec"><span class="h">'+v.c.label+'</span><span class="label">'+v.c.en+'</span></div>'+
+      v.its.map(([gid, q]) => {
+        const x = byId(gid), packed = l.packed.includes(gid), unused = l.unused.includes(gid);
+        const ck = done
+          ? '<button type="button" class="ck'+(unused ? ' off' : ' on')+'" data-unused="'+gid+'" aria-label="使った・使わなかった">'+(unused ? icon('minus', 14, 'var(--mute)') : icon('check', 14, 'var(--paper)'))+'</button>'
+          : '<button type="button" class="ck'+(packed ? ' on' : '')+'" data-pack="'+gid+'" aria-label="パッキング済み">'+(packed ? icon('check', 14, 'var(--paper)') : '')+'</button>';
+        const dim = done ? unused : packed;
+        return '<div class="swipe" data-row="'+gid+'"><button type="button" class="del" data-rm="'+gid+'">外す</button><div class="fg'+(dim ? ' dim' : '')+'">'+ck+
+          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(q > 1 ? ' × ' + q : '')+(x.status === 'wish' ? ' ・ 欲しい' : '')+(done && unused ? ' ・ 使わなかった' : '')+'</div></div>'+
+          (done ? '' : '<div class="step"><button type="button" data-q="-1" data-g="'+gid+'" aria-label="減らす">'+icon('minus', 16)+'</button><span class="q">'+q+'</span><button type="button" data-q="1" data-g="'+gid+'" aria-label="増やす">'+icon('plus', 16)+'</button></div>')+
+          '<span class="lw2 num" style="font-size:15px">'+wTxt(x.w * q)+'</span></div></div>';
+      }).join('')).join('');
+    return nav('Trip', l.name, '<button type="button" class="iconbtn" data-tmore aria-label="その他">'+icon('more', 24)+'</button>') + '<div class="scroll">'+
+      '<div class="dhead"><div class="label">'+(done ? 'DONE' : 'PLAN ・ ' + leftTxt(l.date))+'</div>'+
+        '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
+        '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
+        '<div class="bigw"><span class="num" id="l-tot" data-v="'+tot+'">'+n+'</span><span class="u">'+u+'</span><span class="small" style="margin-left:8px" id="l-cnt">'+listCount(l)+' 点</span></div>'+
+        (food ? '<div class="small">うち 食料・水 '+wTxt(food)+'</div>' : '')+'</div>'+
       '<div class="bar" id="l-bar">'+catW.map((v, i) => '<i style="width:'+(tot ? v.w / tot * 100 : 0)+'%;background:'+BAR[Math.min(i, BAR.length - 1)]+'"></i>').join('')+'</div>'+
-      '<div class="legend">'+catW.slice(0, 5).map((v, i) => '<span><i style="background:'+BAR[i]+'"></i>'+v.c.label+' '+wTxt(v.w)+'</span>').join('')+(catW.length > 5 ? '<span>ほか '+(catW.length - 5)+'</span>' : '')+'</div>'+
-      (l.items.length ? byCat.map(v => '<div class="sec"><span class="h">'+v.c.label+'</span><span class="label">'+v.c.en+'</span></div>'+
-        v.its.map(([gid, q]) => { const x = byId(gid); return '<div class="swipe" data-row="'+gid+'"><button type="button" class="del" data-rm="'+gid+'">外す</button><div class="fg">'+
-          '<span style="width:24px;display:flex;justify-content:center">'+icon(x.cat, 22, 'var(--ink)', x.status === 'wish')+'</span>'+
-          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(x.status === 'wish' ? ' ・ 欲しい' : '')+'</div></div>'+
-          '<div class="step"><button type="button" data-q="-1" data-g="'+gid+'" aria-label="減らす">'+icon('minus', 16)+'</button><span class="q">'+q+'</span><button type="button" data-q="1" data-g="'+gid+'" aria-label="増やす">'+icon('plus', 16)+'</button></div>'+
-          '<span class="lw2 num" style="font-size:15px">'+wTxt(x.w * q)+'</span></div></div>'; }).join('')).join('')
-        : '<div class="empty">まだギアがありません。「ギアを追加」から選んでください。</div>')+
-      '<p class="hint" style="padding-top:14px">行を左にスワイプすると「外す」が出ます。</p>'+
-      '<div class="btnrow"><button type="button" class="btn secondary block" data-addgear>'+icon('plus', 16)+'ギアを追加</button>'+
-      (l.status === 'plan' ? '<button type="button" class="btn primary block" data-done>山行を完了</button>' : '')+'</div></div>';
+      '<div class="legend">'+catW.slice(0, 4).map((v, i) => '<span><i style="background:'+BAR[i]+'"></i>'+v.c.label+' '+wTxt(v.w)+'</span>').join('')+(catW.length > 4 ? '<span>ほか '+(catW.length - 4)+'</span>' : '')+'</div>'+
+      (done ? '<div class="packhead"><span class="small">使わなかったギア <b class="num" style="font-size:15px;color:var(--ink)">'+l.unused.length+'</b> 点。丸を押すと切り替えられます</span></div>'
+        : '<div class="packhead"><div style="flex:1"><div class="small">パッキング <b class="num" style="font-size:15px;color:var(--ink)" id="pc">'+pc+'</b> / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div>'+
+          '<button type="button" class="chip'+(onlyLeft ? ' on' : '')+'" data-left>まだのものだけ</button></div>')+
+      (l.items.length ? (rows || '<div class="empty">全部パッキングできました。</div>') : '<div class="empty">まだギアがありません。「ギアを追加」から選ぶか、前の山行からコピーできます。</div>')+
+      (done ? '<div class="ghead" style="margin-top:10px"><b>この山行の投稿</b><span class="label">POSTS</span></div>'+
+          (posts.length ? posts.map(po => '<div class="mpost" data-openpost="'+po.id+'"><div class="mp-h"><span class="label">'+po.date+'</span><b>'+esc(po.list)+'</b></div><div class="pfoot"><p>'+esc(po.text)+'</p>'+likeBtn(po)+'</div></div>').join('')
+            : '<div class="empty" style="padding-top:4px">まだ投稿していません。</div>')
+        : '<p class="hint" style="padding-top:14px">丸を押すとパッキング済みに。行を左にスワイプすると「外す」が出ます。</p>')+
+      '<div class="btnrow">'+(done
+        ? (posts.length ? '' : '<button type="button" class="btn primary block" data-tpost>'+icon('pen', 16, 'var(--paper)')+'この山行を投稿する</button>')+'<button type="button" class="btn secondary block" data-copy>この持ち物で次の計画を作る</button>'
+        : '<button type="button" class="btn secondary block" data-addgear>'+icon('plus', 16)+'ギアを追加</button><button type="button" class="btn primary block" data-done>山行を完了</button>')+'</div></div>';
   });
   s._after = sc => sc.querySelectorAll('.swipe').forEach(rowSwipe);
   s._after(s);
-  s.addEventListener('click', e => onListClick(e, s, lid));
+  s.addEventListener('click', e => onListClick(e, s, lid, v => { onlyLeft = v === undefined ? !onlyLeft : v; s._render(); }));
 }
-function onListClick(e, s, lid){
-  const l = listById(lid);
+async function onListClick(e, s, lid, setLeft){
+  const l = listById(lid); if (!l) return;
+  if (postClick(e, l.name.length > 8 ? '戻る' : l.name)) return;
+  const pk = e.target.closest('[data-pack]');
+  if (pk) {
+    const id = pk.dataset.pack, i = l.packed.indexOf(id);
+    i >= 0 ? l.packed.splice(i, 1) : l.packed.push(id);
+    s._render(); renderLists();
+    const b = s.querySelector('[data-pack="'+id+'"]'); if (b) b.classList.add('pop');
+    if (l.items.length && packedCount(l) === l.items.length) toast('パッキング完了。いってらっしゃい');
+    return;
+  }
+  const un = e.target.closest('[data-unused]');
+  if (un) {
+    const id = un.dataset.unused, i = l.unused.indexOf(id);
+    i >= 0 ? l.unused.splice(i, 1) : l.unused.push(id);
+    s._render(); renderLists();
+    const b = s.querySelector('[data-unused="'+id+'"]'); if (b) b.classList.add('pop');
+    return;
+  }
+  if (e.target.closest('[data-left]')) return setLeft();
   const q = e.target.closest('[data-q]');
   if (q) {
     const it = l.items.find(i => i[0] === q.dataset.g);
@@ -1101,14 +1227,58 @@ function onListClick(e, s, lid){
     it[1] = nq;
     const row = q.closest('.fg'); row.querySelector('.q').textContent = nq;
     row.querySelector('.lw2').textContent = wTxt(byId(it[0]).w * nq);
+    const sm = row.querySelector('.rm .small'); if (sm) sm.textContent = wTxt(byId(it[0]).w) + (nq > 1 ? ' × ' + nq : '');
     updateListHead(s, l); renderLists();
     return;
   }
   const rm = e.target.closest('[data-rm]'); if (rm) return removeFromList(s, l, rm.dataset.rm);
   const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open, '戻る');
   if (e.target.closest('[data-addgear]')) return openAddGear(s, l);
-  if (e.target.closest('[data-done]')) dialog('山行を完了にしますか？', '完了にすると、使わなかったギアを記録できます（この試作では記録画面は省略）。',
-    [{ label:'キャンセル', value:false }, { label:'完了にする', value:true, bold:true }]).then(ok => { if (ok) { l.status = 'done'; l.wentAt = '2026-11-25'; refreshAll(); toast('山行済みにしました'); } });
+  if (e.target.closest('[data-done]')) return openFinish(s, l);
+  if (e.target.closest('[data-tpost]')) return openPost(l.id);
+  if (e.target.closest('[data-copy]')) return copyTrip(l);
+  if (e.target.closest('[data-tmore]')) {
+    const r = await actionSheet([{ label:'名前を変える', value:'rename' }, { label:'この持ち物で次の計画を作る', value:'copy' }, { label:'削除', value:'del', danger:true }]);
+    if (r === 'copy') copyTrip(l);
+    if (r === 'rename') openSheet({ title:'名前を変える', right:'保存', body:'<div style="height:8px"></div><label class="field"><span>名前</span><input id="r-name" value="'+esc(l.name)+'"></label>',
+      onMount:(sh, close) => { const i = sh.querySelector('#r-name'); setTimeout(() => i.focus(), 420); sh.querySelector('[data-r]').onclick = () => { if (i.value.trim()) l.name = i.value.trim(); close(); refreshAll(); toast('保存しました'); }; } });
+    if (r === 'del') {
+      const ok = await dialog('この計画を削除しますか？', 'ギア自体は消えません。', [{ label:'キャンセル', value:false, bold:true }, { label:'削除', value:true, danger:true }]);
+      if (!ok) return;
+      pop();
+      setTimeout(() => { const i = S.lists.indexOf(l); S.lists.splice(i, 1); refreshAll(); toast('「' + l.name + '」を削除しました', '元に戻す', () => { S.lists.splice(i, 0, l); refreshAll(); }); }, 380);
+    }
+  }
+}
+function copyTrip(l){
+  const n = { id:'L' + (seq++), name:l.name, status:'plan', date:'2026-12-12', days:l.days, items:l.items.map(it => [it[0], it[1]]), packed:[], unused:[] };
+  S.lists.push(n); refreshAll();
+  setTimeout(() => { openList(n.id); toast('持ち物をコピーして計画を作りました'); }, 200);
+}
+/* 山行を完了 → 使わなかったギアに印 → 投稿へ */
+function openFinish(s, l){
+  const unused = new Set();
+  openSheet({ title:'山行を完了', right:'完了', tall:true,
+    body:'<div class="dhead" style="padding-top:2px"><div class="label">おつかれさまでした</div><p class="small" style="line-height:1.8;margin:4px 0 0">使わなかったギアに印を付けてください。次の山支度と、ギアの「山行で使った」に反映されます。</p></div>'+
+      '<div class="group">'+l.items.filter(it => byId(it[0])).map(([gid]) => { const x = byId(gid);
+        return '<div class="gr" data-un="'+gid+'"><span class="chk"></span><span class="gt">'+esc(x.name)+'<small>'+wTxt(x.w)+'</small></span><span class="gv" data-lbl>使った</span></div>'; }).join('')+'</div>',
+    onMount:(sh, close) => {
+      sh.addEventListener('click', e => {
+        const r = e.target.closest('[data-un]'); if (!r) return;
+        const id = r.dataset.un; unused.has(id) ? unused.delete(id) : unused.add(id);
+        const on = unused.has(id), ck = r.querySelector('.chk');
+        ck.classList.toggle('on', on); ck.innerHTML = on ? icon('minus', 14, 'var(--paper)') : '';
+        r.querySelector('[data-lbl]').textContent = on ? '使わなかった' : '使った';
+      });
+      sh.querySelector('[data-r]').onclick = async () => {
+        l.status = 'done'; if (daysLeft(l.date) > 0) l.date = '2026-11-25';
+        l.unused = [...unused]; l.packed = [];
+        l.items.forEach(([gid]) => { const x = byId(gid); if (!x) return; x.use = x.use || [0, 0]; x.use[0]++; if (!unused.has(gid)) x.use[1]++; });
+        close(); refreshAll();
+        const go = await dialog('山行を記録しました', 'このまま投稿しますか？ 持っていったギアと重さは自動で入ります。', [{ label:'あとで', value:false }, { label:'投稿する', value:true, bold:true }]);
+        if (go) openPost(l.id);
+      };
+    } });
 }
 function updateListHead(s, l){
   const tot = listTotal(l);
@@ -1188,11 +1358,11 @@ SEED.posts = [
     items:[['ソフトボトル 1L','water',36],['ヘッドランプ 200','light',60],['ウインドシェル','clothing',95],['デイパック 20L','backpack',480]] },
   { id:'O3', author:'koke', list:'小屋泊 1泊', date:'2026-11-02', text:'初めての冬靴。重いけど安心感がちがう。', photo:false, w:5120, unused:0, likes:15, liked:false,
     items:[['冬靴','footwear',1650],['ダウンジャケット','clothing',380],['チェーンスパイク','safety',340]] },
-  { id:'P1', author:'me', list:'日帰り ハイク', date:'2026-10-12', text:'朝は冷えたけど、歩き出したらレインだけで十分だった。行動食は半分余ったので次は減らす。', photo:true, w:2180, unused:1, likes:3, liked:false,
+  { id:'P1', author:'me', trip:'L2', list:'日帰り ハイク', date:'2026-10-12', text:'朝は冷えたけど、歩き出したらレインだけで十分だった。行動食は半分余ったので次は減らす。', photo:true, w:2180, unused:1, likes:3, liked:false,
     gear:['g5','g10','g13','g14','g16','g17'] },
-  { id:'P2', author:'me', list:'テント泊 1泊2日', date:'2026-09-20', text:'クッカーを替えてから朝の支度が早い。テント場は風が強め、ペグは長いのを持っていって正解。', photo:false, w:7120, unused:2, likes:5, liked:false,
+  { id:'P2', author:'me', trip:'L4', list:'テント泊 1泊2日', date:'2026-09-20', text:'クッカーを替えてから朝の支度が早い。テント場は風が強め、ペグは長いのを持っていって正解。', photo:false, w:7120, unused:2, likes:5, liked:false,
     gear:['g1','g3','g4','g5','g6','g7','g8','g10','g13','g14','g16','g17'] },
-  { id:'P3', author:'me', list:'冬の小屋泊', date:'2026-02-08', text:'寝袋は0℃で足りた。フリースは小屋の中でずっと着ていた。', photo:true, w:4380, unused:0, likes:1, liked:false,
+  { id:'P3', author:'me', trip:'L5', list:'冬の小屋泊', date:'2026-02-08', text:'寝袋は0℃で足りた。フリースは小屋の中でずっと着ていた。', photo:true, w:4380, unused:0, likes:1, liked:false,
     gear:['g3','g5','g9','g13','g14'] }
 ];
 S.users = JSON.parse(JSON.stringify(SEED.users));
@@ -1307,11 +1477,12 @@ $('#tp-home').addEventListener('click', e => {
   if (e.target.closest('[data-post]')) return openPost();
   postClick(e, 'Home');
 });
-function openPost(){
-  let pick = (S.lists.find(l => l.status === 'done') || S.lists[0] || {}).id, photo = false;
+function openPost(pre){
+  const doneTrips = S.lists.filter(l => l.status === 'done').sort((a, b) => b.date.localeCompare(a.date));
+  let pick = pre || (doneTrips[0] || {}).id, photo = false;
   openSheet({ title:'投稿', right:'投稿', tall:true,
     body:'<div class="field" style="margin-bottom:6px"><span>どの山行？</span></div><div class="catpick">'+
-      S.lists.map(l => '<button type="button" class="chip'+(l.id === pick ? ' on' : '')+'" data-pl="'+l.id+'">'+esc(l.name)+'</button>').join('')+'</div>'+
+      doneTrips.map(l => '<button type="button" class="chip'+(l.id === pick ? ' on' : '')+'" data-pl="'+l.id+'">'+esc(l.name)+'</button>').join('')+'</div>'+
       '<label class="field"><span>ひとこと</span><textarea id="p-text" rows="5" placeholder="例: 朝は冷えた。行動食は半分余った。"></textarea></label>'+
       '<button type="button" class="bigbtn" data-photo>'+icon('camera', 26)+'<span><b>写真を添える</b><small id="p-photo">なし</small></span></button>'+
       '<p class="hint">背負った重さと持っていったギアは、Trip のリストから自動で入ります。</p>',
@@ -1325,7 +1496,7 @@ function openPost(){
       });
       b.onclick = () => {
         const l = listById(pick);
-        const po = { id:'P' + (seq++), author:'me', list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), photo, w:l ? listTotal(l) : 0, unused:0, likes:0, liked:false, gear:l ? l.items.map(i => i[0]) : [] };
+        const po = { id:'P' + (seq++), author:'me', trip:l ? l.id : null, list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), photo, w:l ? listTotal(l) : 0, unused:l ? (l.unused || []).length : 0, likes:0, liked:false, gear:l ? l.items.map(i => i[0]) : [] };
         S.posts.unshift(po); close(); refreshAll();
         setTimeout(() => { const a = document.querySelector('#posts [data-post-id="'+po.id+'"]'); if (a) { a.scrollIntoView({ block:'center', behavior:'smooth' }); a.classList.add('flash'); } toast('投稿しました'); }, 380);
       };
