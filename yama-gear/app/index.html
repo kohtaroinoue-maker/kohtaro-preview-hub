@@ -462,6 +462,27 @@ input{font:inherit;color:inherit}
 .nav .back{padding:0 10px 0 6px}
 .dialog .db button{display:flex;align-items:center;justify-content:center}
 
+/* 持ち物チェック・たたき台 */
+.pchk{margin:18px 20px 0;border:1px solid var(--line)}
+.pchk.has{border-color:#E7C9B9}
+.pchk-h{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;text-align:left}
+.pchk-h b{font-size:14px}
+.pchk-h .small{margin-left:auto}
+.pchk.has .pchk-h .small{color:var(--warn);font-weight:700}
+.pchk-b{border-top:1px solid var(--hair)}
+.pchk-r{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 12px;font-size:13.5px}
+.pchk-r + .pchk-r{border-top:1px solid var(--hair)}
+.pchk-r.sub{color:var(--mute);font-size:12.5px}
+.pchk-r .mini{display:inline-flex;align-items:center;gap:2px;max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.aibox{margin:4px 20px 14px;padding:14px;border:1.5px solid var(--blue);background:#F5F8FD}
+.aih{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.aih b{font-size:15px}
+.plus{margin-left:auto;font-size:10.5px;font-weight:700;color:var(--paper);background:var(--blue);padding:1px 7px;letter-spacing:.05em}
+.aibox textarea{width:100%;border:1px solid var(--line);background:var(--paper);padding:10px;font:inherit;font-size:16px;line-height:1.6;outline:none;resize:none;margin-bottom:10px}
+.aibox textarea:focus{border-color:var(--blue)}
+.aibox .btn{background:var(--blue)}
+.aiout{margin-top:12px;padding-top:10px;border-top:1px solid #D5E1F2;display:flex;flex-direction:column;gap:3px}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -1382,7 +1403,7 @@ const isBag = x => x && x.type === '寝袋';
 function coldCheck(l){
   if (l.status === 'done' || l.minTemp == null) return null;
   const bags = l.items.map(([gid]) => byId(gid)).filter(isBag);
-  if (!bags.length) return l.days > 1 ? { level:'warn', title:'寝袋が入っていません', text:'泊まりの山行です' } : null;
+  if (!bags.length) return tripStyle(l) === 'tent' ? { level:'warn', title:'寝袋が入っていません', text:'泊まりの山行です' } : null;
   const known = bags.filter(b => b.comfort != null);
   if (!known.length) return { level:'unknown', title:'寝袋の対応温度が未設定', text:'対応温度を入れると比べられます', gid:bags[0].id };
   const best = known.reduce((a, b) => b.comfort < a.comfort ? b : a);
@@ -1470,20 +1491,43 @@ $('#tp-plan').addEventListener('click', e => {
 /* 新しい計画（前の山行からコピーできる） */
 function openNewTrip(){
   const DATES = [['2026-11-28', '今週末'], ['2026-12-05', '来週末'], ['2026-12-12', '再来週末']];
-  let date = DATES[0][0], days = 2, from = '', minT = 5;
+  let date = DATES[0][0], days = 2, from = '', minT = 5, draft = null;
   const done = S.lists.filter(l => l.status === 'done').sort((a, b) => b.date.localeCompare(a.date));
   openSheet({ title:'新しい計画', right:'作成', tall:true,
-    body:'<div style="height:6px"></div><label class="field"><span>名前</span><input id="t-name" placeholder="例: テント泊 1泊2日"></label>'+
+    body:'<div class="aibox"><div class="aih">'+icon('ai', 18, 'var(--blue)')+'<b>ざっくり書くだけ</b><span class="plus">Plus</span></div>'+
+        '<textarea id="t-ai" rows="3" placeholder="例: 来週末 テント泊で1泊。夜は−5℃くらい"></textarea>'+
+        '<button type="button" class="btn primary block" data-ai disabled>'+icon('ai', 16, 'var(--paper)')+'たたき台を作る</button><div id="t-ai-out"></div></div>'+
+      '<div class="or">または自分で</div>'+
+      '<label class="field"><span>名前</span><input id="t-name" placeholder="例: テント泊 1泊2日"></label>'+
       '<div class="field" style="margin-bottom:6px"><span>いつ？</span></div><div class="catpick">'+DATES.map(([d, l]) => '<button type="button" class="chip'+(d === date ? ' on' : '')+'" data-d="'+d+'">'+l+' '+jpDate(d).replace(/^\d+月/, m => m)+'</button>').join('')+'</div>'+
       '<div class="field" style="margin-bottom:6px"><span>日程</span></div><div class="catpick">'+[1, 2, 3].map(n => '<button type="button" class="chip'+(n === days ? ' on' : '')+'" data-days="'+n+'">'+daysTxt(n)+'</button>').join('')+'</div>'+
-      '<div class="field" style="margin-bottom:6px"><span>想定最低気温</span></div><div class="tstep"><button type="button" data-ntd="-1" aria-label="下げる">'+icon('minus', 18)+'</button><span class="num" id="nt">'+tTxt(minT)+'</span><button type="button" data-ntd="1" aria-label="上げる">'+icon('plus', 18)+'</button><span class="small">あとから変えられます</span></div>'+
+      '<div class="field" style="margin-bottom:6px"><span>想定最低気温</span></div><div class="tstep"><button type="button" data-ntd="-1" aria-label="下げる">'+icon('minus', 18)+'</button><span class="num" id="nt">'+tTxt(minT)+'</span><button type="button" data-ntd="1" aria-label="上げる">'+icon('plus', 18)+'</button></div>'+
       '<div class="field" style="margin-bottom:6px"><span>持ち物</span></div>'+
-      '<div class="group" style="margin-top:0"><div class="gr check" data-from=""><span class="gt">空から始める</span><span class="gv">'+icon('check', 18, 'var(--blue)')+'</span></div>'+
+      '<div class="group" style="margin-top:0" id="t-from"><div class="gr check" data-from=""><span class="gt">空から始める</span><span class="gv">'+icon('check', 18, 'var(--blue)')+'</span></div>'+
       done.map(l => '<div class="gr" data-from="'+l.id+'"><span class="gt">'+esc(l.name)+'<small>'+jpDate(l.date)+' ・ '+l.items.length+' 点 ・ '+wTxt(listTotal(l))+'</small></span><span class="gv"></span></div>').join('')+'</div>',
     onMount:(sh, close) => {
       const name = sh.querySelector('#t-name'), b = sh.querySelector('[data-r]');
       const sync = () => b.disabled = !name.value.trim(); sync(); name.addEventListener('input', sync);
+      const ai = sh.querySelector('#t-ai'), aib = sh.querySelector('[data-ai]');
+      ai.addEventListener('input', () => aib.disabled = !ai.value.trim());
+      const pickChip = (attr, v) => sh.querySelectorAll('['+attr+']').forEach(x => x.classList.toggle('on', x.getAttribute(attr) === String(v)));
       sh.addEventListener('click', e => {
+        if (e.target.closest('[data-ai]')) {
+          const out = sh.querySelector('#t-ai-out');
+          out.innerHTML = '<div class="loading" style="padding:14px 0 0"><span class="spin"></span>読み取っています…</div>';
+          setTimeout(() => {
+            draft = buildDraft(ai.value);
+            name.value = draft.name; sync();
+            date = draft.date; days = draft.days; if (draft.minTemp != null) minT = draft.minTemp;
+            if (!DATES.some(d => d[0] === date)) { const c = sh.querySelector('.catpick'); c.insertAdjacentHTML('beforeend', '<button type="button" class="chip" data-d="'+date+'">'+jpDate(date)+'</button>'); }
+            pickChip('data-d', date); pickChip('data-days', days); sh.querySelector('#nt').textContent = tTxt(minT);
+            from = ''; sh.querySelectorAll('[data-from]').forEach(x => { x.classList.remove('check'); x.querySelector('.gv').innerHTML = ''; });
+            const w = draft.items.reduce((a, [gid, q]) => a + byId(gid).w * q, 0);
+            out.innerHTML = '<div class="aiout enter"><div><b>'+esc(draft.name)+'</b></div><div class="small">'+jpDate(draft.date)+' ・ '+daysTxt(draft.days)+(draft.minTemp != null ? ' ・ 最低 '+tTxt(draft.minTemp) : '')+'</div>'+
+              '<div class="small">持ち物 '+draft.items.length+' 種類 ・ '+wTxt(w)+'（持っているギアから）</div>'+
+              (draft.missing.length ? '<div class="small" style="color:var(--warn)">持っていない: '+draft.missing.map(esc).join('、')+'</div>' : '')+'</div>';
+          }, 1200);
+        }
         const d = e.target.closest('[data-d]'); if (d) { date = d.dataset.d; sh.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('on', x === d)); }
         const nd = e.target.closest('[data-ntd]'); if (nd) { minT = Math.max(-30, Math.min(30, minT + Number(nd.dataset.ntd))); sh.querySelector('#nt').textContent = tTxt(minT); }
         const n = e.target.closest('[data-days]'); if (n) { days = +n.dataset.days; sh.querySelectorAll('[data-days]').forEach(x => x.classList.toggle('on', x === n)); }
@@ -1496,11 +1540,101 @@ function openNewTrip(){
       });
       b.onclick = () => {
         const src = from ? listById(from) : null;
-        const l = { id:'L' + (seq++), name:name.value.trim(), status:'plan', date, days, minTemp:minT, items:src ? src.items.map(it => [it[0], it[1]]).filter(it => byId(it[0])) : [], packed:[], unused:[], photos:[] };
+        const l = { id:'L' + (seq++), name:name.value.trim(), status:'plan', date, days, minTemp:minT, style:draft && !src ? draft.style : undefined,
+          items:src ? src.items.map(it => [it[0], it[1]]).filter(it => byId(it[0])) : draft ? draft.items.map(it => [it[0], it[1]]) : [], packed:[], unused:[], photos:[] };
         S.lists.push(l); close(); renderLists();
-        setTimeout(() => { openList(l.id); toast(src ? '「' + src.name + '」の持ち物をコピーしました' : '計画を作りました'); }, 350);
+        setTimeout(() => { openList(l.id); toast(src ? '「' + src.name + '」の持ち物をコピーしました' : draft ? 'たたき台を作りました' : '計画を作りました'); }, 350);
       };
     } });
+}
+
+
+/* ---------- 持ち物チェック（ルールで判断・無料） ---------- */
+// 山行の形: 日帰り／テント泊／小屋泊（たたき台で決めたもの。無ければ日数と名前から）
+const tripStyle = l => l.style || (l.days <= 1 ? 'day' : /小屋/.test(l.name) ? 'hut' : 'tent');
+const ownedBy = f => S.gear.filter(x => x.status === 'owned' && f(x));
+const inTrip = (l, f) => l.items.some(([gid]) => byId(gid) && f(byId(gid)));
+const qtyIn = (l, f) => l.items.reduce((a, [gid, q]) => a + (byId(gid) && f(byId(gid)) ? q : 0), 0);
+// 足りない物があれば { text, add:[持っているギアのID]（無ければ空） } を返す
+function packCheck(l){
+  if (l.status === 'done' || !l.items.length) return [];
+  const st = tripStyle(l), out = [];
+  const need = (label, f) => { if (!inTrip(l, f)) out.push({ text:label, add:ownedBy(f).map(x => x.id).slice(0, 1) }); };
+  need('ヘッドランプ', x => x.cat === 'light');
+  need('救急セット', x => x.cat === 'safety');
+  need('レインウェア', x => x.cat === 'rain');
+  need('水', x => x.cat === 'water');
+  need('行動食', x => x.cat === 'food');
+  // 小屋泊は寝具・食事が小屋にあることが多いので、テント泊だけ寝具と調理道具を見る
+  if (st === 'tent') {
+    need('寝袋', x => isBag(x));
+    need('テント', x => x.cat === 'tent');
+    need('マット', x => x.cat === 'sleep' && !isBag(x));
+    need('調理道具', x => x.cat === 'cook');
+  }
+  if (l.minTemp != null && l.minTemp <= 0) need('防寒着', x => x.cat === 'clothing');
+  const food = qtyIn(l, x => x.cat === 'food');
+  if (food && food < l.days) out.push({ text:'行動食 '+food+' / '+l.days+' 日分', more:ownedBy(x => x.cat === 'food').map(x => x.id).slice(0, 1) });
+  return out;
+}
+// 前の山行で使わなかったギア（今回も入っているもの）
+function unusedBefore(l){
+  const last = S.lists.filter(x => x.status === 'done' && x.id !== l.id).sort((a, b) => b.date.localeCompare(a.date));
+  const ids = new Set(); last.forEach(t => (t.unused || []).forEach(id => ids.add(id)));
+  return l.items.map(it => it[0]).filter(id => ids.has(id) && byId(id));
+}
+function packCheckCard(l){
+  if (l.status === 'done' || !l.items.length) return '';
+  const issues = packCheck(l), unused = unusedBefore(l), open = l.chkOpen !== false;
+  const n = issues.length;
+  return '<div class="pchk'+(n ? ' has' : ' okc')+'">'+
+    '<button type="button" class="pchk-h" data-chk>'+icon(n ? 'info' : 'check', 18, n ? 'var(--warn)' : 'var(--blue)')+'<b>持ち物チェック</b>'+
+      '<span class="small">'+(n ? n + ' 件' : 'OK')+'</span>'+icon(open ? 'minus' : 'plus', 14, 'var(--faint)')+'</button>'+
+    (open ? '<div class="pchk-b">'+
+      issues.map(it => '<div class="pchk-r"><span>'+esc(it.text)+'</span>'+
+        (it.add && it.add.length ? '<button type="button" class="mini" data-chkadd="'+it.add[0]+'">'+icon('plus', 13)+' '+esc(byId(it.add[0]).name)+'</button>'
+          : it.more && it.more.length ? '<button type="button" class="mini" data-chkmore="'+it.more[0]+'">'+icon('plus', 13)+' 1 日分</button>'
+          : '<span class="small">なし</span>')+'</div>').join('')+
+      (unused.length ? '<div class="pchk-r sub"><span>前回使わなかった: '+unused.map(id => esc(byId(id).name)).join('、')+'</span></div>' : '')+
+    '</div>' : '')+'</div>';
+}
+
+/* ---------- 山行のたたき台（ざっくり書いた文から。AI・Plus） ---------- */
+// 試作では文の中の言葉で判断する（本物は AI が読む）
+function buildDraft(text){
+  const t = text.replace(/\s+/g, ' ');
+  let days = 2;
+  if (/日帰り/.test(t)) days = 1;
+  const m1 = t.match(/(\d+)\s*泊/); if (m1) days = +m1[1] + 1;
+  const style = days === 1 ? 'day' : /小屋/.test(t) ? 'hut' : 'tent';
+  let date = '2026-11-28';
+  if (/来週/.test(t)) date = '2026-12-05';
+  if (/再来週/.test(t)) date = '2026-12-12';
+  const md = t.match(/(\d{1,2})\s*月\s*(\d{1,2})\s*日/);
+  if (md) { const mo = +md[1], y = mo >= 11 ? 2026 : 2027; date = y + '-' + String(mo).padStart(2, '0') + '-' + String(+md[2]).padStart(2, '0'); }
+  else { const mo = t.match(/(\d{1,2})\s*月/); if (mo && +mo[1] !== 11) { const y = +mo[1] >= 11 ? 2026 : 2027; date = y + '-' + String(+mo[1]).padStart(2, '0') + '-12'; } }
+  let minTemp = null;
+  const tm = t.match(/(−|-|マイナス)\s*(\d+)\s*(℃|度)/); const tp = t.match(/(\d+)\s*(℃|度)/);
+  if (tm) minTemp = -+tm[2]; else if (tp) minTemp = +tp[1];
+  else if (/雪|冬|厳冬/.test(t)) minTemp = -5; else if (/夏/.test(t)) minTemp = 10;
+  const place = (t.match(/([^\s、。,]{2,8})(?:で|の)(?:テント|小屋|日帰り|山行|縦走)/) || [])[1];
+  const name = (place ? place + ' ' : '') + (style === 'day' ? '日帰り' : (style === 'hut' ? '小屋泊 ' : 'テント泊 ') + daysTxt(days));
+  // 持っているギアから選ぶ
+  const items = [], add = (f, q) => { const x = ownedBy(f)[0]; if (x && !items.some(i => i[0] === x.id)) items.push([x.id, q || 1]); };
+  add(x => x.cat === 'backpack' && x.type === 'ザック');
+  ownedBy(x => x.cat === 'rain').forEach(x => items.push([x.id, 1]));
+  add(x => x.cat === 'light'); add(x => x.cat === 'safety'); add(x => x.cat === 'footwear');
+  add(x => x.cat === 'water', days > 1 ? 2 : 1); add(x => x.cat === 'food', days);
+  if (days > 1) {
+    add(x => isBag(x)); add(x => x.cat === 'sleep' && !isBag(x)); ownedBy(x => x.cat === 'cook').forEach(x => items.push([x.id, 1]));
+    add(x => x.type === 'スタッフサック'); add(x => x.cat === 'electronics'); add(x => x.cat === 'clothing');
+    if (style === 'tent') add(x => x.cat === 'tent' && x.type === 'テント');
+  } else add(x => x.type === 'ツェルト');
+  if (minTemp != null && minTemp <= 0) add(x => x.cat === 'clothing');
+  const missing = [];
+  if (minTemp != null && minTemp <= 0 && !ownedBy(x => x.cat === 'clothing' && x.type !== '中間着').length) missing.push('防寒着（ダウンなど）');
+  if (/雪|凍結|アイゼン/.test(t)) missing.push('チェーンスパイク・アイゼン');
+  return { name, date, days, minTemp, style, items, missing };
 }
 
 /* 山行の詳細 */
@@ -1557,7 +1691,7 @@ function openList(lid){
       '<div class="bar" id="l-bar">'+catW.map((v, i) => '<i style="width:'+(tot ? v.w / tot * 100 : 0)+'%;background:'+BAR[Math.min(i, BAR.length - 1)]+'"></i>').join('')+'</div>'+
       '<div class="legend">'+catW.slice(0, 4).map((v, i) => '<span><i style="background:'+BAR[i]+'"></i>'+v.c.label+' '+wTxt(v.w)+'</span>').join('')+(catW.length > 4 ? '<span>ほか '+(catW.length - 4)+'</span>' : '')+'</div>'+
       (done ? '<div class="packhead"><span class="small">使わなかったギア <b class="num" style="font-size:15px;color:var(--ink)">'+l.unused.length+'</b> 点。丸を押すと切り替えられます</span></div>'
-        : '<div class="ghead" style="padding-top:22px"><b>持ち物</b><span class="label">ITEMS</span><button type="button" class="mini addg" data-addgear>'+icon('plus', 15)+'ギアを追加</button></div>'+
+        : packCheckCard(l)+'<div class="ghead" style="padding-top:22px"><b>持ち物</b><span class="label">ITEMS</span><button type="button" class="mini addg" data-addgear>'+icon('plus', 15)+'ギアを追加</button></div>'+
           '<div class="packhead" style="padding-top:6px"><div style="flex:1"><div class="small">パッキング <b class="num" style="font-size:15px;color:var(--ink)" id="pc">'+pc+'</b> / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div>'+
           '<button type="button" class="chip'+(onlyLeft ? ' on' : '')+'" data-left>まだのものだけ</button></div>')+
       (l.items.length ? rows : '<div class="empty">まだギアがありません。上の「ギアを追加」から選ぶか、前の山行からコピーできます。</div>')+
@@ -1606,6 +1740,16 @@ async function onListClick(e, s, lid, setLeft){
     return;
   }
   if (e.target.closest('[data-basem]')) return openBaseMeasure(l, () => { s._render(); renderLists(); });
+  if (e.target.closest('[data-chk]')) { l.chkOpen = l.chkOpen === false; s._render(); return; }
+  const ca = e.target.closest('[data-chkadd]') || e.target.closest('[data-chkmore]');
+  if (ca) {
+    const gid = ca.dataset.chkadd || ca.dataset.chkmore, it = l.items.find(i => i[0] === gid);
+    if (it) it[1]++; else l.items.push([gid, 1]);
+    s._render(); renderLists();
+    const r = s.querySelector('[data-row="'+gid+'"] .fg'); if (r) r.classList.add('flash');
+    toast('「' + byId(gid).name + '」を入れました');
+    return;
+  }
   if (e.target.closest('[data-coldshow]')) { l.coldHidden = null; s._render(); renderLists(); return; }
   if (e.target.closest('[data-colddis]')) {
     const c = coldCheck(l); if (!c) return;
