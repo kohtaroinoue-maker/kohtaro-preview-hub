@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#FAFAF6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>動くデモの土台</title>
+<!--
+  動くデモの土台（雛形）
+  使い方: このファイルを kohtaro-preview-hub/<project>/app/index.html にコピーして、
+  ① :root の色と書体 ② TABS と各タブの render ③ サンプルデータ（DATA）を差し替える。
+  公開は scripts/publish.sh <project> "<一言>"。
+  土台の部品（そのまま使う）:
+    push(render) / pop()          … 右から入る画面・戻る（左端スワイプ対応）
+    nav(戻るラベル, 題, 右ボタン)    … 画面上のバー（スクロールで題が出る）
+    openSheet({title,right,body,tall,onMount}) … 下から出るシート（引っぱって閉じる）
+    dialog(題, 文, ボタン) / actionSheet(選択肢) / toast(文, 操作, 処理)
+    countTo(数字の要素, 値)         … 数字をなめらかに変える
+    rowSwipe(行)                  … 左スワイプで「削除」
+    refreshAll()                  … データを変えたら呼ぶ（全画面を描き直す）
+-->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+/* ① アプリの色と書体（ここを差し替える） */
+:root{
+  --paper:#FAFAF6; --ink:#141414; --mute:#5A5A55; --faint:#A8A8A0; --line:#D8D8D0; --hair:#E6E6DE;
+  --accent:#1F5FBF; --warn:#A8461A; --tint:#E4ECF7; --press:#EFEFE8; --red:#B3261E;
+  --serif:'Noto Serif JP',serif; --sans:'Noto Sans JP',system-ui,sans-serif;
+  --ease:cubic-bezier(.22,.9,.3,1); --bottom:26px; --top:0px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:#E9E9E1;color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums;font-family:var(--serif);font-weight:700}
+.label{font-size:10.5px;letter-spacing:.22em;color:var(--mute);font-weight:500}
+.small{font-size:12.5px;color:var(--mute)}
+
+/* PC: 左に説明、右に端末 / スマホ: 全画面 */
+.page{min-height:100%;display:flex;align-items:center;justify-content:center;gap:56px;padding:24px}
+.side{max-width:340px;font-size:14px;line-height:1.85;color:var(--mute)}
+.side h1{font-family:var(--serif);font-weight:900;color:var(--ink);font-size:26px;margin:6px 0 10px}
+.side b{color:var(--ink)}
+#phone{position:relative;width:390px;height:844px;flex:none;border-radius:50px;background:var(--paper);box-shadow:0 0 0 11px #1c1c1c,0 0 0 12px #444,0 40px 80px rgba(0,0,0,.28);overflow:hidden;isolation:isolate}
+.statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:6px 36px 0 40px;font-weight:700;font-size:15px;z-index:60;pointer-events:none}
+.statusbar .isl{position:absolute;left:50%;top:11px;width:122px;height:35px;margin-left:-61px;background:#000;border-radius:20px}
+.homebar{position:absolute;bottom:8px;left:50%;width:136px;height:5px;margin-left:-68px;background:#141414;border-radius:3px;z-index:60;pointer-events:none}
+#app{position:absolute;inset:50px 0 0 0;overflow:hidden}
+#stack{position:absolute;inset:0;transition:transform .42s var(--ease),border-radius .42s var(--ease);transform-origin:50% 0;background:var(--paper)}
+#stack.recede{transform:scale(.93) translateY(6px);border-radius:12px;overflow:hidden}
+@media (max-width:640px){
+  html,body{overflow:hidden;background:var(--paper);overscroll-behavior:none}
+  .page{display:block;padding:0}.side{display:none}
+  #phone{width:100%;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+  .statusbar,.homebar{display:none}#app{inset:0}
+  :root{--bottom:env(safe-area-inset-bottom,0px);--top:env(safe-area-inset-top,0px)}
+}
+
+/* 画面の積み重ね */
+.screen{position:absolute;inset:0;background:var(--paper);display:flex;flex-direction:column;transition:transform .42s var(--ease);will-change:transform;touch-action:pan-y}
+.screen.pushed{box-shadow:-10px 0 28px rgba(0,0,0,.08)}
+.screen::after{content:'';position:absolute;inset:0;background:rgba(20,20,20,.14);opacity:var(--dim,0);pointer-events:none;transition:opacity .42s var(--ease);z-index:40}
+.screen.under{transform:translateX(-28%);--dim:1}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.scroll::-webkit-scrollbar{display:none}
+.nav{flex:none;height:calc(44px + var(--top));padding-top:var(--top);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;background:rgba(250,250,246,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .2s;z-index:5}
+.nav.edge{border-bottom-color:var(--line)}
+.nav .back{display:flex;align-items:center;height:44px;padding:0 10px 0 4px;justify-self:start;font-size:16px;max-width:150px;white-space:nowrap;overflow:hidden}
+.nav .ttl{font-family:var(--serif);font-weight:700;font-size:16.5px;opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.nav.edge .ttl{opacity:1;transform:none}
+.nav .right{justify-self:end;display:flex;align-items:center;padding-right:8px}
+.iconbtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.nav .back:active,.iconbtn:active,.tbtn:active{opacity:.45}
+
+/* タブ */
+#root{display:flex;flex-direction:column}
+.tabpages{flex:1;position:relative}
+.tabpage{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .18s,visibility 0s .18s}
+.tabpage.on{opacity:1;visibility:visible;transition:opacity .18s}
+.tabbar{flex:none;display:flex;border-top:1px solid var(--line);background:rgba(250,250,246,.96);padding-bottom:var(--bottom)}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;color:var(--mute);font-size:10.5px}
+.tabbar button svg{transition:transform .2s var(--ease)}
+.tabbar button:active svg{transform:scale(.86)}
+.tabbar button.on{color:var(--ink);font-weight:700}
+
+/* 見出し・ボタン・行 */
+.bighead{position:relative;padding:calc(18px + var(--top)) 20px 16px;border-bottom:2px solid var(--ink)}
+.titleRow{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.title{font-family:var(--serif);font-weight:900;font-size:32px;margin:2px 0 0;line-height:1.2}
+.dhead{padding:6px 20px 0}
+.dhead h2{font-family:var(--serif);font-weight:900;font-size:24px;line-height:1.35;margin:4px 0 2px}
+.big{display:flex;align-items:baseline;gap:6px;margin:14px 0 4px}
+.big .num{font-size:48px;line-height:1;font-weight:900}
+.btn{min-height:44px;padding:0 18px;font-weight:700;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .12s,opacity .12s;border-radius:2px}
+.btn:active{transform:scale(.97);opacity:.85}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.secondary{border:1.5px solid var(--ink)}
+.btn.block{width:100%}
+.btnrow{display:flex;flex-direction:column;gap:10px;padding:24px 20px 40px}
+.danger{color:var(--red)}
+.search{display:flex;align-items:center;gap:6px;height:42px;border-bottom:1px solid var(--ink);margin-top:14px}
+.search input{flex:1;border:0;background:transparent;outline:none;font-size:15px;min-width:0}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:34px;padding:0 13px;border:1px solid var(--line);font-size:13px;white-space:nowrap;transition:background .15s,color .15s}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+.row{position:relative;display:flex;align-items:center;gap:12px;padding:12px 12px 12px 20px;cursor:pointer;transition:background .12s;user-select:none;-webkit-user-select:none}
+.row::before{content:'';position:absolute;top:0;left:56px;right:0;height:1px;background:var(--hair)}
+.row:active{background:var(--press)}
+.row .ic{flex:none;width:26px;display:flex;justify-content:center}
+.row .rm{flex:1;min-width:0}
+.row .nm{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .sub{font-size:12px;color:var(--mute);margin-top:2px}
+.ghead{padding:22px 20px 6px;display:flex;gap:10px;align-items:baseline}
+.ghead b{font-family:var(--serif);font-size:15px}
+.group{margin:18px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.gr{position:relative;display:flex;align-items:center;gap:12px;min-height:54px;padding:8px 12px 8px 20px;cursor:pointer;transition:background .12s}
+.gr + .gr::before{content:'';position:absolute;top:0;left:20px;right:0;height:1px;background:var(--hair)}
+.gr:active{background:var(--press)}
+.gr .gt{flex:1;min-width:0;font-size:15px}
+.gr .gt small{display:block;font-size:12px;color:var(--mute)}
+.gr .gv{color:var(--mute);font-size:14px}
+.gr.static{cursor:default}.gr.static:active{background:none}
+.hint{padding:0 20px;font-size:12px;color:var(--mute);line-height:1.7}
+.empty{padding:28px 20px;color:var(--mute);font-size:14px;line-height:1.8}
+.like{display:inline-flex;align-items:center;gap:4px;color:var(--mute);font-size:13px;min-height:32px}
+.like.on{color:var(--warn)}
+.post{padding:16px 20px;border-top:1px solid var(--hair);cursor:pointer}
+.post:active{background:var(--press)}
+.post p{font-size:14.5px;line-height:1.8;margin:6px 0}
+.av{display:inline-flex;align-items:center;justify-content:center;flex:none;border-radius:50%;color:#fff;font-weight:700}
+.swipe{position:relative;overflow:hidden;transition:height .26s var(--ease),opacity .26s}
+.swipe .del{position:absolute;right:0;top:0;bottom:0;width:84px;background:var(--red);color:#fff;font-weight:700}
+.swipe .fg{position:relative;background:var(--paper);transition:transform .3s var(--ease);touch-action:pan-y}
+
+/* 動き */
+.pop{animation:pop .38s var(--ease)}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.45)}100%{transform:scale(1)}}
+.enter{animation:rin .32s var(--ease) both}
+@keyframes rin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%,30%{background:var(--tint)}100%{background:transparent}}
+.spin{display:inline-block;width:20px;height:20px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* シート・ダイアログ・アクションシート・トースト */
+.backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
+.backdrop.on{opacity:1}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;background:var(--paper);z-index:81;transform:translateY(100%);transition:transform .42s var(--ease);display:flex;flex-direction:column;border-radius:12px 12px 0 0}
+.sheet.tall{height:92%;max-height:none}
+.sheet.on{transform:translateY(0)}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:7px auto 0;flex:none}
+.shead{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:48px;padding:0 8px;touch-action:none}
+.shead b{font-family:var(--serif);font-size:16.5px}
+.tbtn{height:44px;padding:0 10px;font-size:15.5px;justify-self:start}
+.tbtn.strong{justify-self:end;font-weight:700}
+.tbtn[disabled]{opacity:.3;pointer-events:none}
+.sbody{flex:1;overflow-y:auto;padding:4px 0 calc(24px + var(--bottom))}
+.field{display:block;margin:0 20px 16px}
+.field span{display:block;font-size:12px;color:var(--mute);margin-bottom:2px}
+.field input{width:100%;border:0;border-bottom:1px solid var(--ink);background:transparent;height:40px;font-size:16px;outline:none;border-radius:0}
+.dialog{position:absolute;left:50%;top:50%;width:280px;margin-left:-140px;background:var(--paper);z-index:91;transform:translateY(-50%) scale(1.12);opacity:0;transition:transform .26s var(--ease),opacity .2s;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.dialog.on{transform:translateY(-50%) scale(1);opacity:1}
+.dialog .dt{padding:20px 20px 4px;font-weight:700;font-size:16px;text-align:center}
+.dialog .dm{padding:0 20px 18px;font-size:13px;color:var(--mute);text-align:center;line-height:1.7}
+.dialog .db{display:flex;border-top:1px solid var(--line)}
+.dialog .db button{flex:1;height:46px;font-size:15.5px}
+.dialog .db button + button{border-left:1px solid var(--line)}
+.asheet{position:absolute;left:8px;right:8px;bottom:calc(8px + var(--bottom));z-index:91;transform:translateY(120%);transition:transform .36s var(--ease)}
+.asheet.on{transform:none}
+.asheet .ag{background:var(--paper);margin-bottom:8px}
+.asheet button{display:block;width:100%;height:54px;font-size:16.5px;border-top:1px solid var(--line)}
+.asheet .ag button:first-child{border-top:0}
+.toast{position:absolute;left:16px;right:16px;bottom:calc(72px + var(--bottom));z-index:95;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:12px;padding:12px 16px;font-size:14px;transform:translateY(16px);opacity:0;transition:transform .3s var(--ease),opacity .25s}
+.toast.on{transform:none;opacity:1}
+.toast.low{bottom:calc(20px + var(--bottom))}
+.toast span{flex:1}
+.toast button{color:#9DB8E8;font-weight:700}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="side">
+    <div class="label">APP DEMO ・ TEMPLATE</div>
+    <h1>動くデモの土台</h1>
+    <p>新しいアプリの<b>押して動く試作</b>を、ここから始めます。スマホで開くと全画面で動きます。</p>
+    <p>入っている動き: 画面の進む・戻る（左端スワイプ）、下から出るシート、確認、選択肢、トースト（元に戻す付き）、いいね、左スワイプで削除、数字のなめらかな変化。</p>
+    <p class="small">中身はサンプルです。使い方はファイル先頭のコメントにあります。</p>
+  </div>
+  <div id="phone">
+    <div class="statusbar"><span>9:41</span><i class="isl"></i><span>●●●</span></div>
+    <div id="app"><div id="stack">
+      <section class="screen" id="root">
+        <div class="tabpages" id="tabpages"></div>
+        <nav class="tabbar" id="tabbar"></nav>
+      </section>
+    </div></div>
+    <div class="homebar"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- アイコン（24px の線画。必要に応じて足す） ---------- */
+const ICONS = {
+  back:'<path d="M15 4.5 L7.5 12 L15 19.5"/>', chev:'<path d="M9.5 5.5 L16 12 L9.5 18.5"/>',
+  more:'<circle cx="5.5" cy="12" r="1.3" class="dot"/><circle cx="12" cy="12" r="1.3" class="dot"/><circle cx="18.5" cy="12" r="1.3" class="dot"/>',
+  plus:'<path d="M12 5 V19 M5 12 H19"/>', minus:'<path d="M5 12 H19"/>', check:'<path d="M5 12.5 L9.8 17.2 L19 7"/>',
+  close:'<path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5"/>', search:'<circle cx="10.5" cy="10.5" r="6"/><path d="M15 15 L20 20"/>',
+  heart:'<path d="M12 19.5 C12 19.5 3.5 14.6 3.5 9.2 C3.5 6.6 5.5 4.8 7.8 4.8 C9.6 4.8 11.2 5.9 12 7.4 C12.8 5.9 14.4 4.8 16.2 4.8 C18.5 4.8 20.5 6.6 20.5 9.2 C20.5 14.6 12 19.5 12 19.5 Z"/>',
+  heart_on:'<path class="solid" d="M12 19.5 C12 19.5 3.5 14.6 3.5 9.2 C3.5 6.6 5.5 4.8 7.8 4.8 C9.6 4.8 11.2 5.9 12 7.4 C12.8 5.9 14.4 4.8 16.2 4.8 C18.5 4.8 20.5 6.6 20.5 9.2 C20.5 14.6 12 19.5 12 19.5 Z"/>',
+  home:'<path d="M4 10.5 L12 4 L20 10.5 V20 H4 Z"/><path d="M9.5 20 V14.5 H14.5 V20"/>',
+  list:'<path d="M4 6.5 L5.4 7.9 L7.8 5.2 M4 12.5 L5.4 13.9 L7.8 11.2"/><path d="M10.5 6.5 H20 M10.5 12.5 H20 M10.5 18.5 H20"/><circle cx="5.9" cy="18.5" r="1.3"/>',
+  user:'<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20 C5.3 15.8 8.3 13.8 12 13.8 C15.7 13.8 18.7 15.8 19.5 20"/>',
+  box:'<rect x="4" y="4" width="16" height="16" rx="3"/>'
+};
+function icon(id, size, color){
+  size = size || 24; color = color || 'currentColor';
+  const src = (ICONS[id] || ICONS.box).replace(/class="solid"/g, 'fill="'+color+'"').replace(/class="dot"/g, 'fill="'+color+'" stroke="none"');
+  return '<svg aria-hidden="true" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+src+'</svg>';
+}
+
+/* ---------- 土台の部品（そのまま使う） ---------- */
+const $ = (s, r) => (r || document).querySelector(s);
+const app = $('#app'), stackEl = $('#stack'), stack = [$('#root')];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+const raf2 = f => requestAnimationFrame(() => requestAnimationFrame(f));
+document.addEventListener('touchstart', () => {}, { passive:true });
+
+function countTo(node, to, fmt){
+  fmt = fmt || (v => String(Math.round(v)));
+  const from = parseFloat(node.dataset.v || to); node.dataset.v = to;
+  const t0 = performance.now();
+  const step = t => { const p = Math.min(1, (t - t0) / 420), e = 1 - Math.pow(1 - p, 3); node.textContent = fmt(from + (to - from) * e); if (p < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+let toastTimer;
+function toast(msg, action, onAction){
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = el('<div class="toast" role="status"><span>'+esc(msg)+'</span>'+(action ? '<button type="button">'+action+'</button>' : '')+'</div>');
+  if (stack.length > 1) t.classList.add('low');
+  app.appendChild(t); raf2(() => t.classList.add('on'));
+  const hide = () => { t.classList.remove('on'); setTimeout(() => t.remove(), 300); };
+  if (action) t.querySelector('button').onclick = () => { onAction(); hide(); };
+  clearTimeout(toastTimer); toastTimer = setTimeout(hide, action ? 4200 : 2200);
+}
+function dialog(title, msg, buttons){
+  return new Promise(res => {
+    const bd = el('<div class="backdrop"></div>'), d = el('<div class="dialog" role="alertdialog"><div class="dt">'+title+'</div><div class="dm">'+msg+'</div><div class="db"></div></div>');
+    const close = () => { bd.classList.remove('on'); d.classList.remove('on'); setTimeout(() => { bd.remove(); d.remove(); }, 300); };
+    buttons.forEach(b => { const x = el('<button type="button" class="'+(b.danger ? 'danger' : '')+'"'+(b.bold ? ' style="font-weight:700"' : '')+'>'+b.label+'</button>'); x.onclick = () => { close(); res(b.value); }; d.querySelector('.db').appendChild(x); });
+    app.append(bd, d); raf2(() => { bd.classList.add('on'); d.classList.add('on'); });
+  });
+}
+function actionSheet(opts){
+  return new Promise(res => {
+    const bd = el('<div class="backdrop"></div>'), a = el('<div class="asheet"><div class="ag"></div><div class="ag"><button type="button" style="font-weight:700">キャンセル</button></div></div>');
+    const close = v => { bd.classList.remove('on'); a.classList.remove('on'); setTimeout(() => { bd.remove(); a.remove(); }, 380); res(v); };
+    opts.forEach(o => { const b = el('<button type="button" class="'+(o.danger ? 'danger' : '')+'">'+o.label+'</button>'); b.onclick = () => close(o.value); a.firstChild.appendChild(b); });
+    a.lastChild.firstChild.onclick = () => close(null); bd.onclick = () => close(null);
+    app.append(bd, a); raf2(() => { bd.classList.add('on'); a.classList.add('on'); });
+  });
+}
+function openSheet({ title, left, right, body, tall, onMount }){
+  const bd = el('<div class="backdrop"></div>');
+  const sh = el('<div class="sheet'+(tall ? ' tall' : '')+'" role="dialog"><div class="grab"></div><div class="shead"><button type="button" class="tbtn" data-x>'+(left || 'キャンセル')+'</button><b>'+title+'</b>'+(right ? '<button type="button" class="tbtn strong" data-r>'+right+'</button>' : '<span></span>')+'</div><div class="sbody">'+body+'</div></div>');
+  app.append(bd, sh); raf2(() => { bd.classList.add('on'); sh.classList.add('on'); if (tall) stackEl.classList.add('recede'); });
+  let closed = false;
+  const close = () => { if (closed) return; closed = true; sh.style.transform = ''; sh.classList.remove('on'); bd.classList.remove('on'); stackEl.classList.remove('recede'); setTimeout(() => { sh.remove(); bd.remove(); }, 420); };
+  sh.querySelector('[data-x]').onclick = close; bd.onclick = close;
+  const head = sh.querySelector('.shead'); let y0 = null, dy = 0;
+  head.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; y0 = e.clientY; dy = 0; sh.style.transition = 'none'; head.setPointerCapture(e.pointerId); });
+  head.addEventListener('pointermove', e => { if (y0 === null) return; dy = Math.max(0, e.clientY - y0); sh.style.transform = 'translateY('+dy+'px)'; });
+  const end = () => { if (y0 === null) return; y0 = null; sh.style.transition = ''; if (dy > 110) close(); else sh.style.transform = ''; };
+  head.addEventListener('pointerup', end); head.addEventListener('pointercancel', end);
+  if (onMount) onMount(sh, close);
+  return { sh, close };
+}
+function nav(backLabel, title, right){
+  return '<header class="nav"><button type="button" class="back" data-back aria-label="戻る">'+icon('back', 26)+'<span>'+esc(backLabel)+'</span></button><div class="ttl">'+esc(title)+'</div><div class="right">'+(right || '')+'</div></header>';
+}
+function push(render){
+  const s = document.createElement('section'); s.className = 'screen pushed';
+  s._render = () => {
+    const sc = s.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
+    s.innerHTML = render(s);
+    const sc2 = s.querySelector('.scroll'), nv = s.querySelector('.nav');
+    if (sc2) { sc2.scrollTop = top; if (nv) { const on = () => nv.classList.toggle('edge', sc2.scrollTop > 56); sc2.addEventListener('scroll', on, { passive:true }); on(); } }
+    if (s._after) s._after(s);
+  };
+  s._render();
+  s.style.transform = 'translateX(100%)'; stackEl.appendChild(s);
+  const prev = stack[stack.length - 1]; stack.push(s);
+  raf2(() => { s.style.transform = ''; prev.classList.add('under'); });
+  s.addEventListener('click', e => { if (e.target.closest('[data-back]')) pop(); });
+  edgeSwipe(s);
+  return s;
+}
+function pop(){
+  if (stack.length < 2) return;
+  const s = stack.pop(), prev = stack[stack.length - 1];
+  s.style.transition = ''; prev.style.transition = '';
+  s.style.transform = 'translateX(100%)'; prev.style.transform = ''; prev.style.removeProperty('--dim'); prev.classList.remove('under');
+  setTimeout(() => s.remove(), 450);
+  if (prev._render) prev._render();
+}
+function edgeSwipe(s){
+  let x0 = 0, dx = 0, t0 = 0, active = false, dragging = false;
+  s.addEventListener('pointerdown', e => { if (e.clientX - s.getBoundingClientRect().left > 28 || stack[stack.length - 1] !== s) return; x0 = e.clientX; dx = 0; t0 = performance.now(); active = true; dragging = false; });
+  s.addEventListener('pointermove', e => {
+    if (!active) return;
+    const w = s.offsetWidth, prev = stack[stack.length - 2];
+    dx = Math.max(0, e.clientX - x0);
+    if (!dragging) { if (dx < 8) return; dragging = true; s.setPointerCapture(e.pointerId); }
+    s.style.transition = 'none'; prev.style.transition = 'none';
+    s.style.transform = 'translateX('+dx+'px)'; prev.style.transform = 'translateX('+(-28 + dx / w * 28)+'%)'; prev.style.setProperty('--dim', String(1 - dx / w));
+  });
+  const end = () => {
+    if (!active) return; active = false; if (!dragging) return;
+    const prev = stack[stack.length - 2], v = dx / Math.max(1, performance.now() - t0);
+    s.style.transition = ''; prev.style.transition = '';
+    if (dx > s.offsetWidth * .33 || v > .6) pop(); else { s.style.transform = ''; prev.style.transform = ''; prev.style.removeProperty('--dim'); }
+  };
+  s.addEventListener('pointerup', end); s.addEventListener('pointercancel', end);
+}
+function rowSwipe(row, onDelete){
+  const fg = row.querySelector('.fg'); let x0 = null, y0 = 0, dx = 0, open = false, lock = null;
+  fg.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; x0 = e.clientX; y0 = e.clientY; dx = 0; lock = null; });
+  fg.addEventListener('pointermove', e => {
+    if (x0 === null) return;
+    const mx = e.clientX - x0, my = e.clientY - y0;
+    if (lock === null && (Math.abs(mx) > 8 || Math.abs(my) > 8)) { lock = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'; if (lock === 'x') fg.setPointerCapture(e.pointerId); }
+    if (lock !== 'x') return;
+    dx = Math.min(0, Math.max(-110, (open ? -84 : 0) + mx)); fg.style.transition = 'none'; fg.style.transform = 'translateX('+dx+'px)';
+  });
+  const end = () => { if (x0 === null) return; x0 = null; fg.style.transition = ''; if (lock === 'x') { open = dx < -42; fg.style.transform = open ? 'translateX(-84px)' : ''; row._swiped = true; setTimeout(() => row._swiped = false, 50); } };
+  fg.addEventListener('pointerup', end); fg.addEventListener('pointercancel', end);
+  fg.addEventListener('click', e => { if (row._swiped) e.stopPropagation(); else if (open) { open = false; fg.style.transform = ''; e.stopPropagation(); } }, true);
+  row.querySelector('.del').onclick = () => { row.style.height = row.offsetHeight + 'px'; void row.offsetHeight; row.style.height = '0px'; row.style.opacity = '0'; setTimeout(onDelete, 260); };
+}
+function renderTabbar(){
+  $('#tabbar').innerHTML = TABS.map(t => '<button type="button" class="'+(t.id === curTab ? 'on' : '')+'" data-tab="'+t.id+'">'+icon(t.icon, 26)+'<span>'+t.label+'</span></button>').join('');
+}
+$('#tabbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  curTab = b.dataset.tab; document.querySelectorAll('.tabpage').forEach(p => p.classList.toggle('on', p.id === 'tp-' + curTab)); renderTabbar();
+});
+function renderTab(t){
+  const p = $('#tp-' + t.id), sc = p.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
+  p.innerHTML = t.render(); const sc2 = p.querySelector('.scroll'); if (sc2) sc2.scrollTop = top;
+}
+function refreshAll(){ TABS.forEach(renderTab); stack.slice(1).forEach(s => s._render()); }
+function fit(){ $('#phone').style.zoom = innerWidth <= 640 ? '' : String(Math.max(.55, Math.min(1, (innerHeight - 48) / 868))); }
+addEventListener('resize', fit); fit();
+
+/* ---------- ③ サンプルデータ（差し替える） ---------- */
+const SEED = {
+  posts:[ { id:'p1', user:'あ', color:'#1F5FBF', name:'ユーザーA', text:'ここに投稿の本文が入ります。押すと詳細へ進みます。', likes:3, liked:false },
+          { id:'p2', user:'い', color:'#A8461A', name:'ユーザーB', text:'♡ を押すといいねできます。', likes:12, liked:true } ],
+  items:[ { id:'i1', name:'アイテム 1', cat:'A', n:120 }, { id:'i2', name:'アイテム 2', cat:'A', n:340 }, { id:'i3', name:'アイテム 3', cat:'B', n:80 }, { id:'i4', name:'アイテム 4', cat:'B', n:560 } ]
+};
+let S = JSON.parse(JSON.stringify(SEED)), seq = 100;
+const UI = { cat:null, q:'' };
+
+/* ---------- ② タブと画面（差し替える） ---------- */
+const TABS = [
+  { id:'list', icon:'list', label:'List', render:renderList },
+  { id:'home', icon:'home', label:'Home', render:renderHome },
+  { id:'me', icon:'user', label:'Me', render:renderMe }
+];
+let curTab = 'home';
+
+function renderHome(){
+  return '<div class="scroll"><header class="bighead"><div class="titleRow"><div><div class="label">タイムライン</div><h1 class="title">Home</h1></div>'+
+    '<button type="button" class="btn primary" data-act="add">'+icon('plus', 16, 'var(--paper)')+'追加</button></div></header>'+
+    S.posts.map(po => '<article class="post" data-post="'+po.id+'"><div style="display:flex;align-items:center;gap:10px"><span class="av" style="width:36px;height:36px;background:'+po.color+'">'+po.user+'</span><b>'+esc(po.name)+'</b></div>'+
+      '<p>'+esc(po.text)+'</p><button type="button" class="like'+(po.liked ? ' on' : '')+'" data-like="'+po.id+'">'+icon(po.liked ? 'heart_on' : 'heart', 20, po.liked ? 'var(--warn)' : 'var(--mute)')+'<span>'+po.likes+'</span></button></article>').join('')+
+    '<div style="height:100px"></div></div>';
+}
+function renderList(){
+  const its = S.items.filter(x => (!UI.cat || x.cat === UI.cat) && (!UI.q || x.name.includes(UI.q)));
+  const total = its.reduce((a, x) => a + x.n, 0);
+  return '<div class="scroll"><header class="bighead"><div class="titleRow"><div><div class="label">一覧</div><h1 class="title">List</h1></div><div style="text-align:right"><span class="num" style="font-size:28px">'+its.length+'</span><div class="small">件 ・ 合計 '+total+'</div></div></div>'+
+    '<label class="search">'+icon('search', 18, 'var(--mute)')+'<input id="q" placeholder="名前で検索" value="'+esc(UI.q)+'"></label></header>'+
+    '<div class="chips">'+[['', 'すべて'], ['A', 'グループA'], ['B', 'グループB']].map(([k, l]) => '<button type="button" class="chip'+((UI.cat || '') === k ? ' on' : '')+'" data-cat="'+k+'">'+l+'</button>').join('')+'</div>'+
+    (its.length ? its.map((x, i) => '<div class="row enter" style="animation-delay:'+i * 25+'ms" data-item="'+x.id+'"><span class="ic">'+icon('box', 22)+'</span><div class="rm"><div class="nm">'+esc(x.name)+'</div><div class="sub">グループ'+x.cat+'</div></div><span class="num" style="font-size:18px">'+x.n+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>').join('') : '<div class="empty">該当がありません。</div>')+
+    '<div style="height:100px"></div></div>';
+}
+function renderMe(){
+  return '<div class="scroll"><header class="bighead"><div class="label">自分</div><h1 class="title">Me</h1></header>'+
+    '<div class="group"><div class="gr" data-go="settings"><span class="gt">設定</span>'+icon('chev', 16, 'var(--faint)')+'</div><div class="gr" data-go="reset"><span class="gt danger">データを最初に戻す</span></div></div></div>';
+}
+function openItem(id){
+  const s = push(() => {
+    const x = S.items.find(i => i.id === id);
+    if (!x) return nav('List', '') + '<div class="scroll"><div class="empty">削除されました。</div></div>';
+    return nav('List', x.name, '<button type="button" class="iconbtn" data-more aria-label="その他">'+icon('more', 24)+'</button>') +
+      '<div class="scroll"><div class="dhead"><div class="label">GROUP '+x.cat+'</div><h2>'+esc(x.name)+'</h2><div class="big"><span class="num" id="n">'+x.n+'</span><span class="small">数量</span></div></div>'+
+      '<div class="group"><div class="gr" data-inc="1"><span class="gt">数量を増やす<small>数字がなめらかに変わります</small></span>'+icon('plus', 20)+'</div>'+
+      '<div class="gr" data-deep><span class="gt">一段奥の画面へ<small>こだわる人向けの詳しい情報はここに</small></span>'+icon('chev', 16, 'var(--faint)')+'</div></div>'+
+      '<p class="hint" style="margin-top:14px">左端から右へスワイプでも戻れます。</p></div>';
+  });
+  s.addEventListener('click', async e => {
+    const x = S.items.find(i => i.id === id); if (!x) return;
+    if (e.target.closest('[data-inc]')) { x.n += 10; countTo(s.querySelector('#n'), x.n); TABS.forEach(renderTab); return; }
+    if (e.target.closest('[data-deep]')) return push(() => nav(x.name, '詳しい情報') + '<div class="scroll"><div class="dhead"><div class="label">DETAIL</div><h2>詳しい情報</h2></div><div class="group"><div class="gr static"><span class="gt">項目</span><span class="gv">値</span></div></div></div>');
+    if (e.target.closest('[data-more]')) {
+      const r = await actionSheet([{ label:'名前を変える', value:'edit' }, { label:'削除', value:'del', danger:true }]);
+      if (r === 'edit') editItem(x);
+      if (r === 'del' && await dialog('削除しますか？', 'あとから「元に戻す」で戻せます。', [{ label:'キャンセル', value:false, bold:true }, { label:'削除', value:true, danger:true }])) {
+        pop();
+        setTimeout(() => { const i = S.items.indexOf(x); S.items.splice(i, 1); refreshAll(); toast('「'+x.name+'」を削除しました', '元に戻す', () => { S.items.splice(i, 0, x); refreshAll(); }); }, 380);
+      }
+    }
+  });
+}
+function editItem(x){
+  openSheet({ title:x ? '名前を変える' : '追加', right:'保存', tall:!x, body:'<div style="height:8px"></div><label class="field"><span>名前</span><input id="f-name" value="'+esc(x ? x.name : '')+'"></label>',
+    onMount:(sh, close) => {
+      const i = sh.querySelector('#f-name'), b = sh.querySelector('[data-r]');
+      const sync = () => b.disabled = !i.value.trim(); sync(); i.addEventListener('input', sync); setTimeout(() => i.focus(), 420);
+      b.onclick = () => {
+        if (x) x.name = i.value.trim(); else S.items.unshift({ id:'i' + (seq++), name:i.value.trim(), cat:'A', n:0 });
+        close(); refreshAll(); toast('保存しました');
+        if (!x) setTimeout(() => { const r = $('#tp-list .row'); if (r) r.classList.add('flash'); }, 200);
+      };
+    } });
+}
+
+/* タブの中の操作（タブページは描き直されるので、親で受ける） */
+$('#tabpages').addEventListener('click', e => {
+  const lk = e.target.closest('[data-like]');
+  if (lk) { const po = S.posts.find(p => p.id === lk.dataset.like); po.liked = !po.liked; po.likes += po.liked ? 1 : -1; refreshAll(); const sv = $('[data-like="'+po.id+'"] svg'); if (sv) sv.classList.add('pop'); return; }
+  if (e.target.closest('[data-act="add"]')) return editItem(null);
+  const po = e.target.closest('[data-post]'); if (po) return push(() => { const p = S.posts.find(x => x.id === po.dataset.post); return nav('Home', p.name) + '<div class="scroll"><div class="dhead"><div class="label">POST</div><h2>'+esc(p.name)+'</h2><p style="line-height:1.8">'+esc(p.text)+'</p></div></div>'; });
+  const c = e.target.closest('[data-cat]'); if (c) { UI.cat = c.dataset.cat || null; return renderTab(TABS[0]); }
+  const it = e.target.closest('[data-item]'); if (it) return openItem(it.dataset.item);
+  const g = e.target.closest('[data-go]');
+  if (g && g.dataset.go === 'settings') return push(() => nav('Me', '設定') + '<div class="scroll"><div class="dhead"><div class="label">SETTINGS</div><h2>設定</h2></div><div class="group"><div class="gr static"><span class="gt">項目</span><span class="gv">値</span></div></div></div>');
+  if (g && g.dataset.go === 'reset') return dialog('最初に戻しますか？', '変えた内容がすべて元に戻ります。', [{ label:'キャンセル', value:false }, { label:'戻す', value:true, danger:true }]).then(ok => { if (ok) { S = JSON.parse(JSON.stringify(SEED)); refreshAll(); toast('最初に戻しました'); } });
+});
+$('#tabpages').addEventListener('input', e => { if (e.target.id === 'q') { UI.q = e.target.value.trim(); const pos = e.target.selectionStart; renderTab(TABS[0]); const q = $('#q'); q.focus(); q.setSelectionRange(pos, pos); } });
+
+/* ---------- 起動 ---------- */
+$('#tabpages').innerHTML = TABS.map(t => '<div class="tabpage'+(t.id === curTab ? ' on' : '')+'" id="tp-'+t.id+'"></div>').join('');
+renderTabbar(); TABS.forEach(renderTab);
+</script>
+</body>
+</html>
