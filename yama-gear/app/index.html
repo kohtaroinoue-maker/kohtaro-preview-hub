@@ -382,6 +382,19 @@ input{font:inherit;color:inherit}
 .wtag.t-cons{border-color:var(--warn);color:var(--warn)}
 .wtag:active{background:var(--press)}
 
+/* 想定最低気温 */
+.tempbtn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 10px 6px 8px;border:1px solid var(--line);font-size:13px;color:var(--mute);transition:background .12s}
+.tempbtn:active{background:var(--press)}
+.tempbtn b{font-size:17px;color:var(--ink)}
+.tempbtn.unset b{font-family:var(--sans);font-size:13px;color:var(--blue);font-weight:700}
+.tempbig{display:flex;align-items:center;justify-content:center;gap:26px;padding:18px 0 14px}
+.tempbig button{width:52px;height:52px;border:1.5px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.tempbig button:active{background:var(--press)}
+.tempbig .num{font-size:52px;min-width:150px;text-align:center;font-weight:900}
+.tstep{display:flex;align-items:center;gap:12px;margin:0 20px 16px}
+.tstep button{width:36px;height:36px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
+.tstep .num{font-size:20px;min-width:64px;text-align:center}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -541,6 +554,7 @@ const NEW = {
   tab_gear:'<path class="f" d="M7 9 C7 6.3 9.2 4.5 12 4.5 C14.8 4.5 17 6.3 17 9 V19 C17 19.8 16.3 20.5 15.5 20.5 H8.5 C7.7 20.5 7 19.8 7 19 Z"/><path d="M10 4.8 V3.5 H14 V4.8"/><path d="M9.5 13 H14.5 V17.5 H9.5 Z"/>',
   heart:'<path d="M12 19.5 C12 19.5 3.5 14.6 3.5 9.2 C3.5 6.6 5.5 4.8 7.8 4.8 C9.6 4.8 11.2 5.9 12 7.4 C12.8 5.9 14.4 4.8 16.2 4.8 C18.5 4.8 20.5 6.6 20.5 9.2 C20.5 14.6 12 19.5 12 19.5 Z"/>',
   heart_on:'<path class="solid" d="M12 19.5 C12 19.5 3.5 14.6 3.5 9.2 C3.5 6.6 5.5 4.8 7.8 4.8 C9.6 4.8 11.2 5.9 12 7.4 C12.8 5.9 14.4 4.8 16.2 4.8 C18.5 4.8 20.5 6.6 20.5 9.2 C20.5 14.6 12 19.5 12 19.5 Z"/>',
+  temp:'<path class="f" d="M10 4.5 C10 3.4 10.9 2.5 12 2.5 C13.1 2.5 14 3.4 14 4.5 V13.6 C15.2 14.3 16 15.6 16 17 C16 19.2 14.2 21 12 21 C9.8 21 8 19.2 8 17 C8 15.6 8.8 14.3 10 13.6 Z"/><path d="M12 9 V17"/>',
   info:'<circle class="f" cx="12" cy="12" r="8.5"/><path d="M12 11 V16.5"/><circle cx="12" cy="7.9" r=".9" class="dotf"/>',
   image:'<rect class="f" x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17.5 L9.5 12.5 L13 15.5 L15.5 13.5 L20 17.5"/>',
   tab_house:'<path class="f" d="M4 10.5 L12 4 L20 10.5 V20 H4 Z"/><path d="M9.5 20 V14.5 H14.5 V20"/>',
@@ -608,11 +622,11 @@ const SEED = {
     g('r1','ザック 50L（旧）','backpack','ザック',1680,'ok',{status:'retired',retiredAt:'2025-04'})
   ],
   lists: [
-    { id:'L1', photos:[], name:'テント泊 2泊3日', status:'plan', date:'2026-12-06', days:3, packed:['g1','g3','g5','g7','g13'], unused:[], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2],['g12',1]] },
-    { id:'L3', photos:[], name:'雪の小屋泊 1泊', status:'plan', date:'2027-01-10', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] },
-    { id:'L2', photos:['ph1','ph2','ph3'], name:'日帰り ハイク', status:'done', date:'2026-10-12', days:1, packed:[], unused:['g16'], items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1],['g12',1]] },
-    { id:'L4', photos:['ph4','ph5'], name:'テント泊 1泊2日', status:'done', date:'2026-09-20', days:2, packed:[], unused:['g4','g6'], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g10',1],['g13',1],['g14',1],['g16',2],['g17',1]] },
-    { id:'L5', photos:['ph6'], name:'冬の小屋泊', status:'done', date:'2026-02-08', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] }
+    { id:'L1', minTemp:-2, photos:[], name:'テント泊 2泊3日', status:'plan', date:'2026-12-06', days:3, packed:['g1','g3','g5','g7','g13'], unused:[], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2],['g12',1]] },
+    { id:'L3', minTemp:-8, photos:[], name:'雪の小屋泊 1泊', status:'plan', date:'2027-01-10', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] },
+    { id:'L2', minTemp:8, photos:['ph1','ph2','ph3'], name:'日帰り ハイク', status:'done', date:'2026-10-12', days:1, packed:[], unused:['g16'], items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1],['g12',1]] },
+    { id:'L4', minTemp:3, photos:['ph4','ph5'], name:'テント泊 1泊2日', status:'done', date:'2026-09-20', days:2, packed:[], unused:['g4','g6'], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g10',1],['g13',1],['g14',1],['g16',2],['g17',1]] },
+    { id:'L5', minTemp:-6, photos:['ph6'], name:'冬の小屋泊', status:'done', date:'2026-02-08', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] }
   ]
 };
 let S = JSON.parse(JSON.stringify(SEED));
@@ -1233,7 +1247,28 @@ const listCount = l => l.items.reduce((a, it) => a + it[1], 0);
 // 重さの数え方: base＝装備（ベース）、cons＝消耗品（食料・水・燃料）、worn＝行動着（靴・着ている服）
 // ギアごとに「いつもの数え方」（無ければカテゴリから）、山行ごとに上書きできる（l.wtag）
 const WTAG = { base:'ベース', worn:'行動着', cons:'消耗品' };
+// 決めていなければ: 食料・水＝消耗品、足まわり（靴）＝行動着、それ以外（レインウェア・防寒着も）＝ベース。どれも編集できる
 const defaultTag = x => x.tag || (['food', 'water'].includes(x.cat) ? 'cons' : x.cat === 'footwear' ? 'worn' : 'base');
+// 想定最低気温
+const tTxt = t => t == null ? '未設定' : (t < 0 ? '−' + Math.abs(t) : t) + '℃';
+function openTempSheet(l, after){
+  let t = l.minTemp == null ? 5 : l.minTemp;
+  openSheet({ title:'想定最低気温', right:'決定',
+    body:'<div class="tempbig"><button type="button" data-dt="-1" aria-label="下げる">'+icon('minus', 22)+'</button><span class="num" id="tv">'+tTxt(t)+'</span><button type="button" data-dt="1" aria-label="上げる">'+icon('plus', 22)+'</button></div>'+
+      '<div class="catpick" style="justify-content:center">'+[10, 5, 0, -5, -10].map(v => '<button type="button" class="chip" data-tv="'+v+'">'+tTxt(v)+'</button>').join('')+'</div>'+
+      '<p class="hint" style="text-align:center">寝袋や防寒着を選ぶ目安になります。天気予報や前の記録を見て入れてください。</p>'+
+      '<div class="btnrow"><button type="button" class="btn secondary block" data-tnone>未設定にする</button></div>',
+    onMount:(sh, close) => {
+      const tv = sh.querySelector('#tv');
+      const set = v => { t = Math.max(-30, Math.min(30, v)); tv.textContent = tTxt(t); tv.classList.remove('pop'); void tv.offsetWidth; tv.classList.add('pop'); };
+      sh.addEventListener('click', e => {
+        const d = e.target.closest('[data-dt]'); if (d) set(t + Number(d.dataset.dt));
+        const v = e.target.closest('[data-tv]'); if (v) set(Number(v.dataset.tv));
+        if (e.target.closest('[data-tnone]')) { l.minTemp = null; close(); after(); }
+      });
+      sh.querySelector('[data-r]').onclick = () => { l.minTemp = t; close(); after(); toast('想定最低気温を ' + tTxt(t) + ' にしました'); };
+    } });
+}
 const tagIn = (l, gid) => ((l.wtag || {})[gid]) || defaultTag(byId(gid));
 const sumBy = (l, f) => l.items.reduce((a, [gid, q]) => { const x = byId(gid); return a + (x && f(tagIn(l, gid)) ? x.w * q : 0); }, 0);
 const listBase = l => sumBy(l, t => t === 'base');   // ベースウェイト＝消耗品と行動着を除く
@@ -1256,7 +1291,7 @@ function dblk(d, muted){
 function tripCard(l){
   const done = l.status === 'done', [n, u] = fmtW(listBase(l));
   const sub = done ? (l.unused && l.unused.length ? '使わなかった ' + l.unused.length + ' 点' : '全部使った') + ((l.photos || []).length ? ' ・ 写真 ' + l.photos.length : '') + ' ・ ' + (tripPosts(l).length ? '投稿あり' : '未投稿')
-    : daysTxt(l.days) + ' ・ ' + leftTxt(l.date);
+    : daysTxt(l.days) + (l.minTemp != null ? ' ・ 最低 ' + tTxt(l.minTemp) : '') + ' ・ ' + leftTxt(l.date);
   return '<div class="lcard" data-list="'+l.id+'">'+dblk(l.date, done)+'<div style="min-width:0"><div class="ln">'+esc(l.name)+'</div><div class="small" style="margin-top:3px">'+sub+'</div></div>'+
     '<div class="lw"><div class="small" style="font-size:10.5px">ベース</div><span class="num">'+n+'</span><small class="small"> '+u+'</small></div>'+icon('chev', 16, 'var(--faint)')+'</div>';
 }
@@ -1270,7 +1305,7 @@ function renderLists(){
   if (next) {
     const [n, u] = fmtW(listBase(next)), pc = packedCount(next), all = next.items.length;
     hero = '<div class="hero" data-list="'+next.id+'"><div class="label">NEXT ・ '+leftTxt(next.date)+'</div>'+
-      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+'</div>'+
+      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+(next.minTemp != null ? ' ・ 想定最低気温 '+tTxt(next.minTemp) : '')+'</div>'+
       '<div class="hrow"><div><div class="small">ベースウェイト</div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+'</span><div class="small">食料・水 '+wTxt(listCons(next))+'（パックウェイト '+wTxt(listPack(next))+'）・ '+listCount(next)+' 点</div></div>'+
       '<div class="hp"><div class="small">パッキング '+pc+' / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div></div></div>';
   }
@@ -1290,12 +1325,13 @@ $('#tp-plan').addEventListener('click', e => {
 /* 新しい計画（前の山行からコピーできる） */
 function openNewTrip(){
   const DATES = [['2026-11-28', '今週末'], ['2026-12-05', '来週末'], ['2026-12-12', '再来週末']];
-  let date = DATES[0][0], days = 2, from = '';
+  let date = DATES[0][0], days = 2, from = '', minT = 5;
   const done = S.lists.filter(l => l.status === 'done').sort((a, b) => b.date.localeCompare(a.date));
   openSheet({ title:'新しい計画', right:'作成', tall:true,
     body:'<div style="height:6px"></div><label class="field"><span>名前</span><input id="t-name" placeholder="例: テント泊 1泊2日"></label>'+
       '<div class="field" style="margin-bottom:6px"><span>いつ？</span></div><div class="catpick">'+DATES.map(([d, l]) => '<button type="button" class="chip'+(d === date ? ' on' : '')+'" data-d="'+d+'">'+l+' '+jpDate(d).replace(/^\d+月/, m => m)+'</button>').join('')+'</div>'+
       '<div class="field" style="margin-bottom:6px"><span>日程</span></div><div class="catpick">'+[1, 2, 3].map(n => '<button type="button" class="chip'+(n === days ? ' on' : '')+'" data-days="'+n+'">'+daysTxt(n)+'</button>').join('')+'</div>'+
+      '<div class="field" style="margin-bottom:6px"><span>想定最低気温</span></div><div class="tstep"><button type="button" data-ntd="-1" aria-label="下げる">'+icon('minus', 18)+'</button><span class="num" id="nt">'+tTxt(minT)+'</span><button type="button" data-ntd="1" aria-label="上げる">'+icon('plus', 18)+'</button><span class="small">あとから変えられます</span></div>'+
       '<div class="field" style="margin-bottom:6px"><span>持ち物</span></div><p class="hint" style="margin:-4px 0 8px">前の山行の持ち物をそのまま使えます。あとから足したり外したりできます。</p>'+
       '<div class="group" style="margin-top:0"><div class="gr check" data-from=""><span class="gt">空から始める</span><span class="gv">'+icon('check', 18, 'var(--blue)')+'</span></div>'+
       done.map(l => '<div class="gr" data-from="'+l.id+'"><span class="gt">'+esc(l.name)+'<small>'+jpDate(l.date)+' ・ '+l.items.length+' 点 ・ '+wTxt(listTotal(l))+'</small></span><span class="gv"></span></div>').join('')+'</div>',
@@ -1304,6 +1340,7 @@ function openNewTrip(){
       const sync = () => b.disabled = !name.value.trim(); sync(); name.addEventListener('input', sync);
       sh.addEventListener('click', e => {
         const d = e.target.closest('[data-d]'); if (d) { date = d.dataset.d; sh.querySelectorAll('[data-d]').forEach(x => x.classList.toggle('on', x === d)); }
+        const nd = e.target.closest('[data-ntd]'); if (nd) { minT = Math.max(-30, Math.min(30, minT + Number(nd.dataset.ntd))); sh.querySelector('#nt').textContent = tTxt(minT); }
         const n = e.target.closest('[data-days]'); if (n) { days = +n.dataset.days; sh.querySelectorAll('[data-days]').forEach(x => x.classList.toggle('on', x === n)); }
         const f = e.target.closest('[data-from]');
         if (f) {
@@ -1314,7 +1351,7 @@ function openNewTrip(){
       });
       b.onclick = () => {
         const src = from ? listById(from) : null;
-        const l = { id:'L' + (seq++), name:name.value.trim(), status:'plan', date, days, items:src ? src.items.map(it => [it[0], it[1]]).filter(it => byId(it[0])) : [], packed:[], unused:[], photos:[] };
+        const l = { id:'L' + (seq++), name:name.value.trim(), status:'plan', date, days, minTemp:minT, items:src ? src.items.map(it => [it[0], it[1]]).filter(it => byId(it[0])) : [], packed:[], unused:[], photos:[] };
         S.lists.push(l); close(); renderLists();
         setTimeout(() => { openList(l.id); toast(src ? '「' + src.name + '」の持ち物をコピーしました' : '計画を作りました'); }, 350);
       };
@@ -1352,6 +1389,7 @@ function openList(lid){
       '<div class="dhead"><div class="label">'+(done ? 'DONE' : 'PLAN ・ ' + leftTxt(l.date))+'</div>'+
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
         '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
+        '<button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+
         '<div class="wbox"><div class="wline main"><span class="wl">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button></span><span class="wv"><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
         '<div class="wline"><span class="wl">食料・水</span><span class="wv"><span class="num" id="l-cons" data-v="'+cons+'">'+fmtW(cons)[0]+'</span><span class="u">'+fmtW(cons)[1]+'</span></span></div>'+
         '<div class="wline paren"><span class="wl">（パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+pack+'">'+pn+'</span><span class="u">'+pu+'</span>）</span></div>'+
@@ -1399,6 +1437,7 @@ async function onListClick(e, s, lid, setLeft){
     return;
   }
   if (e.target.closest('[data-left]')) return setLeft();
+  if (e.target.closest('[data-temp]')) return openTempSheet(l, () => { s._render(); renderLists(); });
   if (e.target.closest('[data-winfo]')) {
     const base = listBase(l), pack = listPack(l), worn = listWorn(l), tot = listTotal(l);
     const consRows = l.items.filter(([gid]) => byId(gid) && tagIn(l, gid) === 'cons').map(([gid, q]) => '<div class="gr static"><span class="gt">＋ '+esc(byId(gid).name)+'</span><span class="gv">'+wTxt(byId(gid).w * q)+'</span></div>').join('');
@@ -1472,7 +1511,7 @@ async function onListClick(e, s, lid, setLeft){
   }
 }
 function copyTrip(l){
-  const n = { id:'L' + (seq++), name:l.name, status:'plan', date:'2026-12-12', days:l.days, items:l.items.map(it => [it[0], it[1]]), packed:[], unused:[], photos:[] };
+  const n = { id:'L' + (seq++), name:l.name, status:'plan', date:'2026-12-12', days:l.days, minTemp:l.minTemp, items:l.items.map(it => [it[0], it[1]]), packed:[], unused:[], photos:[] };
   S.lists.push(n); refreshAll();
   setTimeout(() => { openList(n.id); toast('持ち物をコピーして計画を作りました'); }, 200);
 }
