@@ -341,6 +341,26 @@ input{font:inherit;color:inherit}
 .mpost .mp-h .small{margin-left:auto;font-size:12px}
 .toast.high{bottom:calc(150px + var(--bottom))}
 
+/* 気になる・タグ */
+.b-plan{color:var(--paper);background:var(--blue);border-color:var(--blue)}
+.comm{display:flex;gap:16px;margin-top:10px;font-size:12.5px;color:var(--mute)}
+.comm b{font-size:15px;color:var(--ink)}
+.like.light{color:#fff;margin-left:0}
+.gslide{cursor:pointer}
+.gcap{justify-content:space-between}
+.gcap-t{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tagb{position:absolute;right:4px;bottom:4px;display:flex;align-items:center;gap:2px;background:rgba(20,20,20,.6);color:#fff;font-size:10.5px;padding:1px 5px;border-radius:8px}
+.tpost{display:flex;align-items:center;gap:12px;margin:0 20px;padding:12px 0;border-top:1px solid var(--hair);cursor:pointer}
+.tpost:active{background:var(--press)}
+.tp-m{flex:1;min-width:0}
+.tp-m .mp-h{display:flex;gap:8px;align-items:baseline}
+.tp-m .mp-h b{font-family:var(--serif);font-size:15px}
+.tp-m p{margin:3px 0 0;font-size:13px;line-height:1.65;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.vtags{position:absolute;left:16px;right:16px;bottom:16px;display:flex;flex-wrap:wrap;gap:6px}
+.vtags span{display:flex;align-items:center;gap:4px;background:rgba(255,255,255,.14);padding:4px 10px;font-size:12.5px;border-radius:14px}
+.vimg{position:relative}
+.chip svg{vertical-align:-2px}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -414,7 +434,7 @@ input{font:inherit;color:inherit}
       <li>下のメニューは左から <b>Trip（山行計画）・Home（タイムライン）・Gear（ギア管理）</b></li>
       <li>Home の右上の丸が自分のプロフィール。設定はその中の歯車です</li>
       <li>投稿者のアイコンや名前を押すと、その人のプロフィール（投稿・ギア・フォロー）が開きます</li>
-      <li>♡でいいね。投稿を押すと持っていったギアが見られ、他の人のギアは「欲しい」に入れられます</li>
+      <li>♡でいいね。投稿を押すと持っていったギアが見られ、他の人のギアは「気になる」に入れられます</li>
       <li>ギアの行をタップすると詳細へ。いちばん下に、そのギアが出てくる投稿が並びます</li>
       <li>戻るのは左上の「‹」か、左端からのスワイプです</li>
       <li>Gear の「登録」から、型番タグの撮影（まね）で登録できます</li>
@@ -561,7 +581,7 @@ const SEED = {
     g('g15','モバイルバッテリー 10000','electronics','バッテリー',190,'ok'),
     g('g16','行動食セット 1日分','food','行動食',450,'ok'),
     g('g17','ソフトボトル 1L','water','水筒',36,'ok'),
-    g('w1','ウルトラライト テント 1P','tent','テント',620,'ai',{status:'wish',price:64000,replaces:'g1'}),
+    g('w1','ウルトラライト テント 1P','tent','テント',620,'ai',{plan:true,status:'wish',price:64000,replaces:'g1'}),
     g('w2','エアマット ショート','sleep','マット',230,'ai',{status:'wish',price:18000,replaces:'g4'}),
     g('r1','ザック 50L（旧）','backpack','ザック',1680,'ok',{status:'retired',retiredAt:'2025-04'})
   ],
@@ -661,7 +681,7 @@ function openSheet({ title, left, right, body, tall, onMount }){
   let closed = false;
   function close(){
     if (closed) return; closed = true;
-    sh.style.transform = ''; sh.classList.remove('on'); bd.classList.remove('on'); stackEl.classList.remove('recede');
+    sh.style.transform = ''; sh.classList.remove('on'); bd.classList.remove('on'); if (tall) stackEl.classList.remove('recede');
     setTimeout(() => { sh.remove(); bd.remove(); }, 420);
   }
   sh.querySelector('[data-x]').onclick = close; bd.onclick = close;
@@ -763,7 +783,7 @@ $('#tabbar').addEventListener('click', e => {
 
 /* ---------- MyGear ---------- */
 const UI = { tab:'owned', cat:null, fav:false, q:'' };
-const STATUS = [['owned','持っている'],['wish','欲しい'],['retired','手放した']];
+const STATUS = [['owned','持っている'],['wish','気になる'],['retired','手放した']];
 const CONTOUR = '<svg class="contour" viewBox="0 0 300 160" fill="none" stroke="#E2E2D8" stroke-width="1"><path d="M40 160 C60 110 110 80 170 78 C230 76 280 100 320 130"/><path d="M80 160 C95 125 135 104 180 102 C225 100 265 118 300 142"/><path d="M120 160 C132 138 158 126 188 125 C220 124 248 136 272 156"/><path d="M10 120 C40 60 110 34 180 34 C240 34 290 56 330 86"/><path d="M-10 84 C30 20 110 -6 190 -4 C250 -2 300 18 340 44"/></svg>';
 
 function buildGearPage(){
@@ -800,10 +820,10 @@ function renderGear(animate){
     (!q || (x.name + ' ' + x.brand).toLowerCase().includes(q)));
   let html = groupedRows(items, animate);
   if (!items.length) html = '<div class="empty">'+(counts.owned ? '該当するギアがありません。' : 'まだギアがありません。「登録」から入れていきましょう。')+'</div>';
-  // 欲しい・手放したは一段奥に
+  // 気になる・手放したは一段奥に
   const wishItems = S.gear.filter(x => x.status === 'wish'), wp = wishItems.filter(x => x.price != null).reduce((a, x) => a + x.price, 0);
   html += '<div class="group" style="margin-top:28px">'+
-    '<div class="gr" data-stlist="wish"><span class="gi">'+icon('star', 22, 'var(--ink)', true)+'</span><span class="gt">欲しいギア<small>まだ持っていないもの。今のギアとの重さの差を見られます</small></span><span class="gv">'+counts.wish+' 点'+(wp ? ' ・ ' + yen(wp) : '')+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+    '<div class="gr" data-stlist="wish"><span class="gi">'+icon('star', 22, 'var(--ink)', true)+'</span><span class="gt">気になるギア<small>欲しいもの・いいなと思ったもの。今のギアとの重さの差を見られます</small></span><span class="gv">'+counts.wish+' 点'+(wp ? ' ・ ' + yen(wp) : '')+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
     '<div class="gr" data-stlist="retired"><span class="gi">'+icon('backup', 22, 'var(--mute)')+'</span><span class="gt">手放したギア</span><span class="gv">'+counts.retired+' 点</span>'+icon('chev', 16, 'var(--faint)')+'</div></div>';
   $('#g-list').innerHTML = html;
   // 見出しの数字
@@ -826,13 +846,13 @@ function groupedRows(items, animate){
   return html;
 }
 function openStatusList(st){
-  const label = st === 'wish' ? '欲しいギア' : '手放したギア';
+  const label = st === 'wish' ? '気になるギア' : '手放したギア';
   const s = push(() => {
     const items = S.gear.filter(x => x.status === st);
     const wp = items.filter(x => x.price != null).reduce((a, x) => a + x.price, 0);
     return nav('Gear', label) + '<div class="scroll"><div class="dhead"><div class="label">'+(st === 'wish' ? 'WISH LIST' : 'RETIRED')+'</div>'+
       '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+label+'</h2>'+
-      '<p class="small" style="line-height:1.8">'+(st === 'wish' ? items.length + ' 点'+(wp ? ' ・ 合計 ' + yen(wp) + '（参考値）' : '')+'<br>今持っているギアと比べた重さの差を出しています。' : items.length + ' 点。記録として残しています。')+'</p></div>'+
+      '<p class="small" style="line-height:1.8">'+(st === 'wish' ? items.length + ' 点'+(wp ? ' ・ 合計 ' + yen(wp) + '（参考値）' : '')+(items.some(x => x.plan) ? ' ・ うち買う予定 ' + items.filter(x => x.plan).length + ' 点' : '')+'<br>欲しいもの、いいなと思ったもの。今持っているギアと比べた重さの差を出しています。「…」から「買う予定」の印を付けられます。' : items.length + ' 点。記録として残しています。')+'</p></div>'+
       '<div class="list">'+(items.length ? groupedRows(items, false) : '<div class="empty">'+(st === 'wish' ? 'まだありません。ギア詳細の「別の選択肢を探す」から追加できます。' : 'まだありません。')+'</div>')+'</div></div>';
   });
   s.addEventListener('click', e => {
@@ -845,7 +865,7 @@ function rowHtml(x, i){
   const wish = x.status === 'wish', ret = x.status === 'retired';
   const [n, u] = fmtW(x.w);
   let sub;
-  if (wish) sub = '<span>'+(x.price != null ? yen(x.price) : '価格不明')+'</span>'+BADGE[x.src];
+  if (wish) sub = (x.plan ? '<span class="badge b-plan" style="margin:0 4px 0 0">買う予定</span>' : '')+'<span>'+(x.price != null ? yen(x.price) : '価格不明')+'</span>'+BADGE[x.src];
   else sub = [x.type || '種類未設定', x.brand].map((p, k) => '<span'+(k?' class="dot"':'')+'>'+esc(p)+'</span>').join('') + (ret ? '<span class="dot">'+(x.retiredAt||'')+' 手放した</span>' : BADGE[x.src]);
   const ag = wish ? wishAgainst(x) : null;
   return '<div class="row'+(ret?' muted':'')+(i >= 0 ? ' enter' : '')+'" data-open="'+x.id+'"'+(i >= 0 ? ' style="animation-delay:'+Math.min(i, 10) * 22+'ms"' : '')+'>'+
@@ -887,6 +907,8 @@ function openDetail(id, backLabel){
           '<div class="brand">'+esc(x.brand)+'</div>'+
           '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+(x.src !== 'ok' ? BADGE[x.src].replace('class="badge', 'data-go="weight" class="badge') : '')+'</div>'+
           (ag ? '<div class="wishline">今の'+esc(ag.name)+'より '+delta(x.w - ag.w)+(x.price != null ? '　'+yen(x.price) : '')+'</div>' : '')+
+          (x.plan ? '<div style="margin-top:6px"><span class="badge b-plan">買う予定</span></div>' : '')+
+          '<div class="comm"><span><b class="num">'+community(x).own+'</b> 人が持っている</span><span><b class="num">'+community(x).interest+'</b> 人が気になる</span></div>'+
         '</div>'+
         '<div class="group">'+
           gr('weight', '重さ・出典', x.src === 'ok' ? '確定' : x.src === 'ai' ? 'AI推定' : '未確認', 'weight')+
@@ -907,24 +929,32 @@ function openDetail(id, backLabel){
   s._after(s);
   s.addEventListener('click', e => onDetailClick(e, s, id));
 }
-// このギアが出てくる投稿（自分の投稿はギアID、他の人の投稿は同じ名前のギアで探す）
-const postsWithGear = x => S.posts.filter(po => (po.gear && po.gear.includes(x.id)) || (po.items && po.items.some(it => it[0] === x.name)));
-// ギア詳細の一番上の写真: システムが人気の投稿（いいね順）から選ぶ。1投稿1枚、最大5枚
+// 運営が選んだ代表写真（ギア名 → [投稿ID, 写真ID]）。無ければタグ付き写真の一番新しいもの
+const REP_PHOTO = { 'ヘッドランプ 400':['O1','ph7'], '40L ザック':['P1','ph1'] };
+// このギアがタグ付けされた投稿（投稿ごとに最初の1枚）
+function taggedPosts(x){
+  const out = [];
+  S.posts.forEach(po => { const ph = (po.photos || []).find(id => ((po.ptags || {})[id] || []).includes(x.name)); if (ph) out.push({ po, ph }); });
+  return out;
+}
+// みんなの数（試作では名前から作った架空の数）
+function community(x){ let h = 0; for (const c of x.name) h = (h * 31 + c.charCodeAt(0)) % 997; return { own:12 + h % 180, interest:4 + h % 57 }; }
 function gearPhotos(x){
-  const picks = postsWithGear(x).filter(po => po.photos && po.photos.length).sort((a, b) => b.likes - a.likes).slice(0, 5);
-  if (!picks.length) return '<div class="gcar empty-car"><div class="gslide" style="background:var(--hair)">'+icon('image', 40, 'var(--faint)')+
-    '<span class="gnone">まだ写真がありません。このギアを持って行った山行を投稿すると、人気の投稿からここに並びます。</span></div></div>';
-  return '<div class="gcar"><div class="gtrack">'+picks.map(po => { const u = S.users[po.author];
-    return '<button type="button" class="gslide" data-openpost="'+po.id+'" style="background:'+phTint(po.photos[0])+'">'+icon('image', 48, '#7C93BC')+
-      '<span class="gcap">'+icon('heart_on', 13, '#fff')+' '+po.likes+'　'+esc(u.name)+' ・ '+esc(po.list)+'</span></button>'; }).join('')+'</div>'+
-    '<span class="gtag">人気の投稿から</span>'+
-    (picks.length > 1 ? '<div class="gdots">'+picks.map((p, i) => '<i class="'+(i ? '' : 'on')+'"></i>').join('')+'</div>' : '')+'</div>';
+  const tagged = taggedPosts(x), r = REP_PHOTO[x.name];
+  let pick = null, curated = false;
+  if (r && postById(r[0]) && postById(r[0]).photos.includes(r[1])) { pick = { po:postById(r[0]), ph:r[1] }; curated = true; }
+  else if (tagged.length) pick = tagged.slice().sort((a, b) => b.po.date.localeCompare(a.po.date))[0];
+  if (!pick) return '<div class="gcar empty-car"><div class="gslide" style="background:var(--hair)">'+icon('image', 40, 'var(--faint)')+'<span class="gnone">まだ写真がありません。投稿の写真にこのギアをタグ付けすると、ここに並びます。</span></div></div>';
+  const u = S.users[pick.po.author];
+  return '<div class="gcar"><div class="gslide" data-openpost="'+pick.po.id+'" style="background:'+phTint(pick.ph)+'">'+icon('image', 48, '#7C93BC')+
+    '<span class="gcap"><span class="gcap-t">'+esc(u.name)+' ・ '+esc(pick.po.list)+'</span>'+likeBtn(pick.po, true)+'</span></div>'+
+    '<span class="gtag">'+(curated ? '代表写真（運営が選んだもの）' : '新しい投稿から')+'</span></div>';
 }
 function gearPosts(x){
-  const ps = postsWithGear(x);
-  return '<div class="ghead" style="border-top:2px solid var(--ink);padding-top:18px"><b>このギアが出てくる投稿</b><span class="label">POSTS</span><span class="small" style="margin-left:auto">'+ps.length+' 件</span></div>'+
-    (ps.length ? ps.map(po => '<div class="mpost" data-openpost="'+po.id+'"><div class="mp-h"><span class="label">'+po.date+'</span><b>'+esc(po.list)+'</b><span class="small">'+esc(S.users[po.author].name)+'</span></div><div class="pfoot"><p>'+esc(po.text)+'</p>'+likeBtn(po)+'</div></div>').join('')
-      : '<div class="empty" style="padding-top:6px">まだありません。山行のあとに投稿すると、持っていったギアの投稿がここに並びます。</div>')+
+  const ps = taggedPosts(x).sort((a, b) => b.po.likes - a.po.likes);
+  return '<div class="ghead" style="border-top:2px solid var(--ink);padding-top:18px"><b>このギアがタグ付けされた投稿</b><span class="label">人気順</span><span class="small" style="margin-left:auto">'+ps.length+' 件</span></div>'+
+    (ps.length ? ps.map(({ po, ph }) => '<div class="tpost" data-openpost="'+po.id+'">'+phTile(ph, 64)+'<div class="tp-m"><div class="mp-h"><b>'+esc(po.list)+'</b><span class="small">'+esc(S.users[po.author].name)+'</span></div><p>'+esc(po.text)+'</p></div>'+likeBtn(po)+'</div>').join('')
+      : '<div class="empty" style="padding-top:6px">まだありません。投稿の写真にこのギアをタグ付けすると、ここに人気順で並びます。</div>')+
     '<div style="height:40px"></div>';
 }
 function gr(ic, title, val, go, sub){
@@ -946,7 +976,8 @@ async function onDetailClick(e, s, id){
   if (e.target.closest('[data-edit]')) return openEdit(id);
   if (e.target.closest('[data-more]')) {
     const move = x.status === 'owned' ? { label:'手放したにする', value:'retired' } : x.status === 'wish' ? { label:'買った（持っているへ）', value:'owned' } : { label:'持っているに戻す', value:'owned' };
-    const r = await actionSheet([{ label:'編集', value:'edit' }, move, { label:'削除（登録ミス用）', value:'del', danger:true }]);
+    const r = await actionSheet([{ label:'編集', value:'edit' }].concat(x.status === 'wish' ? [{ label:x.plan ? '買う予定を外す' : '買う予定にする', value:'plan' }] : [], [move, { label:'削除（登録ミス用）', value:'del', danger:true }]));
+    if (r === 'plan') { x.plan = !x.plan; refreshAll(); toast(x.plan ? '買う予定にしました' : '買う予定を外しました'); }
     if (r === 'edit') openEdit(id);
     if (r === 'retired' || r === 'owned') { x.status = r; if (r === 'retired') x.retiredAt = '2026-11'; refreshAll(); toast(r === 'retired' ? '「手放したギア」に移しました' : '持っているギアに入れました'); }
     if (r === 'del') {
@@ -1029,7 +1060,7 @@ function openAlt(id, back){
     if (state === 'loading') body = '<div class="loading"><span class="spin"></span>AI が同じ種類のギアを探しています…</div><div class="skel"></div><div class="skel"></div><div class="skel"></div>';
     else body = '<p class="hint" style="padding-top:12px">今の「'+esc(x.name)+'」（'+wTxt(x.w)+'）より軽いもの。価格は変動するため参考値です。</p><div style="margin-top:6px">'+
       cands.map(c => '<div class="cand enter"><span>'+icon(x.cat, 24, 'var(--ink)', true)+'</span><div class="cm"><div class="cn">'+esc(c.name)+'</div><div class="cd">'+wTxt(c.w)+'　'+delta(c.w - x.w)+'</div><div class="cp">'+yen(c.price)+'</div></div>'+
-        '<button type="button" class="mini'+(added.has(c.k) ? ' done' : '')+'" data-add="'+c.k+'" data-w="'+c.w+'" data-p="'+c.price+'" data-n="'+esc(c.name)+'">'+(added.has(c.k) ? '追加済み' : '欲しいに追加')+'</button></div>').join('')+'</div>';
+        '<button type="button" class="mini'+(added.has(c.k) ? ' done' : '')+'" data-add="'+c.k+'" data-w="'+c.w+'" data-p="'+c.price+'" data-n="'+esc(c.name)+'">'+(added.has(c.k) ? '追加済み' : '気になるに追加')+'</button></div>').join('')+'</div>';
     return nav(back, '別の選択肢') + '<div class="scroll"><div class="dhead"><div class="label">ALTERNATIVES</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0 0">別の選択肢</h2></div>'+body+'<div style="height:40px"></div></div>';
   });
   setTimeout(() => { state = 'done'; s._render(); }, 1400);
@@ -1038,7 +1069,7 @@ function openAlt(id, back){
     const x = byId(id); added.add(b.dataset.add);
     S.gear.push({ id:'n' + (seq++), name:b.dataset.n, brand:B, cat:x.cat, type:x.type, w:+b.dataset.w, src:'ai', fav:false, status:'wish', price:+b.dataset.p, replaces:x.id });
     refreshAll();
-    toast('「欲しい」に追加しました');
+    toast('「気になる」に追加しました');
   });
 }
 
@@ -1067,7 +1098,7 @@ function openEdit(id, focusWeight){
 function openNew(){
   let pickedCat = null, status = 'owned', aiFilled = false;
   openSheet({ title:'ギアを登録', right:'保存', tall:true,
-    body:'<div class="segc" id="n-seg" style="margin-top:6px"><i class="thumb" style="width:50%;transform:translateX('+(status === 'wish' ? 100 : 0)+'%)"></i><button type="button" class="'+(status==='owned'?'on':'')+'" data-ns="owned">持っている</button><button type="button" class="'+(status==='wish'?'on':'')+'" data-ns="wish">欲しい</button></div>'+
+    body:'<div class="segc" id="n-seg" style="margin-top:6px"><i class="thumb" style="width:50%;transform:translateX('+(status === 'wish' ? 100 : 0)+'%)"></i><button type="button" class="'+(status==='owned'?'on':'')+'" data-ns="owned">持っている</button><button type="button" class="'+(status==='wish'?'on':'')+'" data-ns="wish">気になる</button></div>'+
       '<div style="height:14px"></div>'+
       '<button type="button" class="bigbtn" data-cam>'+icon('camera', 30)+'<span><b>型番タグを撮影</b><small>AI が名前と重さを読み取ります</small></span></button>'+
       '<div class="or">または手で入力</div>'+
@@ -1104,7 +1135,7 @@ function openNew(){
         setTimeout(() => {
           const r = document.querySelector('#g-list [data-open="'+it.id+'"]');
           if (r) { r.scrollIntoView({ block:'center', behavior:'smooth' }); r.classList.add('flash'); }
-          toast(status === 'wish' ? '「欲しいギア」に登録しました' : '登録しました');
+          toast(status === 'wish' ? '「気になるギア」に登録しました' : '登録しました');
         }, 380);
       };
     } });
@@ -1134,23 +1165,25 @@ const PH_TINT = ['#E4ECF7', '#E8EDE3', '#F1EBE2', '#E8E8F0'];
 let phSeq = 1000;
 const newPhoto = () => 'ph' + (phSeq++);
 const phTint = id => PH_TINT[parseInt(id.replace(/\D/g, ''), 10) % PH_TINT.length];
-function phTile(id, size, more){
+function phTile(id, size, more, tagN){
   return '<button type="button" class="ptile" data-ph="'+id+'" aria-label="写真" style="background:'+phTint(id)+';'+(size ? 'width:'+size+'px;height:'+size+'px;' : '')+'">'+
-    icon('image', size ? Math.round(size * .36) : 30, '#7C93BC')+(more ? '<span class="more">+'+more+'</span>' : '')+'</button>';
+    icon('image', size ? Math.round(size * .36) : 30, '#7C93BC')+(more ? '<span class="more">+'+more+'</span>' : '')+(tagN ? '<span class="tagb">'+icon('type', 11, '#fff')+tagN+'</span>' : '')+'</button>';
 }
-function photoGrid(ids){
+function photoGrid(ids, ptags){
   if (!ids || !ids.length) return '';
   const n = Math.min(ids.length, 4);
-  return '<div class="pgrid n'+n+'">'+ids.slice(0, 4).map((id, i) => phTile(id, 0, i === 3 && ids.length > 4 ? ids.length - 4 : 0)).join('')+'</div>';
+  return '<div class="pgrid n'+n+'">'+ids.slice(0, 4).map((id, i) => phTile(id, 0, i === 3 && ids.length > 4 ? ids.length - 4 : 0, ((ptags || {})[id] || []).length)).join('')+'</div>';
 }
-function openViewer(ids, idx, onDelete){
+function openViewer(ids, idx, onDelete, ptags){
   const v = el('<div class="viewer" role="dialog"><div class="vtop"><button type="button" class="vx">閉じる</button><span class="vc"></span>'+(onDelete ? '<button type="button" class="vd">削除</button>' : '<span style="width:52px"></span>')+'</div>'+
     '<div class="vimg"></div><div class="vnav"><button type="button" class="vp" aria-label="前へ">'+icon('back', 28, '#fff')+'</button><button type="button" class="vn" aria-label="次へ">'+icon('chev', 28, '#fff')+'</button></div></div>');
   app.appendChild(v);
   const draw = dir => {
     v.querySelector('.vc').textContent = (idx + 1) + ' / ' + ids.length;
     const img = v.querySelector('.vimg');
-    img.innerHTML = '<div class="vph'+(dir ? ' slide' + dir : '')+'" style="background:'+phTint(ids[idx])+'">'+icon('image', 64, '#7C93BC')+'<span>写真（試作ではアイコンで表示）</span></div>';
+    const tg = ((ptags || {})[ids[idx]] || []);
+    img.innerHTML = '<div class="vph'+(dir ? ' slide' + dir : '')+'" style="background:'+phTint(ids[idx])+'">'+icon('image', 64, '#7C93BC')+'<span>写真（試作ではアイコンで表示）</span></div>'+
+      (tg.length ? '<div class="vtags">'+tg.map(nm => '<span>'+icon('type', 12, '#fff')+esc(nm)+'</span>').join('')+'</div>' : '');
     v.querySelector('.vp').style.visibility = idx > 0 ? 'visible' : 'hidden';
     v.querySelector('.vn').style.visibility = idx < ids.length - 1 ? 'visible' : 'hidden';
   };
@@ -1276,7 +1309,7 @@ function openList(lid){
           : '<button type="button" class="ck'+(packed ? ' on' : '')+'" data-pack="'+gid+'" aria-label="パッキング済み">'+(packed ? icon('check', 14, 'var(--paper)') : '')+'</button>';
         const dim = done ? unused : packed;
         return '<div class="swipe" data-row="'+gid+'"><button type="button" class="del" data-rm="'+gid+'">外す</button><div class="fg'+(dim ? ' dim' : '')+'">'+ck+
-          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(q > 1 ? ' × ' + q : '')+(x.status === 'wish' ? ' ・ 欲しい' : '')+(done && unused ? ' ・ 使わなかった' : '')+'</div></div>'+
+          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(q > 1 ? ' × ' + q : '')+(x.status === 'wish' ? ' ・ 気になる' : '')+(done && unused ? ' ・ 使わなかった' : '')+'</div></div>'+
           (done ? '' : '<div class="step"><button type="button" data-q="-1" data-g="'+gid+'" aria-label="減らす">'+icon('minus', 16)+'</button><span class="q">'+q+'</span><button type="button" data-q="1" data-g="'+gid+'" aria-label="増やす">'+icon('plus', 16)+'</button></div>')+
           '<span class="lw2 num" style="font-size:15px">'+wTxt(x.w * q)+'</span></div></div>';
       }).join('')).join('');
@@ -1447,7 +1480,7 @@ function openAddGear(s, l){
   openSheet({ title:'ギアを追加', right:'追加', tall:true,
     body: cand.length ? CATS.map(c => { const its = cand.filter(x => x.cat === c.id); if (!its.length) return '';
       return '<div class="sec"><span class="h">'+c.label+'</span><span class="label">'+c.en+'</span></div>'+its.map(x =>
-        '<div class="gr" data-sel="'+x.id+'"><span class="chk"></span><span class="gt">'+esc(x.name)+'<small>'+wTxt(x.w)+(x.status === 'wish' ? ' ・ 欲しい' : '')+'</small></span></div>').join(''); }).join('')
+        '<div class="gr" data-sel="'+x.id+'"><span class="chk"></span><span class="gt">'+esc(x.name)+'<small>'+wTxt(x.w)+(x.status === 'wish' ? ' ・ 気になる' : '')+'</small></span></div>').join(''); }).join('')
       : '<div class="empty">追加できるギアがありません。</div>',
     onMount:(sh, close) => {
       const b = sh.querySelector('[data-r]'); b.disabled = true;
@@ -1475,17 +1508,17 @@ SEED.users = {
   koke: { name:'こけもも', handle:'kokemomo', bio:'小屋泊と雪山入門。重くても安心な派。', color:'#5A5A55', followers:51, following:40, followed:false }
 };
 SEED.posts = [
-  { id:'O1', author:'sora', list:'縦走 2泊3日', date:'2026-11-20', text:'シェルターをツェルトに替えて 400 g 減。夜は少し寒かったので、マットは厚めに戻すつもり。', photos:['ph7','ph8'], w:6420, unused:0, likes:24, liked:false,
+  { id:'O1', author:'sora', list:'縦走 2泊3日', date:'2026-11-20', text:'シェルターをツェルトに替えて 400 g 減。夜は少し寒かったので、マットは厚めに戻すつもり。', photos:['ph7','ph8'], ptags:{ph7:['ヘッドランプ 400','ダウン寝袋 0℃'], ph8:['ツェルト ライト']}, w:6420, unused:0, likes:24, liked:false,
     items:[['ツェルト ライト','tent',300],['エアマット ショート','sleep',230],['ザック 30L','backpack',720],['チタンクッカー 550','cook',78],['ウインドシェル','clothing',95],['ダウン寝袋 0℃','sleep',620],['ヘッドランプ 400','light',75]] },
-  { id:'O2', author:'haru', list:'日帰り 紅葉', date:'2026-11-18', text:'行動食はナッツとドライフルーツ。ソフトボトル 2 本で足りた。', photos:['ph9'], w:2650, unused:1, likes:9, liked:true,
+  { id:'O2', author:'haru', list:'日帰り 紅葉', date:'2026-11-18', text:'行動食はナッツとドライフルーツ。ソフトボトル 2 本で足りた。', photos:['ph9'], ptags:{ph9:['ソフトボトル 1L']}, w:2650, unused:1, likes:9, liked:true,
     items:[['ソフトボトル 1L','water',36],['ヘッドランプ 200','light',60],['ウインドシェル','clothing',95],['デイパック 20L','backpack',480]] },
-  { id:'O3', author:'koke', list:'小屋泊 1泊', date:'2026-11-02', text:'初めての冬靴。重いけど安心感がちがう。', photos:['ph10'], w:5120, unused:0, likes:15, liked:false,
+  { id:'O3', author:'koke', list:'小屋泊 1泊', date:'2026-11-02', text:'初めての冬靴。重いけど安心感がちがう。', photos:['ph10'], ptags:{ph10:['40L ザック','冬靴']}, w:5120, unused:0, likes:15, liked:false,
     items:[['冬靴','footwear',1650],['ダウンジャケット','clothing',380],['チェーンスパイク','safety',340],['40L ザック','backpack',1150],['ヘッドランプ 400','light',75]] },
-  { id:'P1', author:'me', trip:'L2', list:'日帰り ハイク', date:'2026-10-12', text:'朝は冷えたけど、歩き出したらレインだけで十分だった。行動食は半分余ったので次は減らす。', photos:['ph1','ph2','ph3'], w:2180, unused:1, likes:3, liked:false,
+  { id:'P1', author:'me', trip:'L2', list:'日帰り ハイク', date:'2026-10-12', text:'朝は冷えたけど、歩き出したらレインだけで十分だった。行動食は半分余ったので次は減らす。', photos:['ph1','ph2','ph3'], ptags:{ph1:['40L ザック'], ph2:['ヘッドランプ 400','レインジャケット']}, w:2180, unused:1, likes:3, liked:false,
     gear:['g5','g10','g13','g14','g16','g17'] },
-  { id:'P2', author:'me', trip:'L4', list:'テント泊 1泊2日', date:'2026-09-20', text:'クッカーを替えてから朝の支度が早い。テント場は風が強め、ペグは長いのを持っていって正解。', photos:[], w:7120, unused:2, likes:5, liked:false,
+  { id:'P2', author:'me', trip:'L4', list:'テント泊 1泊2日', date:'2026-09-20', text:'クッカーを替えてから朝の支度が早い。テント場は風が強め、ペグは長いのを持っていって正解。', photos:[], ptags:{}, w:7120, unused:2, likes:5, liked:false,
     gear:['g1','g3','g4','g5','g6','g7','g8','g10','g13','g14','g16','g17'] },
-  { id:'P3', author:'me', trip:'L5', list:'冬の小屋泊', date:'2026-02-08', text:'寝袋は0℃で足りた。フリースは小屋の中でずっと着ていた。', photos:['ph6'], w:4380, unused:0, likes:1, liked:false,
+  { id:'P3', author:'me', trip:'L5', list:'冬の小屋泊', date:'2026-02-08', text:'寝袋は0℃で足りた。フリースは小屋の中でずっと着ていた。', photos:['ph6'], ptags:{ph6:['ダウン寝袋 0℃','フリースジャケット']}, w:4380, unused:0, likes:1, liked:false,
     gear:['g3','g5','g9','g13','g14'] }
 ];
 S.users = JSON.parse(JSON.stringify(SEED.users));
@@ -1497,9 +1530,9 @@ function avatar(uid, size){
   const u = S.users[uid]; size = size || 40;
   return '<span class="av" data-user="'+uid+'" style="width:'+size+'px;height:'+size+'px;font-size:'+Math.round(size * .42)+'px;background:'+u.color+'">'+esc(u.name.slice(0, 1))+'</span>';
 }
-function likeBtn(po){
-  return '<button type="button" class="like'+(po.liked ? ' on' : '')+'" data-like="'+po.id+'" aria-label="いいね">'+
-    icon(po.liked ? 'heart_on' : 'heart', 20, po.liked ? 'var(--warn)' : 'var(--mute)')+'<span>'+po.likes+'</span></button>';
+function likeBtn(po, light){
+  return '<button type="button" class="like'+(po.liked ? ' on' : '')+(light ? ' light' : '')+'" data-like="'+po.id+'" aria-label="この投稿にいいね">'+
+    icon(po.liked ? 'heart_on' : 'heart', 20, po.liked ? (light ? '#FFB4A0' : 'var(--warn)') : (light ? '#fff' : 'var(--mute)'))+'<span>'+po.likes+'</span></button>';
 }
 function renderHome(){
   const p = $('#tp-home');
@@ -1518,7 +1551,7 @@ function renderHome(){
 }
 function postHtml(po, full){
   const u = S.users[po.author];
-  const photo = photoGrid(po.photos);
+  const photo = photoGrid(po.photos, po.ptags);
   return '<article class="post" data-post-id="'+po.id+'"'+(full ? '' : ' data-openpost="'+po.id+'"')+'>'+
     '<div class="ph">'+avatar(po.author, 40)+'<div class="pu"><b data-user="'+po.author+'">'+esc(u.name)+'</b><span class="small">@'+u.handle+' ・ '+shortDate(po.date)+'</span></div></div>'+
     '<div class="pt">'+esc(po.list)+'</div>'+photo+
@@ -1533,7 +1566,7 @@ function postClick(e, back){
   const lk = e.target.closest('[data-like]'); if (lk) { e.stopPropagation(); toggleLike(lk.dataset.like); return true; }
   const us = e.target.closest('[data-user]'); if (us) { e.stopPropagation(); openProfile(us.dataset.user, back); return true; }
   const ph = e.target.closest('[data-ph]'), pa = ph && ph.closest('[data-post-id]');
-  if (pa) { e.stopPropagation(); const po = postById(pa.dataset.postId); openViewer(po.photos, po.photos.indexOf(ph.dataset.ph)); return true; }
+  if (pa) { e.stopPropagation(); const po = postById(pa.dataset.postId); openViewer(po.photos, po.photos.indexOf(ph.dataset.ph), null, po.ptags); return true; }
   const op = e.target.closest('[data-openpost]'); if (op) { openPostDetail(op.dataset.openpost, back); return true; }
   return false;
 }
@@ -1543,20 +1576,24 @@ function openPostDetail(pid, back){
     let gearHtml;
     if (po.gear) gearHtml = po.gear.map(byId).filter(Boolean).map(x => '<div class="gr" data-open="'+x.id+'"><span class="gi">'+icon(x.cat, 22)+'</span><span class="gt">'+esc(x.name)+'</span><span class="gv">'+wTxt(x.w)+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>').join('');
     else gearHtml = po.items.map((it, i) => '<div class="gr static"><span class="gi">'+icon(it[1], 22)+'</span><span class="gt">'+esc(it[0])+'<small>'+wTxt(it[2])+'</small></span>'+
-      '<button type="button" class="mini'+(it[3] ? ' done' : '')+'" data-want="'+i+'">'+(it[3] ? '追加済み' : '欲しい')+'</button></div>').join('');
+      '<button type="button" class="mini'+(it[3] ? ' done' : '')+'" data-want="'+i+'">'+(it[3] ? '追加済み' : '気になる')+'</button></div>').join('');
+    const tagNames = [...new Set(Object.values(po.ptags || {}).flat())];
     return nav(back, po.list) + '<div class="scroll">'+postHtml(po, true).replace('class="post"', 'class="post" style="border-top:0"')+
+      (tagNames.length ? '<div class="ghead" style="padding-top:8px"><b>写真に写っているギア</b><span class="label">TAGS</span></div><div class="catpick">'+tagNames.map(nm => '<button type="button" class="chip" data-gname="'+esc(nm)+'">'+icon('type', 13)+' '+esc(nm)+'</button>').join('')+'</div>' : '')+
       '<div class="ghead"><b>持っていったギア</b><span class="label">GEAR</span><span class="small" style="margin-left:auto">'+gearCount(po)+' 点</span></div>'+
-      (po.gear ? '' : '<p class="hint" style="margin-top:-2px">気になるギアは「欲しい」で自分の欲しいギアに入れられます。</p>')+
+      (po.gear ? '' : '<p class="hint" style="margin-top:-2px">いいなと思ったギアは「気になる」で自分の一覧に入れられます。</p>')+
       '<div class="group" style="margin-top:'+(po.gear ? 0 : 8)+'px">'+gearHtml+'</div><div style="height:40px"></div></div>';
   });
   s.addEventListener('click', e => {
     if (postClick(e, '戻る')) return;
+    const gn = e.target.closest('[data-gname]');
+    if (gn) { const g = S.gear.find(x => x.name === gn.dataset.gname); if (g) openDetail(g.id, '戻る'); else toast('自分のギアには無いギアです。下の「気になる」から入れられます'); return; }
     const w = e.target.closest('[data-want]');
     if (w) {
       const po = postById(pid), it = po.items[+w.dataset.want]; if (it[3]) return;
       it[3] = true;
       S.gear.push({ id:'n' + (seq++), name:it[0], brand:'—', cat:it[1], type:null, w:it[2], src:'un', fav:false, status:'wish', use:null });
-      refreshAll(); toast('「欲しいギア」に入れました');
+      refreshAll(); toast('「気になるギア」に入れました');
       return;
     }
     const o = e.target.closest('[data-open]'); if (o) openDetail(o.dataset.open, '戻る');
@@ -1619,22 +1656,39 @@ function openPost(pre){
       const ta = sh.querySelector('#p-text'), b = sh.querySelector('[data-r]');
       b.disabled = true; ta.addEventListener('input', () => b.disabled = !ta.value.trim());
       setTimeout(() => ta.focus(), 450);
+      let ptags = {};
       function drawPh(added){
         const l = listById(pick), fromTrip = l && (l.photos || []).length;
-        sh.querySelector('#p-phl').textContent = '写真 ' + photos.length + ' 枚' + (fromTrip ? '（山行の写真から。押すと外せます）' : '');
-        sh.querySelector('#p-ph').innerHTML = '<button type="button" class="ptile add" data-addph>'+icon('camera', 22)+'<span>追加</span></button>' + photos.map(id => phTile(id, 64)).join('');
+        sh.querySelector('#p-phl').textContent = '写真 ' + photos.length + ' 枚' + (photos.length ? '（押すと、写っているギアをタグ付けできます）' : '');
+        sh.querySelector('#p-ph').innerHTML = '<button type="button" class="ptile add" data-addph>'+icon('camera', 22)+'<span>追加</span></button>' + photos.map(id => phTile(id, 64, 0, (ptags[id] || []).length)).join('');
         if (added) { const t = sh.querySelectorAll('#p-ph .ptile[data-ph]'); const last = t[t.length - 1]; if (last) last.classList.add('pop'); }
       }
       photos = pick && listById(pick) ? (listById(pick).photos || []).slice() : []; drawPh();
+      function openTagSheet(id){
+        const l = listById(pick), names = l ? l.items.map(it => byId(it[0])).filter(Boolean).map(x => x.name) : [];
+        const sel = new Set(ptags[id] || []);
+        openSheet({ title:'写っているギア', right:'決定',
+          body:'<p class="hint" style="margin:4px 0 10px">選んだギアのページに、この写真が並びます。付けなくても大丈夫です。</p><div class="group" style="margin-top:0">'+
+            names.map(nm => '<div class="gr" data-tg="'+esc(nm)+'"><span class="chk'+(sel.has(nm) ? ' on' : '')+'">'+(sel.has(nm) ? icon('check', 16, 'var(--paper)') : '')+'</span><span class="gt">'+esc(nm)+'</span></div>').join('')+'</div>'+
+            '<div class="btnrow"><button type="button" class="btn secondary block danger" data-rmph>この写真を投稿から外す</button></div>',
+          onMount:(t, close2) => {
+            t.addEventListener('click', e => {
+              const r = e.target.closest('[data-tg]');
+              if (r) { const nm = r.dataset.tg; sel.has(nm) ? sel.delete(nm) : sel.add(nm); const ck = r.querySelector('.chk'); ck.classList.toggle('on', sel.has(nm)); ck.innerHTML = sel.has(nm) ? icon('check', 16, 'var(--paper)') : ''; }
+              if (e.target.closest('[data-rmph]')) { photos = photos.filter(x => x !== id); delete ptags[id]; close2(); drawPh(); }
+            });
+            t.querySelector('[data-r]').onclick = () => { ptags[id] = [...sel]; close2(); drawPh(); };
+          } });
+      }
       sh.addEventListener('click', e => {
         const c = e.target.closest('[data-pl]'); if (c) { pick = c.dataset.pl; sh.querySelectorAll('[data-pl]').forEach(x => x.classList.toggle('on', x === c)); }
-        if (c) { photos = (listById(pick).photos || []).slice(); drawPh(); }
+        if (c) { photos = (listById(pick).photos || []).slice(); ptags = {}; drawPh(); }
         if (e.target.closest('[data-addph]')) { photos.push(newPhoto()); drawPh(true); }
-        const pt = e.target.closest('.ptile[data-ph]'); if (pt) { photos = photos.filter(x => x !== pt.dataset.ph); drawPh(); }
+        const pt = e.target.closest('.ptile[data-ph]'); if (pt) openTagSheet(pt.dataset.ph);
       });
       b.onclick = () => {
         const l = listById(pick);
-        const po = { id:'P' + (seq++), author:'me', trip:l ? l.id : null, list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), photos:photos.slice(), w:l ? listTotal(l) : 0, unused:l ? (l.unused || []).length : 0, likes:0, liked:false, gear:l ? l.items.map(i => i[0]) : [] };
+        const po = { id:'P' + (seq++), author:'me', trip:l ? l.id : null, list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), photos:photos.slice(), ptags:Object.fromEntries(Object.entries(ptags).filter(([k, v]) => photos.includes(k) && v.length)), w:l ? listTotal(l) : 0, unused:l ? (l.unused || []).length : 0, likes:0, liked:false, gear:l ? l.items.map(i => i[0]) : [] };
         S.posts.unshift(po); close(); refreshAll();
         setTimeout(() => { const a = document.querySelector('#posts [data-post-id="'+po.id+'"]'); if (a) { a.scrollIntoView({ block:'center', behavior:'smooth' }); a.classList.add('flash'); } toast('投稿しました'); }, 380);
       };
