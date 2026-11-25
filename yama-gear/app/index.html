@@ -1638,7 +1638,7 @@ function openFinish(s, l){
         l.items.forEach(([gid]) => { const x = byId(gid); if (!x) return; x.use = x.use || [0, 0]; x.use[0]++; if (!unused.has(gid)) x.use[1]++; });
         close(); refreshAll();
         const go = await dialog('山行を記録しました', 'このまま投稿しますか？ 持っていったギアと重さは自動で入ります。', [{ label:'あとで', value:false }, { label:'投稿する', value:true, bold:true }]);
-        if (go) openPost(l.id);
+        if (go) openPost(l.id, askRateOnce); else askRateOnce();
       };
     } });
 }
@@ -1886,7 +1886,7 @@ $('#tp-home').addEventListener('click', e => {
   if (e.target.closest('[data-post]')) return openPost();
   postClick(e, 'Home');
 });
-function openPost(pre){
+function openPost(pre, after){
   const doneTrips = S.lists.filter(l => l.status === 'done').sort((a, b) => b.date.localeCompare(a.date));
   let pick = pre || (doneTrips[0] || {}).id, photos = [];
   openSheet({ title:'投稿', right:'投稿', tall:true,
@@ -1933,7 +1933,7 @@ function openPost(pre){
         const l = listById(pick);
         const po = { id:'P' + (seq++), author:'me', trip:l ? l.id : null, list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), photos:photos.slice(), ptags:Object.fromEntries(Object.entries(ptags).filter(([k, v]) => photos.includes(k) && v.length)), w:l ? listTotal(l) : 0, unused:l ? (l.unused || []).length : 0, likes:0, liked:false, gear:l ? l.items.map(i => i[0]) : [] };
         S.posts.unshift(po); close(); refreshAll();
-        setTimeout(() => { const a = document.querySelector('#posts [data-post-id="'+po.id+'"]'); if (a) { a.scrollIntoView({ block:'center', behavior:'smooth' }); a.classList.add('flash'); } toast('投稿しました'); }, 380);
+        setTimeout(() => { const a = document.querySelector('#posts [data-post-id="'+po.id+'"]'); if (a) { a.scrollIntoView({ block:'center', behavior:'smooth' }); a.classList.add('flash'); } toast('投稿しました'); if (after) after(); }, 380);
       };
     } });
 }
@@ -1975,10 +1975,18 @@ function openSettings(){
 }
 
 // Google Play の評価（本物のアプリでは Google Play の「アプリ内レビュー」の画面が出る。ここはそのまね）
-function openRate(){
+// 評価のお願いは、山行を完了した直後に「一度だけ」。それ以降は設定の「フィードバック」からだけ
+// （Google Play の決まり: 出す回数に上限があり、「気に入りましたか？」のような前置きで振り分けない）
+function askRateOnce(){
+  if (S.rateAsked) return;
+  S.rateAsked = true;
+  setTimeout(() => openRate(true), 1400);
+}
+function openRate(afterTrip){
   let stars = 0;
   openSheet({ title:'山ギアを評価', right:'送信',
-    body:'<p class="hint" style="text-align:center;margin:6px 0 2px">Google Play に公開されます</p>'+
+    body:(afterTrip ? '<p style="text-align:center;font-family:var(--serif);font-weight:700;font-size:16px;margin:8px 0 0">山行おつかれさまでした</p>' : '')+
+      '<p class="hint" style="text-align:center;margin:6px 0 2px">Google Play に公開されます</p>'+
       '<div class="rstars">'+[1, 2, 3, 4, 5].map(n => '<button type="button" data-st="'+n+'" aria-label="星 '+n+'">'+icon('star', 38, 'var(--faint)')+'</button>').join('')+'</div>'+
       '<label class="field"><span>ひとこと（任意）</span><textarea id="r-text" rows="3" placeholder="例: パッキングのチェックが便利"></textarea></label>'+
       '<p class="hint">本物のアプリでは、ここで Google Play の評価画面が開きます（アプリから出ずに評価できる仕組み）。</p>',
