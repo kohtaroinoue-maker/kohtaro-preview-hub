@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#FAFAF6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>山ギア 動く試作</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@500;700;900&family=Noto+Sans+JP:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#FAFAF6; --ink:#141414; --mute:#5A5A55; --faint:#A8A8A0; --line:#D8D8D0; --hair:#E6E6DE;
+  --blue:#1F5FBF; --warn:#A8461A; --tint:#E4ECF7; --press:#EFEFE8; --red:#B3261E;
+  --ease:cubic-bezier(.22,.9,.3,1); --bottom:26px; --top:0px;
+  --serif:'Noto Serif JP',serif; --sans:'Noto Sans JP',system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:#E9E9E1;color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums;font-family:var(--serif);font-weight:700}
+.label{font-size:10.5px;letter-spacing:.22em;color:var(--mute);font-weight:500}
+.small{font-size:12.5px;color:var(--mute)}
+
+/* ページ（PC では左に説明、右に端末） */
+.page{min-height:100%;display:flex;align-items:center;justify-content:center;gap:56px;padding:32px 24px}
+.side{max-width:340px;font-size:14px;line-height:1.85;color:var(--mute)}
+.side h1{font-family:var(--serif);font-weight:900;color:var(--ink);font-size:26px;margin:6px 0 10px;letter-spacing:.03em}
+.side b{color:var(--ink)}
+.side ul{padding-left:1.1em;margin:8px 0}
+.side .ctl{margin-top:18px}
+.side a{color:var(--blue)}
+.sseg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.sseg button{min-height:36px;padding:0 12px;border:1.5px solid var(--ink);font-size:13px}
+.sseg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);font-weight:700}
+
+#phone{position:relative;width:390px;height:844px;flex:none;border-radius:50px;background:var(--paper);
+  box-shadow:0 0 0 11px #1c1c1c,0 0 0 12px #444,0 40px 80px rgba(0,0,0,.28);overflow:hidden;isolation:isolate}
+.statusbar{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:center;justify-content:space-between;padding:6px 34px 0 40px;font-weight:700;font-size:15px;z-index:60;pointer-events:none}
+.statusbar .isl{position:absolute;left:50%;top:11px;width:122px;height:35px;margin-left:-61px;background:#000;border-radius:20px}
+.statusbar .r{display:flex;gap:6px;align-items:center}
+.homebar{position:absolute;bottom:8px;left:50%;width:136px;height:5px;margin-left:-68px;background:#141414;border-radius:3px;z-index:60;pointer-events:none}
+#app{position:absolute;inset:50px 0 0 0;overflow:hidden}
+#stack{position:absolute;inset:0;transition:transform .42s var(--ease),border-radius .42s var(--ease);transform-origin:50% 0;background:var(--paper)}
+#stack.recede{transform:scale(.93) translateY(6px);border-radius:12px;overflow:hidden}
+
+@media (max-width:640px){
+  html,body{overflow:hidden;background:var(--paper);overscroll-behavior:none}
+  .page{display:block;padding:0}
+  .side{display:none}
+  #phone{width:100%;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+  .statusbar,.homebar{display:none}
+  #app{inset:0}
+  :root{--bottom:env(safe-area-inset-bottom,0px);--top:env(safe-area-inset-top,0px)}
+}
+
+/* 画面の積み重ね */
+.screen{position:absolute;inset:0;background:var(--paper);display:flex;flex-direction:column;transition:transform .42s var(--ease);will-change:transform;touch-action:pan-y}
+.screen.pushed{box-shadow:-10px 0 28px rgba(0,0,0,.08)}
+.screen::after{content:'';position:absolute;inset:0;background:rgba(20,20,20,.14);opacity:var(--dim,0);pointer-events:none;transition:opacity .42s var(--ease);z-index:40}
+.screen.under{transform:translateX(-28%);--dim:1}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;position:relative}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ナビバー */
+.nav{flex:none;height:calc(44px + var(--top));padding-top:var(--top);display:grid;grid-template-columns:1fr auto 1fr;align-items:center;background:rgba(250,250,246,.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid transparent;transition:border-color .2s;position:relative;z-index:5}
+.nav.edge{border-bottom-color:var(--line)}
+.nav .back{display:flex;align-items:center;gap:0;height:44px;padding:0 10px 0 4px;justify-self:start;font-size:16px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav .back:active,.tbtn:active{opacity:.45}
+.nav .ttl{font-family:var(--serif);font-weight:700;font-size:16.5px;opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;white-space:nowrap;max-width:190px;overflow:hidden;text-overflow:ellipsis}
+.nav.edge .ttl{opacity:1;transform:none}
+.nav .ttl.always{opacity:1;transform:none}
+.nav .right{justify-self:end;display:flex;align-items:center;padding-right:8px}
+.iconbtn{width:44px;height:44px;display:flex;align-items:center;justify-content:center}
+.iconbtn:active{opacity:.45}
+
+/* タブ */
+#root{display:flex;flex-direction:column}
+.tabpages{flex:1;position:relative}
+.tabpage{position:absolute;inset:0;display:flex;flex-direction:column;opacity:0;visibility:hidden;transition:opacity .18s,visibility 0s .18s}
+.tabpage.on{opacity:1;visibility:visible;transition:opacity .18s}
+.tabbar{flex:none;display:flex;border-top:1px solid var(--line);background:rgba(250,250,246,.96);padding-bottom:var(--bottom)}
+.tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 0 5px;color:var(--mute);font-size:10.5px;transition:color .15s}
+.tabbar button svg{transition:transform .2s var(--ease)}
+.tabbar button:active svg{transform:scale(.86)}
+.tabbar button.on{color:var(--ink);font-weight:700}
+
+/* 大きい見出し（MyGear 等） */
+.compact{position:absolute;top:0;left:0;right:0;height:calc(44px + var(--top));padding-top:var(--top);display:flex;align-items:center;justify-content:center;gap:8px;z-index:6;background:rgba(250,250,246,.94);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line);opacity:0;pointer-events:none;transition:opacity .18s}
+.compact.on{opacity:1}
+.compact b{font-family:var(--serif);font-size:16.5px}
+.bighead{position:relative;padding:calc(18px + var(--top)) 20px 16px;border-bottom:2px solid var(--ink);overflow:hidden}
+.contour{position:absolute;right:-30px;top:-10px;width:300px;height:160px;pointer-events:none}
+.titleRow{position:relative;display:flex;align-items:flex-end;justify-content:space-between}
+.title{font-family:var(--serif);font-weight:900;font-size:32px;margin:2px 0 0;letter-spacing:.02em;line-height:1.2}
+.sum{text-align:right}
+.sum .num{font-size:28px;line-height:1}
+.searchRow{position:relative;display:flex;gap:10px;align-items:center;margin-top:14px}
+.search{flex:1;display:flex;align-items:center;gap:6px;height:42px;border-bottom:1px solid var(--ink)}
+.search input{flex:1;border:0;background:transparent;outline:none;font-size:15px;min-width:0}
+.search input::placeholder{color:var(--faint)}
+.btn{min-height:44px;padding:0 18px;font-weight:700;font-size:15px;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:transform .12s,opacity .12s;border-radius:2px}
+.btn:active{transform:scale(.97);opacity:.85}
+.btn.primary{background:var(--ink);color:var(--paper)}
+.btn.secondary{border:1.5px solid var(--ink)}
+.btn.block{width:100%}
+.btn[disabled]{opacity:.3;pointer-events:none}
+
+/* 状態タブ */
+.stabs{position:sticky;top:0;z-index:4;display:flex;background:var(--paper);border-bottom:1px solid var(--line);padding:0 20px}
+.stabs button{flex:1;min-height:46px;color:var(--mute);font-size:14.5px;transition:color .2s}
+.stabs button.on{color:var(--ink);font-weight:700}
+.stabs button small{font-size:11.5px;color:var(--mute);font-weight:400;margin-left:2px}
+.stabs .ind{position:absolute;bottom:-1px;left:20px;height:2px;background:var(--ink);transition:transform .32s var(--ease)}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:12px 20px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:34px;padding:0 13px;border:1px solid var(--line);font-size:13px;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+.chip.on{background:var(--ink);color:var(--paper);border-color:var(--ink);font-weight:700}
+.chip:active{transform:scale(.96)}
+
+/* ギアの行 */
+.list{padding:0 0 110px}
+.sec{display:flex;align-items:baseline;gap:10px;padding:20px 20px 6px}
+.sec .h{font-family:var(--serif);font-weight:700;font-size:17px}
+.sec .ss{margin-left:auto;font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.row{position:relative;display:flex;align-items:center;gap:12px;padding:12px 8px 12px 20px;transition:background .12s;cursor:pointer;user-select:none;-webkit-user-select:none}
+.row::before{content:'';position:absolute;top:0;left:56px;right:0;height:1px;background:var(--hair)}
+.row:active{background:var(--press)}
+.row .ic{flex:none;width:26px;display:flex;justify-content:center}
+.row .rm{flex:1;min-width:0}
+.row .nm{font-weight:700;font-size:15px;line-height:1.45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .sub{display:flex;flex-wrap:wrap;gap:0 2px;align-items:center;font-size:12px;color:var(--mute);margin-top:2px}
+.row .sub .dot::before{content:'・';color:var(--faint)}
+.row .diff{font-size:12px;color:var(--blue);margin-top:2px}
+.row .w{flex:none;text-align:right;min-width:62px}
+.row .w .num{font-size:20px}
+.row .w small{font-size:11px;color:var(--mute);margin-left:2px}
+.row.muted .nm,.row.muted .w .num{color:var(--mute)}
+.star{flex:none;width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.star:active{background:var(--press)}
+.pop{animation:pop .38s var(--ease)}
+@keyframes pop{0%{transform:scale(1)}35%{transform:scale(1.45)}100%{transform:scale(1)}}
+.enter{animation:rin .32s var(--ease) both}
+@keyframes rin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.flash{animation:flash 1.6s ease-out}
+@keyframes flash{0%,30%{background:var(--tint)}100%{background:transparent}}
+.badge{display:inline-block;font-size:10.5px;line-height:1.5;padding:0 5px;border:1px solid;margin-left:4px;font-weight:500;white-space:nowrap}
+.b-ai{color:var(--blue);border-color:var(--blue)}
+.b-un{color:var(--warn);border-color:var(--warn);border-style:dashed}
+.b-ok{color:var(--mute);border-color:var(--line)}
+.empty{padding:28px 20px;color:var(--mute);font-size:14px;line-height:1.8}
+
+/* 詳細 */
+.dhead{padding:6px 20px 0}
+.dname{display:flex;align-items:flex-start;gap:8px}
+.dname h2{flex:1;font-family:var(--serif);font-weight:900;font-size:25px;line-height:1.35;margin:4px 0 2px}
+.brand{color:var(--mute);font-size:14px}
+.bigw{display:flex;align-items:baseline;gap:6px;margin:18px 0 4px}
+.bigw .num{font-size:52px;line-height:1;font-weight:900}
+.bigw .u{font-size:18px;color:var(--mute);font-family:var(--serif)}
+.bigw .badge{align-self:center;margin-left:8px;font-size:11.5px;padding:1px 7px;cursor:pointer}
+.wishline{font-size:13.5px;color:var(--blue);margin-top:2px}
+.segc{position:relative;display:flex;border:1.5px solid var(--ink);margin:18px 20px 6px}
+.segc button{flex:1;min-height:38px;position:relative;z-index:1;font-size:14px;transition:color .25s}
+.segc button.on{color:var(--paper);font-weight:700}
+.segc .thumb{position:absolute;top:0;bottom:0;left:0;background:var(--ink);transition:transform .3s var(--ease)}
+.hint{padding:0 20px;font-size:12px;color:var(--mute);line-height:1.7}
+.group{margin:18px 0 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ghead{padding:22px 20px 6px;display:flex;gap:10px;align-items:baseline}
+.ghead b{font-family:var(--serif);font-size:15px}
+.gr{position:relative;display:flex;align-items:center;gap:12px;min-height:54px;padding:8px 12px 8px 20px;cursor:pointer;transition:background .12s;user-select:none;-webkit-user-select:none}
+.gr + .gr::before{content:'';position:absolute;top:0;left:56px;right:0;height:1px;background:var(--hair)}
+.gr:active{background:var(--press)}
+.gr .gi{width:24px;flex:none;display:flex;justify-content:center}
+.gr .gt{flex:1;min-width:0;font-size:15px}
+.gr .gt small{display:block;font-size:12px;color:var(--mute);margin-top:1px}
+.gr .gv{color:var(--mute);font-size:14px;text-align:right;white-space:nowrap;max-width:46%;overflow:hidden;text-overflow:ellipsis}
+.gr.check .gv{color:var(--blue)}
+.gr.static{cursor:default}
+.gr.static:active{background:none}
+.pad{padding:20px}
+.btnrow{display:flex;flex-direction:column;gap:10px;padding:24px 20px 40px}
+.danger{color:var(--red)}
+
+/* AI 候補 */
+.loading{padding:28px 20px;display:flex;align-items:center;gap:12px;color:var(--mute);font-size:14px}
+.spin{width:20px;height:20px;border:2px solid var(--line);border-top-color:var(--ink);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.skel{height:84px;margin:10px 20px;background:linear-gradient(90deg,#efefe8 0%,#f7f7f2 50%,#efefe8 100%);background-size:200% 100%;animation:shim 1.1s linear infinite}
+@keyframes shim{from{background-position:200% 0}to{background-position:-200% 0}}
+.cand{margin:0 20px;padding:14px 0;border-top:1px solid var(--hair);display:flex;gap:12px;align-items:center}
+.cand:first-of-type{border-top:0}
+.cand .cm{flex:1;min-width:0}
+.cand .cn{font-weight:700;font-size:15px}
+.cand .cd{font-size:13px;color:var(--blue);margin-top:2px}
+.cand .cp{font-size:12px;color:var(--mute)}
+.mini{min-height:36px;padding:0 12px;border:1.5px solid var(--ink);font-size:13px;font-weight:700;white-space:nowrap;transition:background .2s,color .2s,transform .12s}
+.mini:active{transform:scale(.95)}
+.mini.done{background:var(--ink);color:var(--paper)}
+
+/* パックリスト */
+.lcard{position:relative;display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer;transition:background .12s}
+.lcard + .lcard::before{content:'';position:absolute;top:0;left:20px;right:0;height:1px;background:var(--hair)}
+.lcard:active{background:var(--press)}
+.lcard .ln{font-family:var(--serif);font-weight:700;font-size:17px}
+.lcard .lw{margin-left:auto;text-align:right}
+.lcard .lw .num{font-size:22px}
+.tag{display:inline-block;font-size:11px;padding:0 6px;border:1px solid var(--line);color:var(--mute);margin-right:6px}
+.tag.done{border-color:var(--ink);color:var(--ink)}
+.bar{display:flex;height:10px;margin:14px 20px 8px;background:var(--hair);overflow:hidden}
+.bar i{display:block;height:100%;transition:width .45s var(--ease)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:0 20px;font-size:12px;color:var(--mute)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:9px;height:9px;display:inline-block}
+.swipe{position:relative;overflow:hidden;transition:height .26s var(--ease),opacity .26s}
+.swipe .del{position:absolute;right:0;top:0;bottom:0;width:84px;background:var(--red);color:#fff;font-weight:700;font-size:14px}
+.swipe .fg{position:relative;background:var(--paper);display:flex;align-items:center;gap:10px;padding:10px 12px 10px 20px;transition:transform .3s var(--ease);touch-action:pan-y}
+.swipe .fg .rm{flex:1;min-width:0;cursor:pointer}
+.swipe .fg .nm{font-weight:700;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.swipe + .swipe .fg::before{content:'';position:absolute;top:0;left:54px;right:0;height:1px;background:var(--hair)}
+.step{display:flex;align-items:center;border:1px solid var(--line)}
+.step button{width:34px;height:32px;display:flex;align-items:center;justify-content:center}
+.step button:active{background:var(--press)}
+.step .q{min-width:22px;text-align:center;font-size:14px;font-variant-numeric:tabular-nums}
+.lw2{min-width:58px;text-align:right;font-size:14px}
+
+/* シート・ダイアログ・トースト */
+.backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
+.backdrop.on{opacity:1}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;background:var(--paper);z-index:81;transform:translateY(100%);transition:transform .42s var(--ease);display:flex;flex-direction:column;border-radius:12px 12px 0 0;box-shadow:0 -6px 30px rgba(0,0,0,.12)}
+.sheet.tall{height:92%;max-height:none}
+.sheet.on{transform:translateY(0)}
+.grab{width:38px;height:5px;border-radius:3px;background:var(--line);margin:7px auto 0;flex:none}
+.shead{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:48px;padding:0 8px;touch-action:none;cursor:grab}
+.shead b{font-family:var(--serif);font-size:16.5px}
+.tbtn{height:44px;padding:0 10px;font-size:15.5px;justify-self:start}
+.tbtn.strong{justify-self:end;font-weight:700}
+.tbtn[disabled]{opacity:.3;pointer-events:none}
+.sbody{flex:1;overflow-y:auto;padding:4px 0 calc(24px + var(--bottom))}
+.field{display:block;margin:0 20px 16px}
+.field span{display:block;font-size:12px;color:var(--mute);margin-bottom:2px}
+.field input{width:100%;border:0;border-bottom:1px solid var(--ink);background:transparent;height:40px;font-size:16px;outline:none;border-radius:0}
+.field input:focus{border-bottom-width:2px}
+.field.ai input{color:var(--blue)}
+.bigbtn{display:flex;align-items:center;gap:14px;margin:4px 20px 18px;padding:16px;border:1.5px solid var(--ink);width:calc(100% - 40px);text-align:left;transition:transform .12s,background .12s}
+.bigbtn:active{transform:scale(.98);background:var(--press)}
+.bigbtn b{display:block;font-size:15.5px}
+.bigbtn small{color:var(--mute);font-size:12.5px}
+.or{display:flex;align-items:center;gap:10px;margin:0 20px 14px;color:var(--faint);font-size:12px}
+.or::before,.or::after{content:'';flex:1;height:1px;background:var(--line)}
+.catpick{display:flex;flex-wrap:wrap;gap:8px;margin:0 20px 16px}
+.chk{width:22px;height:22px;border:1.5px solid var(--ink);display:flex;align-items:center;justify-content:center;flex:none;transition:background .15s}
+.chk.on{background:var(--ink)}
+.dialog{position:absolute;left:50%;top:50%;width:280px;margin-left:-140px;background:var(--paper);z-index:91;transform:translateY(-50%) scale(1.12);opacity:0;transition:transform .26s var(--ease),opacity .2s;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.dialog.on{transform:translateY(-50%) scale(1);opacity:1}
+.dialog .dt{padding:20px 20px 4px;font-weight:700;font-size:16px;text-align:center}
+.dialog .dm{padding:0 20px 18px;font-size:13px;color:var(--mute);text-align:center;line-height:1.7}
+.dialog .db{display:flex;border-top:1px solid var(--line)}
+.dialog .db button{flex:1;height:46px;font-size:15.5px}
+.dialog .db button + button{border-left:1px solid var(--line)}
+.dialog .db button:active{background:var(--press)}
+.asheet{position:absolute;left:8px;right:8px;bottom:calc(8px + var(--bottom));z-index:91;transform:translateY(120%);transition:transform .36s var(--ease)}
+.asheet.on{transform:none}
+.asheet .ag{background:var(--paper);margin-bottom:8px}
+.asheet button{display:block;width:100%;height:54px;font-size:16.5px;border-top:1px solid var(--line)}
+.asheet .ag button:first-child{border-top:0}
+.asheet button:active{background:var(--press)}
+.toast{position:absolute;left:16px;right:16px;bottom:calc(72px + var(--bottom));z-index:95;background:var(--ink);color:var(--paper);display:flex;align-items:center;gap:12px;padding:12px 16px;font-size:14px;transform:translateY(16px);opacity:0;transition:transform .3s var(--ease),opacity .25s}
+.toast.on{transform:none;opacity:1}
+.toast.low{bottom:calc(20px + var(--bottom))}
+.toast span{flex:1}
+.toast button{color:#9DB8E8;font-weight:700}
+
+/* カメラ */
+.camera{position:absolute;inset:0;z-index:100;background:#0c0c0c;color:#fff;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .42s var(--ease)}
+.camera.on{transform:none}
+.camera .vf{flex:1;position:relative;background:radial-gradient(ellipse at 50% 45%,#3a3a36 0%,#1a1a18 70%);overflow:hidden}
+.camera .tagcard{position:absolute;left:50%;top:44%;width:190px;height:120px;margin:-60px 0 0 -95px;background:#efeee6;color:#333;transform:rotate(-4deg);padding:14px;font-size:11px;line-height:1.6;font-family:monospace;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.camera .frame{position:absolute;left:50%;top:44%;width:240px;height:160px;margin:-80px 0 0 -120px;border:2px solid rgba(255,255,255,.85);border-radius:8px;transition:border-color .2s}
+.camera .frame.ok{border-color:#7FB0FF}
+.camera .cbar{flex:none;height:150px;display:flex;align-items:center;justify-content:center;position:relative;padding-bottom:var(--bottom)}
+.camera .shutter{width:70px;height:70px;border-radius:50%;border:4px solid #fff;padding:4px}
+.camera .shutter i{display:block;width:100%;height:100%;border-radius:50%;background:#fff;transition:transform .1s}
+.camera .shutter:active i{transform:scale(.88)}
+.camera .cx{position:absolute;left:20px;font-size:16px}
+.camera .msg{position:absolute;left:0;right:0;top:calc(18px + var(--top));text-align:center;font-size:13.5px;opacity:.85}
+.camera .flashw{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .35s}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="side">
+    <div class="label">YAMA-GEAR ・ PROTOTYPE</div>
+    <h1>動く試作</h1>
+    <p>アプリと同じように、<b>押す・進む・戻る</b>が動く試作です。スマホで開くと全画面のアプリとして動きます。</p>
+    <ul>
+      <li>ギアの行をタップすると詳細へ進み、左端からのスワイプか「‹」で戻ります</li>
+      <li>右上の「登録」から、型番タグの撮影（まね）で登録できます</li>
+      <li>「リスト」タブでは個数の ＋－ と左スワイプでの「外す」が動きます</li>
+      <li>ギア詳細は、前に相談した<b>2層の作り（最初は大事なことだけ、深い情報は一段奥）</b>の案です</li>
+    </ul>
+    <p class="small">ギア名は架空です。変更は保存されず、再読み込みで元に戻ります。</p>
+    <div class="ctl"><b>アイコン</b><div class="sseg" id="side-set"></div></div>
+    <p class="small" style="margin-top:18px"><a href="../">← 見た目の比較ページ</a></p>
+  </div>
+  <div id="phone">
+    <div class="statusbar"><span>9:41</span><i class="isl"></i><span class="r">
+      <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" fill="#141414"/><rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="#141414"/><rect x="10" y="3" width="3" height="9" rx="1" fill="#141414"/><rect x="15" y="0" width="3" height="12" rx="1" fill="#141414"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="#141414" opacity=".4"/><rect x="2" y="2" width="18" height="9" rx="2" fill="#141414"/><path d="M25 4.5 V8.5" stroke="#141414" stroke-width="1.5" opacity=".4"/></svg></span></div>
+    <div id="app">
+      <div id="stack">
+        <section class="screen" id="root">
+          <div class="tabpages">
+            <div class="tabpage on" id="tp-gear"></div>
+            <div class="tabpage" id="tp-lists"></div>
+            <div class="tabpage" id="tp-set"></div>
+          </div>
+          <nav class="tabbar" id="tabbar"></nav>
+        </section>
+      </div>
+    </div>
+    <div class="homebar"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- アイコン（24px グリッドの線画。f は案3で薄く塗る面） ---------- */
+const CUR = {
+  tent:'<path d="M3 20 L12 4 L21 20 Z"/><path d="M12 4 V20"/><path d="M9 20 L12 14 L15 20"/>',
+  sleep:'<rect x="6" y="3" width="12" height="18" rx="6"/><path d="M9 8 H15"/>',
+  backpack:'<path d="M7 9 A5 5 0 0 1 17 9 V19 A2 2 0 0 1 15 21 H9 A2 2 0 0 1 7 19 Z"/><path d="M10 5 V3 H14 V5"/><path d="M9 14 H15"/>',
+  cook:'<path d="M4 10 H20 V15 A5 5 0 0 1 15 20 H9 A5 5 0 0 1 4 15 Z"/><path d="M2 10 H4 M20 10 H22"/><path d="M9 6 C9 5 10 5 10 4 M14 6 C14 5 15 5 15 4"/>',
+  clothing:'<path d="M8 3 L4 6 L6 10 L8 9 V21 H16 V9 L18 10 L20 6 L16 3 A4 4 0 0 1 8 3 Z"/>',
+  rain:'<path d="M3 12 A9 7 0 0 1 21 12 Z"/><path d="M12 12 V19 A2 2 0 0 1 8 19"/>',
+  footwear:'<path d="M5 4 H10 V12 L18 14 A3 3 0 0 1 21 17 V19 H4 Z"/><path d="M4 16 H21"/>',
+  light:'<circle cx="12" cy="13" r="4"/><path d="M12 3 V5 M4.5 6.5 L6 8 M19.5 6.5 L18 8 M3 13 H5 M19 13 H21"/>',
+  safety:'<rect x="3" y="6" width="18" height="14" rx="2"/><path d="M9 6 V4 H15 V6"/><path d="M12 10 V16 M9 13 H15"/>',
+  electronics:'<rect x="7" y="4" width="10" height="17" rx="2"/><path d="M10 2 H14"/><path d="M13 8 L10 13 H14 L11 18"/>',
+  food:'<path d="M12 3 L20 17 A2 2 0 0 1 18 20 H6 A2 2 0 0 1 4 17 Z"/><path d="M8 14 H16 V20 H8 Z"/>',
+  water:'<path d="M10 2 H14 V5 L16 8 V20 A2 2 0 0 1 14 22 H10 A2 2 0 0 1 8 20 V8 L10 5 Z"/><path d="M8 12 H16"/>',
+  other:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12 H16 M12 8 V16"/>',
+  tab_gear:'<path d="M7 9 A5 5 0 0 1 17 9 V19 A2 2 0 0 1 15 21 H9 A2 2 0 0 1 7 19 Z"/><path d="M9 14 H15"/>',
+  tab_list:'<path d="M4 6 L5.5 7.5 L8 5"/><path d="M11 6 H20"/><path d="M4 12 L5.5 13.5 L8 11"/><path d="M11 12 H20"/><path d="M11 18 H20"/><circle cx="6" cy="18" r="1.2"/>',
+  tab_set:'<circle cx="12" cy="12" r="3"/><path d="M12 2 V5 M12 19 V22 M2 12 H5 M19 12 H22 M4.9 4.9 L7 7 M17 17 L19.1 19.1 M4.9 19.1 L7 17 M17 7 L19.1 4.9"/>'
+};
+const CUR_GLYPH = { star:'☆', star_on:'★', plus:'＋', minus:'－', close:'✕', chev:'→', check:'✓', back:'‹', more:'…' };
+const NEW = {
+  tent:'<path class="f" d="M3.5 19 C3.5 12.5 7.4 8 12 8 C16.6 8 20.5 12.5 20.5 19 Z"/><path d="M9.6 19 C9.6 15.6 10.6 13 12 13 C13.4 13 14.4 15.6 14.4 19"/><path d="M2 19 H22"/><path d="M12 8 V5.5"/>',
+  sleep:'<path class="f" d="M8.2 3.5 H15.8 C17.3 3.5 18.5 4.7 18.5 6.2 V16.8 C18.5 19.4 16.2 21 12 21 C7.8 21 5.5 19.4 5.5 16.8 V6.2 C5.5 4.7 6.7 3.5 8.2 3.5 Z"/><path d="M8.6 7.2 C8.6 5.9 15.4 5.9 15.4 7.2 C15.4 8.6 8.6 8.6 8.6 7.2 Z"/><path d="M5.6 12.5 H18.4 M5.8 16.5 H18.2"/>',
+  backpack:'<path class="f" d="M7 9 C7 6.3 9.2 4.5 12 4.5 C14.8 4.5 17 6.3 17 9 V19 C17 19.8 16.3 20.5 15.5 20.5 H8.5 C7.7 20.5 7 19.8 7 19 Z"/><path d="M10 4.8 V3.5 H14 V4.8"/><path d="M9.5 13 H14.5 V17.5 H9.5 Z"/><path d="M7 11 H5 V17 H7 M17 11 H19 V17 H17"/>',
+  cook:'<path class="f" d="M5 11.5 H19 V16.5 C19 18.4 17.4 20 15.5 20 H8.5 C6.6 20 5 18.4 5 16.5 Z"/><path d="M4 11.5 H20"/><path d="M8 11.5 C8 9.8 9.8 9 12 9 C14.2 9 16 9.8 16 11.5"/><path d="M3 14 H5 M19 14 H21"/><path d="M10 6.5 C9.4 5.6 10.6 5 10 4 M14 6.5 C13.4 5.6 14.6 5 14 4"/>',
+  clothing:'<path class="f" d="M9 3.5 L4.6 5.8 L3 12 L6 12.6 V20.5 H18 V12.6 L21 12 L19.4 5.8 L15 3.5 C14.3 4.8 13.3 5.5 12 5.5 C10.7 5.5 9.7 4.8 9 3.5 Z"/><path d="M12 5.5 V20.5"/><path d="M8.5 14.5 H10.5"/>',
+  rain:'<path class="f" d="M3 12 C3 7.6 7 4 12 4 C17 4 21 7.6 21 12 C19.6 10.9 17.9 10.9 16.5 12 C15.1 10.9 13.4 10.9 12 12 C10.6 10.9 8.9 10.9 7.5 12 C6.1 10.9 4.4 10.9 3 12 Z"/><path d="M12 12 V18.6 C12 19.9 11 21 9.7 21 C8.5 21 7.6 20.1 7.6 19"/><path d="M12 4 V2.8"/>',
+  footwear:'<path class="f" d="M6.2 3.5 H11 V9.5 L17.2 11.8 C19.3 12.6 20.5 14.2 20.5 16.2 V17.5 H4.5 V7 C4.5 5 5.2 3.5 6.2 3.5 Z"/><path d="M4 17.5 H21 V20.5 H4 Z"/><path d="M7.5 7 H10 M7.5 10 H11"/>',
+  light:'<path class="f" d="M8.5 9 H15.5 C16.3 9 17 9.7 17 10.5 V14.5 C17 15.3 16.3 16 15.5 16 H8.5 C7.7 16 7 15.3 7 14.5 V10.5 C7 9.7 7.7 9 8.5 9 Z"/><circle cx="12" cy="12.5" r="1.9"/><path d="M7 11 H3.5 M7 14 H3.5 M17 11 H20.5 M17 14 H20.5"/><path d="M9.8 6.4 L9.2 4.8 M12 6 V4.2 M14.2 6.4 L14.8 4.8"/>',
+  safety:'<rect class="f" x="3.5" y="7" width="17" height="13" rx="2.5"/><path d="M9 7 V5.6 C9 4.7 9.7 4 10.6 4 H13.4 C14.3 4 15 4.7 15 5.6 V7"/><path d="M12 10.5 V16.5 M9 13.5 H15"/>',
+  electronics:'<rect class="f" x="6.5" y="4" width="11" height="17" rx="2.5"/><path d="M10.2 2.5 H13.8"/><path d="M12.9 8 L10.1 12.8 H13.9 L11.1 17.6"/>',
+  food:'<path class="f" d="M12 4 C13.1 4 13.9 4.6 14.5 5.6 L20.1 15.5 C21.2 17.5 19.8 20 17.6 20 H6.4 C4.2 20 2.8 17.5 3.9 15.5 L9.5 5.6 C10.1 4.6 10.9 4 12 4 Z"/><path d="M8.8 20 V14.8 H15.2 V20"/>',
+  water:'<path d="M10 2.5 H14 V5 H10 Z"/><path class="f" d="M10 5 C10 6.6 7.5 7.6 7.5 10 V19 C7.5 20.4 8.6 21.5 10 21.5 H14 C15.4 21.5 16.5 20.4 16.5 19 V10 C16.5 7.6 14 6.6 14 5 Z"/><path d="M12 11.5 C12 11.5 10 14 10 15.3 C10 16.4 10.9 17.3 12 17.3 C13.1 17.3 14 16.4 14 15.3 C14 14 12 11.5 12 11.5 Z"/>',
+  other:'<rect class="f" x="4" y="4" width="16" height="16" rx="4"/><circle cx="8.5" cy="12" r=".9" class="dotf"/><circle cx="12" cy="12" r=".9" class="dotf"/><circle cx="15.5" cy="12" r=".9" class="dotf"/>',
+  star:'<path d="M12 3.8 L14.5 9 L20.2 9.7 L16 13.6 L17.1 19.3 L12 16.5 L6.9 19.3 L8 13.6 L3.8 9.7 L9.5 9 Z"/>',
+  star_on:'<path class="solid" d="M12 3.8 L14.5 9 L20.2 9.7 L16 13.6 L17.1 19.3 L12 16.5 L6.9 19.3 L8 13.6 L3.8 9.7 L9.5 9 Z"/>',
+  plus:'<path d="M12 5 V19 M5 12 H19"/>',
+  minus:'<path d="M5 12 H19"/>',
+  close:'<path d="M6.5 6.5 L17.5 17.5 M17.5 6.5 L6.5 17.5"/>',
+  chev:'<path d="M9.5 5.5 L16 12 L9.5 18.5"/>',
+  back:'<path d="M15 4.5 L7.5 12 L15 19.5"/>',
+  more:'<circle cx="5.5" cy="12" r="1.3" class="dotf"/><circle cx="12" cy="12" r="1.3" class="dotf"/><circle cx="18.5" cy="12" r="1.3" class="dotf"/>',
+  check:'<path d="M5 12.5 L9.8 17.2 L19 7"/>',
+  search:'<circle class="f" cx="10.5" cy="10.5" r="6"/><path d="M15 15 L20 20"/>',
+  camera:'<path class="f" d="M4 8 H7.5 L9 5.5 H15 L16.5 8 H20 C20.6 8 21 8.4 21 9 V18 C21 18.6 20.6 19 20 19 H4 C3.4 19 3 18.6 3 18 V9 C3 8.4 3.4 8 4 8 Z"/><circle cx="12" cy="13.2" r="3.4"/>',
+  ai:'<path class="f" d="M11 3.5 C11.6 8.2 13.3 9.9 18 10.5 C13.3 11.1 11.6 12.8 11 17.5 C10.4 12.8 8.7 11.1 4 10.5 C8.7 9.9 10.4 8.2 11 3.5 Z"/><path d="M18 15 C18.2 16.6 18.8 17.2 20.4 17.4 C18.8 17.6 18.2 18.2 18 19.8 C17.8 18.2 17.2 17.6 15.6 17.4 C17.2 17.2 17.8 16.6 18 15 Z"/>',
+  weight:'<path d="M9 9 C9 6.8 10.3 5 12 5 C13.7 5 15 6.8 15 9"/><circle class="f" cx="12" cy="14.5" r="5.8"/><path d="M12 12.5 V14.5 L13.4 15.6"/>',
+  type:'<path class="f" d="M4 4.5 H11 L20 13.5 L13.5 20 L4.5 11 Z"/><circle cx="8" cy="8" r="1.3"/>',
+  mountain:'<path class="f" d="M2.5 19.5 L9 8 L12.5 13.5 L15 10 L21.5 19.5 Z"/><path d="M7.4 10.8 L9 12 L10.4 10.6"/>',
+  note:'<path class="f" d="M6 3.5 H14.5 L18.5 7.5 V20.5 H6 Z"/><path d="M14.5 3.5 V7.5 H18.5"/><path d="M8.8 11.5 H15.6 M8.8 15 H15.6"/>',
+  backup:'<path class="f" d="M5 14 V19.5 H19 V14"/><path d="M12 4 V14.5 M8 8 L12 4 L16 8"/>',
+  tab_gear:'<path class="f" d="M7 9 C7 6.3 9.2 4.5 12 4.5 C14.8 4.5 17 6.3 17 9 V19 C17 19.8 16.3 20.5 15.5 20.5 H8.5 C7.7 20.5 7 19.8 7 19 Z"/><path d="M10 4.8 V3.5 H14 V4.8"/><path d="M9.5 13 H14.5 V17.5 H9.5 Z"/>',
+  tab_list:'<path d="M4 6.5 L5.4 7.9 L7.8 5.2 M4 12.5 L5.4 13.9 L7.8 11.2"/><path d="M10.5 6.5 H20 M10.5 12.5 H20 M10.5 18.5 H20"/><circle cx="5.9" cy="18.5" r="1.3"/>',
+  tab_set:'<path d="M4 7.5 H20 M4 16.5 H20"/><circle class="knob" cx="9" cy="7.5" r="2.3"/><circle class="knob" cx="15" cy="16.5" r="2.3"/>'
+};
+const SETS = [
+  { id:'a', name:'案1 線を整える', sw:1.6, fill:false },
+  { id:'b', name:'案2 太くやわらかく', sw:2.0, fill:false },
+  { id:'c', name:'案3 線＋うすい面', sw:1.6, fill:true },
+  { id:'cur', name:'今', sw:1.3, fill:false }
+];
+let SET = 'a';
+
+function icon(id, size, color, dashed){
+  const s = SETS.find(x => x.id === SET);
+  size = size || 24; color = color || 'currentColor';
+  let src = SET === 'cur' ? CUR[id] : NEW[id];
+  if (!src && SET === 'cur') {
+    if (CUR_GLYPH[id]) return '<span aria-hidden="true" style="font-size:'+Math.round(size*.8)+'px;line-height:1;color:'+color+'">'+CUR_GLYPH[id]+'</span>';
+    src = NEW[id];
+  }
+  if (!src) return '';
+  const fillCol = s.fill ? 'var(--tint)' : 'none';
+  src = src.replace(/class="f"/g, 'fill="'+fillCol+'"').replace(/class="solid"/g, 'fill="'+color+'"')
+           .replace(/class="dotf"/g, 'fill="'+color+'" stroke="none"').replace(/class="knob"/g, 'fill="var(--paper)"');
+  return '<svg aria-hidden="true" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="'+color+'" stroke-width="'+s.sw+'" stroke-linecap="round" stroke-linejoin="round"'+(dashed?' stroke-dasharray="2 2"':'')+'>'+src+'</svg>';
+}
+
+/* ---------- データ（架空） ---------- */
+const CATS = [
+  ['tent','シェルター','SHELTER'],['sleep','睡眠','SLEEP'],['backpack','ザック・収納','PACK'],['cook','調理・水まわり','COOK'],
+  ['clothing','ウェア','WEAR'],['rain','レイン','RAIN'],['footwear','足まわり','FOOTWEAR'],['light','ライト','LIGHT'],
+  ['safety','安全・緊急','SAFETY'],['electronics','電子機器','ELECTRONICS'],['food','食料','FOOD'],['water','水','WATER'],['other','その他','OTHER']
+].map(([id,label,en]) => ({ id, label, en }));
+const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
+const B = '[ブランド]';
+const g = (id, name, cat, type, w, src, extra) => Object.assign({ id, name, brand:B, cat, type, w, src, fav:false, status:'owned', use:[6,4] }, extra || {});
+const SEED = {
+  gear: [
+    g('g1','シングルウォールテント 2P','tent','テント',980,'ai',{fav:true,use:[6,5],price:52000}),
+    g('g2','ツェルト','tent','ツェルト',280,'ok',{use:[6,2]}),
+    g('g3','ダウン寝袋 0℃','sleep','寝袋',620,'ok',{fav:true,use:[6,5]}),
+    g('g4','エアマット レギュラー','sleep',null,340,'un',{use:[6,5]}),
+    g('g5','40L ザック','backpack','ザック',1150,'ok',{use:[6,6]}),
+    g('g6','スタッフサック 3点','backpack','スタッフサック',60,'ok'),
+    g('g7','チタンクッカー 750','cook','クッカー',103,'ok',{fav:true,use:[6,6]}),
+    g('g8','ガスストーブ','cook','ストーブ',88,'ai',{use:[6,5]}),
+    g('g9','フリースジャケット','clothing','中間着',310,'ok'),
+    g('g10','レインジャケット','rain','レインウェア上',290,'ok',{use:[6,6]}),
+    g('g11','レインパンツ','rain','レインウェア下',220,'un'),
+    g('g12','トレッキングシューズ','footwear','登山靴',1240,'ok',{use:[6,6]}),
+    g('g13','ヘッドランプ 400','light','ヘッドランプ',75,'ai',{use:[6,6]}),
+    g('g14','ファーストエイドキット','safety','救急セット',180,'ok',{use:[6,6]}),
+    g('g15','モバイルバッテリー 10000','electronics','バッテリー',190,'ok'),
+    g('g16','行動食セット 1日分','food','行動食',450,'ok'),
+    g('g17','ソフトボトル 1L','water','水筒',36,'ok'),
+    g('w1','ウルトラライト テント 1P','tent','テント',620,'ai',{status:'wish',price:64000,replaces:'g1'}),
+    g('w2','エアマット ショート','sleep','マット',230,'ai',{status:'wish',price:18000,replaces:'g4'}),
+    g('r1','ザック 50L（旧）','backpack','ザック',1680,'ok',{status:'retired',retiredAt:'2025-04'})
+  ],
+  lists: [
+    { id:'L1', name:'テント泊 2泊3日', status:'plan', items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2]] },
+    { id:'L2', name:'日帰り ハイク', status:'done', wentAt:'2026-10-12', items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1]] },
+    { id:'L3', name:'冬の小屋泊', status:'plan', items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] }
+  ]
+};
+let S = JSON.parse(JSON.stringify(SEED));
+let seq = 100;
+const byId = id => S.gear.find(x => x.id === id);
+const listById = id => S.lists.find(x => x.id === id);
+const fmtW = gr => gr >= 1000 ? [(gr/1000).toFixed(2), 'kg'] : [String(Math.round(gr)), 'g'];
+const wTxt = gr => fmtW(gr).join(' ');
+const yen = n => '約 ¥' + n.toLocaleString('en-US');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const BADGE = { ai:'<span class="badge b-ai">AI推定</span>', un:'<span class="badge b-un">未確認</span>', ok:'' };
+
+function wishAgainst(w){
+  const owned = S.gear.filter(x => x.status === 'owned');
+  if (w.replaces) { const r = byId(w.replaces); if (r && r.status === 'owned') return r; }
+  const same = owned.filter(x => w.type && x.type === w.type);
+  const pool = same.length ? same : owned.filter(x => x.cat === w.cat);
+  return pool.sort((a, b) => b.w - a.w)[0];
+}
+const delta = d => (d < 0 ? '−' : '＋') + Math.abs(d) + ' g';
+
+/* ---------- 小道具 ---------- */
+const $ = (s, r) => (r || document).querySelector(s);
+const app = $('#app'), stackEl = $('#stack');
+function el(html){ const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; }
+const raf2 = f => requestAnimationFrame(() => requestAnimationFrame(f));
+document.addEventListener('touchstart', () => {}, { passive:true }); // iOS で :active を効かせる
+
+function countTo(node, to){
+  if (!node) return;
+  const from = parseFloat(node.dataset.v || to);
+  node.dataset.v = to;
+  const t0 = performance.now(), dur = 420;
+  const step = t => {
+    const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+    const v = from + (to - from) * e;
+    const [n, u] = fmtW(v);
+    node.textContent = n; const us = node.nextElementSibling; if (us && us.classList.contains('u')) us.textContent = u;
+    if (p < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+
+let toastTimer;
+function toast(msg, action, onAction){
+  document.querySelectorAll('.toast').forEach(t => t.remove());
+  const t = el('<div class="toast" role="status"><span>'+esc(msg)+'</span>'+(action ? '<button type="button">'+action+'</button>' : '')+'</div>');
+  if (stack.length > 1) t.classList.add('low');
+  app.appendChild(t);
+  raf2(() => t.classList.add('on'));
+  if (action) t.querySelector('button').onclick = () => { onAction(); hide(); };
+  function hide(){ t.classList.remove('on'); setTimeout(() => t.remove(), 300); }
+  clearTimeout(toastTimer); toastTimer = setTimeout(hide, action ? 4200 : 2200);
+}
+
+function dialog(title, msg, buttons){
+  return new Promise(res => {
+    const bd = el('<div class="backdrop"></div>');
+    const d = el('<div class="dialog" role="alertdialog"><div class="dt">'+title+'</div><div class="dm">'+msg+'</div><div class="db"></div></div>');
+    buttons.forEach(b => {
+      const x = el('<button type="button" class="'+(b.danger?'danger':'')+'" style="'+(b.bold?'font-weight:700':'')+'">'+b.label+'</button>');
+      x.onclick = () => { close(); res(b.value); };
+      d.querySelector('.db').appendChild(x);
+    });
+    app.append(bd, d); raf2(() => { bd.classList.add('on'); d.classList.add('on'); });
+    function close(){ bd.classList.remove('on'); d.classList.remove('on'); setTimeout(() => { bd.remove(); d.remove(); }, 300); }
+  });
+}
+
+function actionSheet(opts){
+  return new Promise(res => {
+    const bd = el('<div class="backdrop"></div>');
+    const a = el('<div class="asheet"><div class="ag"></div><div class="ag"><button type="button" style="font-weight:700">キャンセル</button></div></div>');
+    opts.forEach(o => { const b = el('<button type="button" class="'+(o.danger?'danger':'')+'">'+o.label+'</button>'); b.onclick = () => { close(); res(o.value); }; a.firstChild.appendChild(b); });
+    a.lastChild.firstChild.onclick = () => { close(); res(null); };
+    bd.onclick = () => { close(); res(null); };
+    app.append(bd, a); raf2(() => { bd.classList.add('on'); a.classList.add('on'); });
+    function close(){ bd.classList.remove('on'); a.classList.remove('on'); setTimeout(() => { bd.remove(); a.remove(); }, 380); }
+  });
+}
+
+function openSheet({ title, left, right, body, tall, onMount }){
+  const bd = el('<div class="backdrop"></div>');
+  const sh = el('<div class="sheet'+(tall?' tall':'')+'" role="dialog"><div class="grab"></div><div class="shead"><button type="button" class="tbtn" data-x>'+(left||'キャンセル')+'</button><b>'+title+'</b>'+(right?'<button type="button" class="tbtn strong" data-r>'+right+'</button>':'<span></span>')+'</div><div class="sbody">'+body+'</div></div>');
+  app.append(bd, sh);
+  raf2(() => { bd.classList.add('on'); sh.classList.add('on'); if (tall) stackEl.classList.add('recede'); });
+  let closed = false;
+  function close(){
+    if (closed) return; closed = true;
+    sh.style.transform = ''; sh.classList.remove('on'); bd.classList.remove('on'); stackEl.classList.remove('recede');
+    setTimeout(() => { sh.remove(); bd.remove(); }, 420);
+  }
+  sh.querySelector('[data-x]').onclick = close; bd.onclick = close;
+  // 下に引っぱって閉じる
+  const head = sh.querySelector('.shead'); let y0 = null, dy = 0;
+  const startDrag = e => { if (e.target.closest('button')) return; y0 = e.clientY; dy = 0; sh.style.transition = 'none'; head.setPointerCapture(e.pointerId); };
+  head.addEventListener('pointerdown', startDrag);
+  head.addEventListener('pointermove', e => { if (y0 === null) return; dy = Math.max(0, e.clientY - y0); sh.style.transform = 'translateY('+dy+'px)'; });
+  const end = () => { if (y0 === null) return; y0 = null; sh.style.transition = ''; if (dy > 110) close(); else sh.style.transform = ''; };
+  head.addEventListener('pointerup', end); head.addEventListener('pointercancel', end);
+  if (onMount) onMount(sh, close);
+  return { sh, close };
+}
+
+/* ---------- 画面の積み重ね（進む・戻る・左端スワイプ） ---------- */
+const stack = [$('#root')];
+function nav(backLabel, title, right){
+  return '<header class="nav"><button type="button" class="back" data-back aria-label="戻る">'+icon('back', 26)+'<span>'+esc(backLabel)+'</span></button><div class="ttl">'+esc(title)+'</div><div class="right">'+(right||'')+'</div></header>';
+}
+function push(render){
+  const s = document.createElement('section');
+  s.className = 'screen pushed';
+  s._render = () => {
+    const sc = s.querySelector('.scroll'); const top = sc ? sc.scrollTop : 0;
+    s.innerHTML = render(s);
+    const sc2 = s.querySelector('.scroll'); if (sc2) { sc2.scrollTop = top; watchEdge(s); }
+    if (s._after) s._after(s);
+  };
+  s._render();
+  s.style.transform = 'translateX(100%)';
+  stackEl.appendChild(s);
+  const prev = stack[stack.length - 1];
+  stack.push(s);
+  raf2(() => { s.style.transform = ''; prev.classList.add('under'); });
+  s.addEventListener('click', e => { if (e.target.closest('[data-back]')) pop(); });
+  edgeSwipe(s);
+  return s;
+}
+function pop(){
+  if (stack.length < 2) return;
+  const s = stack.pop(), prev = stack[stack.length - 1];
+  s.style.transition = ''; prev.style.transition = '';
+  s.style.transform = 'translateX(100%)'; prev.style.transform = ''; prev.style.removeProperty('--dim');
+  prev.classList.remove('under');
+  setTimeout(() => s.remove(), 450);
+  if (prev._render) prev._render();
+}
+function watchEdge(s){
+  const sc = s.querySelector('.scroll'), nv = s.querySelector('.nav');
+  if (!sc || !nv) return;
+  const on = () => nv.classList.toggle('edge', sc.scrollTop > 56);
+  sc.addEventListener('scroll', on, { passive:true }); on();
+}
+function edgeSwipe(s){
+  let x0 = null, dx = 0, t0 = 0, active = false, dragging = false;
+  s.addEventListener('pointerdown', e => {
+    const r = s.getBoundingClientRect();
+    if (e.clientX - r.left > 28 || stack[stack.length - 1] !== s) return;
+    x0 = e.clientX; dx = 0; t0 = performance.now(); active = true; dragging = false;
+  });
+  s.addEventListener('pointermove', e => {
+    if (!active) return;
+    const w = s.offsetWidth, prev = stack[stack.length - 2];
+    dx = Math.max(0, e.clientX - x0);
+    if (!dragging) { if (dx < 8) return; dragging = true; s.setPointerCapture(e.pointerId); }
+    s.style.transition = 'none'; prev.style.transition = 'none';
+    s.style.transform = 'translateX('+dx+'px)';
+    prev.style.transform = 'translateX('+(-28 + dx / w * 28)+'%)';
+    prev.style.setProperty('--dim', String(1 - dx / w));
+  });
+  const end = () => {
+    if (!active) return; active = false;
+    if (!dragging) return;
+    const w = s.offsetWidth, prev = stack[stack.length - 2];
+    const v = dx / Math.max(1, performance.now() - t0);
+    s.style.transition = ''; prev.style.transition = '';
+    if (dx > w * 0.33 || v > 0.6) pop();
+    else { s.style.transform = ''; prev.style.transform = ''; prev.style.removeProperty('--dim'); }
+  };
+  s.addEventListener('pointerup', end); s.addEventListener('pointercancel', end);
+}
+function refreshAll(){
+  renderGear(false); renderLists(); renderSettings();
+  stack.slice(1).forEach(s => s._render());
+}
+
+/* ---------- タブ ---------- */
+const TABS = [['gear','tab_gear','MyGear'],['lists','tab_list','リスト'],['set','tab_set','設定']];
+let curTab = 'gear';
+function renderTabbar(){
+  $('#tabbar').innerHTML = TABS.map(([k, ic, l]) => '<button type="button" class="'+(k===curTab?'on':'')+'" data-tab="'+k+'">'+icon(ic, 26)+'<span>'+l+'</span></button>').join('');
+}
+$('#tabbar').addEventListener('click', e => {
+  const b = e.target.closest('[data-tab]'); if (!b) return;
+  curTab = b.dataset.tab;
+  document.querySelectorAll('.tabpage').forEach(p => p.classList.toggle('on', p.id === 'tp-' + curTab));
+  renderTabbar();
+});
+
+/* ---------- MyGear ---------- */
+const UI = { tab:'owned', cat:null, fav:false, q:'' };
+const STATUS = [['owned','持っている'],['wish','欲しい'],['retired','手放した']];
+const CONTOUR = '<svg class="contour" viewBox="0 0 300 160" fill="none" stroke="#E2E2D8" stroke-width="1"><path d="M40 160 C60 110 110 80 170 78 C230 76 280 100 320 130"/><path d="M80 160 C95 125 135 104 180 102 C225 100 265 118 300 142"/><path d="M120 160 C132 138 158 126 188 125 C220 124 248 136 272 156"/><path d="M10 120 C40 60 110 34 180 34 C240 34 290 56 330 86"/><path d="M-10 84 C30 20 110 -6 190 -4 C250 -2 300 18 340 44"/></svg>';
+
+function buildGearPage(){
+  const p = $('#tp-gear');
+  p.innerHTML =
+    '<div class="compact" id="g-compact"><b>MyGear</b><span class="small" id="gc-sum"></span></div>'+
+    '<div class="scroll" id="g-scroll">'+
+      '<header class="bighead">'+CONTOUR+
+        '<div class="titleRow"><div><div class="label">MY GEAR</div><h1 class="title">MyGear</h1></div>'+
+        '<div class="sum"><div><span class="num" id="g-count">0</span></div><div class="small" id="g-sum"></div></div></div>'+
+        '<div class="searchRow"><label class="search">'+icon('search', 18, 'var(--mute)')+'<input id="q" type="search" placeholder="名前・ブランドで検索" autocomplete="off"></label>'+
+        '<button type="button" class="btn primary" data-act="new">'+icon('plus', 16, 'var(--paper)')+'登録</button></div>'+
+      '</header>'+
+      '<div class="stabs" id="stabs" role="tablist"></div>'+
+      '<div class="chips" id="chips"></div>'+
+      '<div class="list" id="g-list"></div>'+
+    '</div>';
+  const sc = $('#g-scroll');
+  sc.addEventListener('scroll', () => $('#g-compact').classList.toggle('on', sc.scrollTop > 64), { passive:true });
+  $('#q').addEventListener('input', e => { UI.q = e.target.value.trim(); renderGear(false); });
+}
+$('#tp-gear').addEventListener('click', e => onGearClick(e));
+
+function renderGear(animate){
+  const counts = Object.fromEntries(STATUS.map(([k]) => [k, S.gear.filter(x => x.status === k).length]));
+  // 状態タブ
+  const st = $('#stabs'), idx = STATUS.findIndex(s => s[0] === UI.tab);
+  st.innerHTML = STATUS.map(([k, l]) => '<button type="button" role="tab" class="'+(k===UI.tab?'on':'')+'" data-st="'+k+'">'+l+'<small>'+counts[k]+'</small></button>').join('') + '<i class="ind"></i>';
+  const ind = st.querySelector('.ind');
+  ind.style.width = 'calc((100% - 40px) / 3)';
+  ind.style.transform = 'translateX(' + (UI._prevIdx ?? idx) * 100 + '%)';
+  if (UI._prevIdx !== undefined && UI._prevIdx !== idx) raf2(() => ind.style.transform = 'translateX(' + idx * 100 + '%)');
+  UI._prevIdx = idx;
+  // チップ
+  const chips = [['', 'すべて', UI.cat === null]].concat(CATS.map(c => [c.id, c.label, UI.cat === c.id]));
+  const chipsEl = $('#chips'), cl = chipsEl.scrollLeft;
+  chipsEl.innerHTML = chips.map(([id, l, on]) => '<button type="button" class="chip'+(on?' on':'')+'" data-cat="'+id+'">'+l+'</button>').join('') +
+    '<button type="button" class="chip'+(UI.fav?' on':'')+'" data-favonly>★ お気に入り</button>';
+  chipsEl.scrollLeft = cl;
+  // 行
+  const q = UI.q.toLowerCase();
+  const items = S.gear.filter(x => x.status === UI.tab && (!UI.cat || x.cat === UI.cat) && (!UI.fav || x.fav) &&
+    (!q || (x.name + ' ' + x.brand).toLowerCase().includes(q)));
+  let html = '', n = 0;
+  if (UI.tab === 'wish' && items.length) html += '<p class="hint" style="padding-top:8px">まだ持っていないギア。今のギアと比べた重さの差を出しています。</p>';
+  CATS.forEach(c => {
+    const its = items.filter(x => x.cat === c.id);
+    if (!its.length) return;
+    const tot = its.reduce((a, x) => a + x.w, 0);
+    html += '<div class="sec"><span class="h">'+c.label+'</span><span class="label">'+c.en+'</span><span class="ss">'+its.length+' 点 ・ '+wTxt(tot)+'</span></div>';
+    its.forEach(x => { html += rowHtml(x, animate ? n++ : -1); });
+  });
+  if (!items.length) html = '<div class="empty">'+(S.gear.some(x => x.status === UI.tab) ? '該当するギアがありません。' :
+    UI.tab === 'wish' ? '欲しいギアはまだありません。ギア詳細の「別の選択肢を探す」から追加できます。' :
+    UI.tab === 'retired' ? '手放したギアはありません。' : 'まだギアがありません。「登録」から入れていきましょう。')+'</div>';
+  $('#g-list').innerHTML = html;
+  // 見出しの数字
+  const tot = items.reduce((a, x) => a + x.w, 0);
+  $('#g-count').textContent = items.length;
+  const priced = items.filter(x => x.price != null);
+  const sumTxt = UI.tab === 'wish' ? '点 ・ ' + (priced.length ? '合計 ' + yen(priced.reduce((a, x) => a + x.price, 0)) : '価格不明') : '点 ・ ' + wTxt(tot);
+  $('#g-sum').textContent = sumTxt;
+  $('#gc-sum').textContent = items.length + ' ' + sumTxt;
+}
+
+function rowHtml(x, i){
+  const wish = x.status === 'wish', ret = x.status === 'retired';
+  const [n, u] = fmtW(x.w);
+  let sub;
+  if (wish) sub = '<span>'+(x.price != null ? yen(x.price) : '価格不明')+'</span>'+BADGE[x.src];
+  else sub = [x.type || '種類未設定', x.brand].map((p, k) => '<span'+(k?' class="dot"':'')+'>'+esc(p)+'</span>').join('') + (ret ? '<span class="dot">'+(x.retiredAt||'')+' 手放した</span>' : BADGE[x.src]);
+  const ag = wish ? wishAgainst(x) : null;
+  return '<div class="row'+(ret?' muted':'')+(i >= 0 ? ' enter' : '')+'" data-open="'+x.id+'"'+(i >= 0 ? ' style="animation-delay:'+Math.min(i, 10) * 22+'ms"' : '')+'>'+
+    '<span class="ic">'+icon(CAT[x.cat].id, 24, ret ? 'var(--mute)' : 'var(--ink)', wish)+'</span>'+
+    '<div class="rm"><div class="nm">'+esc(x.name)+'</div><div class="sub">'+sub+'</div>'+(ag ? '<div class="diff">今の'+esc(ag.name)+'より '+delta(x.w - ag.w)+'</div>' : '')+'</div>'+
+    '<button type="button" class="star" data-fav="'+x.id+'" aria-label="お気に入り">'+icon(x.fav ? 'star_on' : 'star', 20, x.fav ? 'var(--ink)' : 'var(--faint)')+'</button>'+
+    '<div class="w"><span class="num">'+n+'</span><small>'+u+'</small></div></div>';
+}
+
+function toggleFav(id){
+  const x = byId(id); x.fav = !x.fav;
+  refreshAll();
+  document.querySelectorAll('[data-fav="'+id+'"] svg, [data-fav="'+id+'"] span').forEach(s => { s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); });
+  if (x.fav) toast('お気に入りにしました');
+}
+
+function onGearClick(e){
+  const f = e.target.closest('[data-fav]'); if (f) { e.stopPropagation(); return toggleFav(f.dataset.fav); }
+  const st = e.target.closest('[data-st]'); if (st) { UI.tab = st.dataset.st; return renderGear(true); }
+  const c = e.target.closest('[data-cat]'); if (c) { UI.cat = c.dataset.cat || null; renderGear(true); const on = $('#chips .chip.on'); if (on) on.scrollIntoView({ inline:'center', block:'nearest', behavior:'smooth' }); return; }
+  if (e.target.closest('[data-favonly]')) { UI.fav = !UI.fav; return renderGear(true); }
+  if (e.target.closest('[data-act="new"]')) return openNew();
+  const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open, 'MyGear');
+}
+
+/* ---------- ギア詳細（2層: 最初は大事なことだけ、深い情報は一段奥） ---------- */
+function openDetail(id, backLabel){
+  const s = push(sc => {
+    const x = byId(id);
+    if (!x) return nav(backLabel, '') + '<div class="scroll"><div class="empty">このギアは削除されました。</div></div>';
+    const [n, u] = fmtW(x.w), c = CAT[x.cat];
+    const idx = STATUS.findIndex(t => t[0] === x.status);
+    const ag = x.status === 'wish' ? wishAgainst(x) : null;
+    const useRate = x.use ? Math.round(x.use[1] / x.use[0] * 100) : null;
+    return nav(backLabel, x.name, '<button type="button" class="iconbtn" data-more aria-label="その他">'+icon('more', 24)+'</button>') +
+      '<div class="scroll">'+
+        '<div class="dhead"><div class="label">'+c.en+' ・ '+c.label+'</div>'+
+          '<div class="dname"><h2>'+esc(x.name)+'</h2><button type="button" class="star" data-fav="'+x.id+'" aria-label="お気に入り" style="margin-top:2px">'+icon(x.fav ? 'star_on' : 'star', 24, x.fav ? 'var(--ink)' : 'var(--faint)')+'</button></div>'+
+          '<div class="brand">'+esc(x.brand)+'</div>'+
+          '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+(x.src !== 'ok' ? BADGE[x.src].replace('class="badge', 'data-go="weight" class="badge') : '')+'</div>'+
+          (ag ? '<div class="wishline">今の'+esc(ag.name)+'より '+delta(x.w - ag.w)+(x.price != null ? '　'+yen(x.price) : '')+'</div>' : '')+
+        '</div>'+
+        '<div class="segc" id="segc"><i class="thumb" style="width:33.333%;transform:translateX('+idx*100+'%)"></i>'+
+          STATUS.map(([k, l]) => '<button type="button" class="'+(k===x.status?'on':'')+'" data-status="'+k+'">'+l+'</button>').join('')+'</div>'+
+        '<div class="group">'+
+          gr('weight', '重さ・出典', x.src === 'ok' ? '確定' : x.src === 'ai' ? 'AI推定' : '未確認', 'weight')+
+          gr('type', '種類・カテゴリ', (x.type || '未設定') + ' ・ ' + c.label, 'type')+
+          gr('mountain', '山行で使った', useRate === null ? '記録なし' : x.use[0]+' 回中 '+x.use[1]+' 回', 'usage')+
+          gr('note', 'スペック・メモ', '', 'specs')+
+        '</div>'+
+        (x.status === 'owned' ? '<div class="group">'+gr('ai', '別の選択肢を探す', '', 'alt', 'AI が同じ種類のギアを探します')+'</div>' : '')+
+        '<div class="btnrow"><button type="button" class="btn secondary block" data-edit>編集</button></div>'+
+      '</div>';
+  }, backLabel);
+  s.addEventListener('click', e => onDetailClick(e, s, id));
+}
+function gr(ic, title, val, go, sub){
+  return '<div class="gr" data-go="'+go+'"><span class="gi">'+icon(ic, 22)+'</span><span class="gt">'+title+(sub ? '<small>'+sub+'</small>' : '')+'</span><span class="gv">'+esc(val)+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>';
+}
+async function onDetailClick(e, s, id){
+  const x = byId(id); if (!x) return;
+  const f = e.target.closest('[data-fav]'); if (f) return toggleFav(id);
+  const stb = e.target.closest('[data-status]');
+  if (stb) {
+    const k = stb.dataset.status; if (k === x.status) return;
+    const idx = STATUS.findIndex(t => t[0] === k);
+    s.querySelector('.thumb').style.transform = 'translateX(' + idx * 100 + '%)';
+    s.querySelectorAll('[data-status]').forEach(b => b.classList.toggle('on', b === stb));
+    setTimeout(() => {
+      x.status = k; if (k === 'retired') x.retiredAt = '2026-11';
+      refreshAll();
+      toast('「' + STATUS[idx][1] + '」に移しました');
+    }, 260);
+    return;
+  }
+  const go = e.target.closest('[data-go]');
+  if (go) {
+    const t = go.dataset.go, name = x.name.length > 8 ? '戻る' : x.name;
+    if (t === 'weight') return openWeight(id, name);
+    if (t === 'type') return openType(id, name);
+    if (t === 'usage') return openUsage(id, name);
+    if (t === 'specs') return openSpecs(id, name);
+    if (t === 'alt') return openAlt(id, name);
+  }
+  if (e.target.closest('[data-edit]')) return openEdit(id);
+  if (e.target.closest('[data-more]')) {
+    const r = await actionSheet([{ label:'編集', value:'edit' }, { label:'削除（登録ミス用）', value:'del', danger:true }]);
+    if (r === 'edit') openEdit(id);
+    if (r === 'del') {
+      const ok = await dialog('削除しますか？', '登録ミスを取り消すためのものです。使わなくなったギアは、状態を「手放した」にすると記録が残ります。',
+        [{ label:'キャンセル', value:false, bold:true }, { label:'削除', value:true, danger:true }]);
+      if (!ok) return;
+      pop();
+      setTimeout(() => {
+        const i = S.gear.indexOf(x); S.gear.splice(i, 1);
+        const savedItems = S.lists.map(l => l.items.slice());
+        S.lists.forEach(l => l.items = l.items.filter(it => it[0] !== id));
+        refreshAll();
+        toast('「' + x.name + '」を削除しました', '元に戻す', () => { S.gear.splice(i, 0, x); S.lists.forEach((l, k) => l.items = savedItems[k]); refreshAll(); });
+      }, 380);
+    }
+  }
+}
+
+/* 一段奥の画面たち */
+function openWeight(id, back){
+  push(() => {
+    const x = byId(id); if (!x) return nav(back, '') + '<div class="scroll"></div>';
+    const [n, u] = fmtW(x.w);
+    const srcTxt = { ai:'AI が型番から推定した値です。メーカーの公表値や、量った値に直せます。', un:'まだ確かめていない値です。', ok:'確定した値です。' }[x.src];
+    return nav(back, '重さ・出典') + '<div class="scroll"><div class="dhead"><div class="label">WEIGHT</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">重さ・出典</h2>'+
+      '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+BADGE[x.src]+'</div>'+
+      '<p class="small" style="line-height:1.8">'+srcTxt+'</p></div>'+
+      '<div class="group">'+
+        '<div class="gr static"><span class="gt">出典</span><span class="gv">'+(x.src === 'ai' ? 'AI 推定（型番タグ）' : x.src === 'ok' ? '自分で量った' : '不明')+'</span></div>'+
+        '<div class="gr static"><span class="gt">いつもの重量タグ</span><span class="gv">ベース重量</span></div>'+
+      '</div>'+
+      '<div class="btnrow">'+(x.src !== 'ok' ? '<button type="button" class="btn primary block" data-confirm>この重さで確定にする</button>' : '')+
+      '<button type="button" class="btn secondary block" data-reweigh>量った重さを入れる</button></div></div>';
+  }).addEventListener('click', e => {
+    const x = byId(id);
+    if (e.target.closest('[data-confirm]')) { x.src = 'ok'; refreshAll(); toast('確定にしました'); }
+    if (e.target.closest('[data-reweigh]')) openEdit(id, true);
+  });
+}
+function openType(id, back){
+  push(() => {
+    const x = byId(id); if (!x) return nav(back, '') + '<div class="scroll"></div>';
+    return nav(back, '種類・カテゴリ') + '<div class="scroll"><div class="ghead"><b>カテゴリ</b><span class="label">CATEGORY</span></div><div class="group" style="margin-top:0">'+
+      CATS.map(c => '<div class="gr'+(c.id === x.cat ? ' check' : '')+'" data-pick="'+c.id+'"><span class="gi">'+icon(c.id, 22)+'</span><span class="gt">'+c.label+'</span><span class="gv">'+(c.id === x.cat ? icon('check', 20, 'var(--blue)') : '')+'</span></div>').join('')+
+      '</div><div class="ghead"><b>種類</b><span class="label">TYPE</span></div><p class="hint">種類は、重さの比較や「別の選択肢」探しに使います。分からなければ未設定のままで大丈夫です。</p>'+
+      '<div class="group"><div class="gr static"><span class="gt">今の種類</span><span class="gv">'+esc(x.type || '未設定')+'</span></div></div><div style="height:40px"></div></div>';
+  }).addEventListener('click', e => {
+    const p = e.target.closest('[data-pick]'); if (!p) return;
+    const x = byId(id); if (x.cat === p.dataset.pick) return;
+    x.cat = p.dataset.pick; refreshAll();
+    setTimeout(pop, 320);
+  });
+}
+function openUsage(id, back){
+  push(() => {
+    const x = byId(id); if (!x) return nav(back, '') + '<div class="scroll"></div>';
+    const rate = x.use ? Math.round(x.use[1] / x.use[0] * 100) : 0;
+    const trips = ['日帰り ハイク','テント泊 1泊2日','冬の小屋泊','日帰り ハイク','テント泊 2泊3日','日帰り 低山'].slice(0, x.use ? x.use[0] : 0);
+    return nav(back, '山行で使った') + '<div class="scroll"><div class="dhead"><div class="label">USAGE</div>'+
+      '<div class="bigw"><span class="num">'+rate+'</span><span class="u">%</span></div><p class="small">'+(x.use ? x.use[0]+' 回の山行のうち '+x.use[1]+' 回使いました' : '記録なし')+'</p></div>'+
+      '<div class="group">'+trips.map((t, i) => '<div class="gr static"><span class="gi">'+icon(i < x.use[1] ? 'check' : 'minus', 18, i < x.use[1] ? 'var(--ink)' : 'var(--faint)')+'</span><span class="gt">'+t+'<small>2026-'+String(10 - i).padStart(2, '0')+'</small></span><span class="gv">'+(i < x.use[1] ? '使った' : '使わなかった')+'</span></div>').join('')+'</div><div style="height:40px"></div></div>';
+  });
+}
+function openSpecs(id, back){
+  push(() => {
+    const x = byId(id); if (!x) return nav(back, '') + '<div class="scroll"></div>';
+    return nav(back, 'スペック・メモ') + '<div class="scroll"><div class="ghead"><b>スペック</b><span class="label">SPECS</span></div><div class="group" style="margin-top:0">'+
+      [['素材','（未入力）'],['収納サイズ','（未入力）'],['耐水圧','（未入力）']].map(([k, v]) => '<div class="gr static"><span class="gt">'+k+'</span><span class="gv">'+v+'</span></div>').join('')+
+      '</div><div class="ghead"><b>その他</b><span class="label">NOTES</span></div><div class="group" style="margin-top:0">'+
+      '<div class="gr static"><span class="gt">価格</span><span class="gv">'+(x.price ? x.price.toLocaleString() + ' 円' : '（未入力）')+'</span></div>'+
+      '<div class="gr static"><span class="gt">購入日</span><span class="gv">（未入力）</span></div></div><div style="height:40px"></div></div>';
+  });
+}
+function openAlt(id, back){
+  let state = 'loading', added = new Set();
+  const s = push(() => {
+    const x = byId(id); if (!x) return nav(back, '') + '<div class="scroll"></div>';
+    const cands = [['A', .62, 1.4], ['B', .74, 1.1], ['C', .86, .8]].map(([k, r, p]) => ({ k, name:(x.type || 'ギア') + ' ライト ' + k, w:Math.round(x.w * r), price:Math.round((x.price || 20000) * p / 100) * 100 }));
+    let body;
+    if (state === 'loading') body = '<div class="loading"><span class="spin"></span>AI が同じ種類のギアを探しています…</div><div class="skel"></div><div class="skel"></div><div class="skel"></div>';
+    else body = '<p class="hint" style="padding-top:12px">今の「'+esc(x.name)+'」（'+wTxt(x.w)+'）より軽いもの。価格は変動するため参考値です。</p><div style="margin-top:6px">'+
+      cands.map(c => '<div class="cand enter"><span>'+icon(x.cat, 24, 'var(--ink)', true)+'</span><div class="cm"><div class="cn">'+esc(c.name)+'</div><div class="cd">'+wTxt(c.w)+'　'+delta(c.w - x.w)+'</div><div class="cp">'+yen(c.price)+'</div></div>'+
+        '<button type="button" class="mini'+(added.has(c.k) ? ' done' : '')+'" data-add="'+c.k+'" data-w="'+c.w+'" data-p="'+c.price+'" data-n="'+esc(c.name)+'">'+(added.has(c.k) ? '追加済み' : '欲しいに追加')+'</button></div>').join('')+'</div>';
+    return nav(back, '別の選択肢') + '<div class="scroll"><div class="dhead"><div class="label">ALTERNATIVES</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0 0">別の選択肢</h2></div>'+body+'<div style="height:40px"></div></div>';
+  });
+  setTimeout(() => { state = 'done'; s._render(); }, 1400);
+  s.addEventListener('click', e => {
+    const b = e.target.closest('[data-add]'); if (!b || added.has(b.dataset.add)) return;
+    const x = byId(id); added.add(b.dataset.add);
+    S.gear.push({ id:'n' + (seq++), name:b.dataset.n, brand:B, cat:x.cat, type:x.type, w:+b.dataset.w, src:'ai', fav:false, status:'wish', price:+b.dataset.p, replaces:x.id });
+    refreshAll();
+    toast('「欲しい」に追加しました');
+  });
+}
+
+/* 編集シート */
+function openEdit(id, focusWeight){
+  const x = byId(id);
+  openSheet({ title:'編集', right:'保存', tall:true,
+    body:'<div style="height:8px"></div>'+
+      '<label class="field"><span>名前</span><input id="e-name" value="'+esc(x.name)+'"></label>'+
+      '<label class="field"><span>ブランド</span><input id="e-brand" value="'+esc(x.brand)+'"></label>'+
+      '<label class="field"><span>重さ（g）</span><input id="e-w" inputmode="numeric" value="'+x.w+'"></label>'+
+      '<p class="hint">種類・カテゴリ・状態は、詳細画面のそれぞれの行から変えられます。</p>',
+    onMount:(sh, close) => {
+      if (focusWeight) setTimeout(() => { const i = sh.querySelector('#e-w'); i.focus(); i.select(); }, 450);
+      sh.querySelector('[data-r]').onclick = () => {
+        const w = parseInt(sh.querySelector('#e-w').value, 10);
+        x.name = sh.querySelector('#e-name').value.trim() || x.name;
+        x.brand = sh.querySelector('#e-brand').value.trim() || x.brand;
+        if (w > 0 && w !== x.w) { x.w = w; x.src = 'ok'; }
+        close(); refreshAll(); toast('保存しました');
+      };
+    } });
+}
+
+/* ---------- 登録（型番タグ撮影のまね） ---------- */
+function openNew(){
+  let pickedCat = null, status = UI.tab === 'wish' ? 'wish' : 'owned', aiFilled = false;
+  openSheet({ title:'ギアを登録', right:'保存', tall:true,
+    body:'<div class="segc" id="n-seg" style="margin-top:6px"><i class="thumb" style="width:50%;transform:translateX('+(status === 'wish' ? 100 : 0)+'%)"></i><button type="button" class="'+(status==='owned'?'on':'')+'" data-ns="owned">持っている</button><button type="button" class="'+(status==='wish'?'on':'')+'" data-ns="wish">欲しい</button></div>'+
+      '<div style="height:14px"></div>'+
+      '<button type="button" class="bigbtn" data-cam>'+icon('camera', 30)+'<span><b>型番タグを撮影</b><small>AI が名前と重さを読み取ります</small></span></button>'+
+      '<div class="or">または手で入力</div>'+
+      '<label class="field"><span>名前</span><input id="n-name" placeholder="例: レインジャケット"></label>'+
+      '<label class="field"><span>ブランド</span><input id="n-brand" placeholder="分からなければ空欄で大丈夫"></label>'+
+      '<label class="field"><span>重さ（g）</span><input id="n-w" inputmode="numeric" placeholder="分からなければ空欄"></label>'+
+      '<div class="field" style="margin-bottom:6px"><span>カテゴリ</span></div><div class="catpick" id="n-cats">'+
+      CATS.map(c => '<button type="button" class="chip" data-nc="'+c.id+'">'+c.label+'</button>').join('')+'</div>',
+    onMount:(sh, close) => {
+      const save = sh.querySelector('[data-r]');
+      const name = sh.querySelector('#n-name');
+      const sync = () => { save.disabled = !name.value.trim() || !pickedCat; };
+      sync(); name.addEventListener('input', sync);
+      sh.addEventListener('click', e => {
+        const ns = e.target.closest('[data-ns]');
+        if (ns) { status = ns.dataset.ns; sh.querySelector('#n-seg .thumb').style.transform = 'translateX(' + (status === 'wish' ? 100 : 0) + '%)'; sh.querySelectorAll('[data-ns]').forEach(b => b.classList.toggle('on', b === ns)); }
+        const nc = e.target.closest('[data-nc]');
+        if (nc) { pickedCat = nc.dataset.nc; sh.querySelectorAll('[data-nc]').forEach(b => b.classList.toggle('on', b === nc)); sync(); }
+        if (e.target.closest('[data-cam]')) openCamera(r => {
+          aiFilled = true;
+          typeInto(sh.querySelector('#n-name'), r.name); typeInto(sh.querySelector('#n-brand'), r.brand); typeInto(sh.querySelector('#n-w'), String(r.w));
+          ['#n-name', '#n-brand', '#n-w'].forEach(s => sh.querySelector(s).parentElement.classList.add('ai'));
+          pickedCat = r.cat; sh.querySelectorAll('[data-nc]').forEach(b => b.classList.toggle('on', b.dataset.nc === r.cat));
+          setTimeout(sync, 700);
+        });
+      });
+      save.onclick = () => {
+        const w = parseInt(sh.querySelector('#n-w').value, 10) || 0;
+        const it = { id:'n' + (seq++), name:name.value.trim(), brand:sh.querySelector('#n-brand').value.trim() || '—', cat:pickedCat, type:null, w, src:aiFilled ? 'ai' : (w ? 'ok' : 'un'), fav:false, status, use:null };
+        S.gear.push(it);
+        close();
+        UI.tab = status; UI.cat = null; UI.fav = false; UI.q = ''; $('#q').value = '';
+        refreshAll();
+        setTimeout(() => {
+          const r = document.querySelector('#g-list [data-open="'+it.id+'"]');
+          if (r) { r.scrollIntoView({ block:'center', behavior:'smooth' }); r.classList.add('flash'); }
+          toast('登録しました');
+        }, 380);
+      };
+    } });
+}
+function typeInto(input, text){
+  input.value = ''; let i = 0;
+  const t = setInterval(() => { input.value = text.slice(0, ++i); input.dispatchEvent(new Event('input')); if (i >= text.length) clearInterval(t); }, 28);
+}
+function openCamera(onDone){
+  const c = el('<div class="camera"><div class="vf"><div class="msg">タグを枠の中に入れてください</div>'+
+    '<div class="tagcard">MODEL: WS-01<br>WIND SHELL<br>WEIGHT: 95g<br>SIZE: M<br>[BRAND]</div><div class="frame"></div><div class="flashw"></div></div>'+
+    '<div class="cbar"><button type="button" class="cx">キャンセル</button><button type="button" class="shutter" aria-label="撮影"><i></i></button></div></div>');
+  app.appendChild(c); raf2(() => c.classList.add('on'));
+  const close = () => { c.classList.remove('on'); setTimeout(() => c.remove(), 450); };
+  c.querySelector('.cx').onclick = close;
+  c.querySelector('.shutter').onclick = () => {
+    const fl = c.querySelector('.flashw'); fl.style.transition = 'none'; fl.style.opacity = 1;
+    raf2(() => { fl.style.transition = ''; fl.style.opacity = 0; });
+    c.querySelector('.frame').classList.add('ok');
+    c.querySelector('.msg').innerHTML = '<span class="spin" style="display:inline-block;vertical-align:middle;border-color:#555;border-top-color:#fff;margin-right:8px"></span>AI が読み取っています…';
+    setTimeout(() => { close(); setTimeout(() => onDone({ name:'ウインドシェル', brand:B, w:95, cat:'clothing' }), 300); }, 1300);
+  };
+}
+
+/* ---------- パックリスト ---------- */
+const BAR = ['#141414','#1F5FBF','#5A5A55','#8FA9D6','#A8A8A0','#C9C9C0','#D8D8D0'];
+const listTotal = l => l.items.reduce((a, [gid, q]) => { const x = byId(gid); return a + (x ? x.w * q : 0); }, 0);
+const listCount = l => l.items.reduce((a, it) => a + it[1], 0);
+function renderLists(){
+  const p = $('#tp-lists');
+  const sc = p.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
+  p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+'<div class="titleRow"><div><div class="label">PACK LISTS</div><h1 class="title">パックリスト</h1></div>'+
+    '<button type="button" class="btn primary" data-newlist>'+icon('plus', 16, 'var(--paper)')+'新規</button></div></header>'+
+    S.lists.map(l => { const [n, u] = fmtW(listTotal(l)); return '<div class="lcard" data-list="'+l.id+'"><div><div class="ln">'+esc(l.name)+'</div><div class="small" style="margin-top:4px">'+
+      '<span class="tag'+(l.status === 'done' ? ' done' : '')+'">'+(l.status === 'done' ? '山行済み' : '計画中')+'</span>'+listCount(l)+' 点'+(l.wentAt ? ' ・ ' + l.wentAt : '')+'</div></div>'+
+      '<div class="lw"><span class="num">'+n+'</span><small class="small"> '+u+'</small></div>'+icon('chev', 16, 'var(--faint)')+'</div>'; }).join('')+
+    '<div style="height:100px"></div></div>';
+  p.querySelector('.scroll').scrollTop = top;
+}
+$('#tp-lists').addEventListener('click', e => {
+  const c = e.target.closest('[data-list]'); if (c) return openList(c.dataset.list);
+  if (e.target.closest('[data-newlist]')) openSheet({ title:'新しいリスト', right:'作成', body:'<div style="height:8px"></div><label class="field"><span>リスト名</span><input id="l-name" placeholder="例: テント泊 1泊2日"></label>',
+    onMount:(sh, close) => {
+      const i = sh.querySelector('#l-name'), b = sh.querySelector('[data-r]');
+      b.disabled = true; i.addEventListener('input', () => b.disabled = !i.value.trim());
+      setTimeout(() => i.focus(), 420);
+      b.onclick = () => { const l = { id:'L' + (seq++), name:i.value.trim(), status:'plan', items:[] }; S.lists.unshift(l); close(); renderLists(); setTimeout(() => openList(l.id), 350); };
+    } });
+});
+
+function openList(lid){
+  const s = push(() => {
+    const l = listById(lid); if (!l) return nav('パックリスト', '') + '<div class="scroll"></div>';
+    const tot = listTotal(l), [n, u] = fmtW(tot);
+    const byCat = CATS.map(c => ({ c, its:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id) })).filter(v => v.its.length);
+    const catW = byCat.map(v => ({ c:v.c, w:v.its.reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).sort((a, b) => b.w - a.w);
+    return nav('パックリスト', l.name) + '<div class="scroll"><div class="dhead"><div class="label">PACK LIST ・ '+(l.status === 'done' ? '山行済み ' + (l.wentAt || '') : '計画中')+'</div>'+
+      '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
+      '<div class="bigw"><span class="num" id="l-tot" data-v="'+tot+'">'+n+'</span><span class="u">'+u+'</span><span class="small" style="margin-left:8px" id="l-cnt">'+listCount(l)+' 点</span></div></div>'+
+      '<div class="bar" id="l-bar">'+catW.map((v, i) => '<i style="width:'+(tot ? v.w / tot * 100 : 0)+'%;background:'+BAR[Math.min(i, BAR.length - 1)]+'"></i>').join('')+'</div>'+
+      '<div class="legend">'+catW.slice(0, 5).map((v, i) => '<span><i style="background:'+BAR[i]+'"></i>'+v.c.label+' '+wTxt(v.w)+'</span>').join('')+(catW.length > 5 ? '<span>ほか '+(catW.length - 5)+'</span>' : '')+'</div>'+
+      (l.items.length ? byCat.map(v => '<div class="sec"><span class="h">'+v.c.label+'</span><span class="label">'+v.c.en+'</span></div>'+
+        v.its.map(([gid, q]) => { const x = byId(gid); return '<div class="swipe" data-row="'+gid+'"><button type="button" class="del" data-rm="'+gid+'">外す</button><div class="fg">'+
+          '<span style="width:24px;display:flex;justify-content:center">'+icon(x.cat, 22, 'var(--ink)', x.status === 'wish')+'</span>'+
+          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(x.status === 'wish' ? ' ・ 欲しい' : '')+'</div></div>'+
+          '<div class="step"><button type="button" data-q="-1" data-g="'+gid+'" aria-label="減らす">'+icon('minus', 16)+'</button><span class="q">'+q+'</span><button type="button" data-q="1" data-g="'+gid+'" aria-label="増やす">'+icon('plus', 16)+'</button></div>'+
+          '<span class="lw2 num" style="font-size:15px">'+wTxt(x.w * q)+'</span></div></div>'; }).join('')).join('')
+        : '<div class="empty">まだギアがありません。「ギアを追加」から選んでください。</div>')+
+      '<p class="hint" style="padding-top:14px">行を左にスワイプすると「外す」が出ます。</p>'+
+      '<div class="btnrow"><button type="button" class="btn secondary block" data-addgear>'+icon('plus', 16)+'ギアを追加</button>'+
+      (l.status === 'plan' ? '<button type="button" class="btn primary block" data-done>山行を完了</button>' : '')+'</div></div>';
+  });
+  s._after = sc => sc.querySelectorAll('.swipe').forEach(rowSwipe);
+  s._after(s);
+  s.addEventListener('click', e => onListClick(e, s, lid));
+}
+function onListClick(e, s, lid){
+  const l = listById(lid);
+  const q = e.target.closest('[data-q]');
+  if (q) {
+    const it = l.items.find(i => i[0] === q.dataset.g);
+    const nq = it[1] + Number(q.dataset.q);
+    if (nq < 1) return removeFromList(s, l, it[0]);
+    it[1] = nq;
+    const row = q.closest('.fg'); row.querySelector('.q').textContent = nq;
+    row.querySelector('.lw2').textContent = wTxt(byId(it[0]).w * nq);
+    updateListHead(s, l); renderLists();
+    return;
+  }
+  const rm = e.target.closest('[data-rm]'); if (rm) return removeFromList(s, l, rm.dataset.rm);
+  const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open, 'リスト');
+  if (e.target.closest('[data-addgear]')) return openAddGear(s, l);
+  if (e.target.closest('[data-done]')) dialog('山行を完了にしますか？', '完了にすると、使わなかったギアを記録できます（この試作では記録画面は省略）。',
+    [{ label:'キャンセル', value:false }, { label:'完了にする', value:true, bold:true }]).then(ok => { if (ok) { l.status = 'done'; l.wentAt = '2026-11-25'; refreshAll(); toast('山行済みにしました'); } });
+}
+function updateListHead(s, l){
+  const tot = listTotal(l);
+  countTo(s.querySelector('#l-tot'), tot);
+  s.querySelector('#l-cnt').textContent = listCount(l) + ' 点';
+  const catW = CATS.map(c => ({ c, w:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id).reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).filter(v => v.w).sort((a, b) => b.w - a.w);
+  const bars = s.querySelectorAll('#l-bar i');
+  if (bars.length === catW.length) catW.forEach((v, i) => bars[i].style.width = (v.w / tot * 100) + '%');
+}
+function removeFromList(s, l, gid){
+  const row = s.querySelector('[data-row="'+gid+'"]');
+  const i = l.items.findIndex(it => it[0] === gid), saved = l.items[i];
+  row.style.height = row.offsetHeight + 'px'; void row.offsetHeight;
+  row.style.height = '0px'; row.style.opacity = '0';
+  setTimeout(() => {
+    l.items.splice(i, 1); s._render(); renderLists();
+    toast('「' + byId(gid).name + '」を外しました', '元に戻す', () => { l.items.splice(i, 0, saved); s._render(); renderLists(); });
+  }, 260);
+}
+function rowSwipe(row){
+  const fg = row.querySelector('.fg'); let x0 = null, y0 = 0, dx = 0, open = false, lock = null;
+  fg.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; x0 = e.clientX; y0 = e.clientY; dx = 0; lock = null; });
+  fg.addEventListener('pointermove', e => {
+    if (x0 === null) return;
+    const mx = e.clientX - x0, my = e.clientY - y0;
+    if (lock === null && (Math.abs(mx) > 8 || Math.abs(my) > 8)) { lock = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'; if (lock === 'x') fg.setPointerCapture(e.pointerId); }
+    if (lock !== 'x') return;
+    dx = Math.min(0, Math.max(-110, (open ? -84 : 0) + mx));
+    fg.style.transition = 'none'; fg.style.transform = 'translateX(' + dx + 'px)';
+  });
+  const end = e => {
+    if (x0 === null) return; x0 = null;
+    fg.style.transition = '';
+    if (lock === 'x') { open = dx < -42; fg.style.transform = open ? 'translateX(-84px)' : ''; e.preventDefault(); row._justSwiped = true; setTimeout(() => row._justSwiped = false, 50); }
+  };
+  fg.addEventListener('pointerup', end); fg.addEventListener('pointercancel', end);
+  fg.addEventListener('click', e => { if (row._justSwiped) { e.stopPropagation(); } else if (open && !e.target.closest('button')) { open = false; fg.style.transform = ''; e.stopPropagation(); } }, true);
+}
+function openAddGear(s, l){
+  const inList = new Set(l.items.map(i => i[0]));
+  const cand = S.gear.filter(x => x.status !== 'retired' && !inList.has(x.id));
+  const sel = new Set();
+  openSheet({ title:'ギアを追加', right:'追加', tall:true,
+    body: cand.length ? CATS.map(c => { const its = cand.filter(x => x.cat === c.id); if (!its.length) return '';
+      return '<div class="sec"><span class="h">'+c.label+'</span><span class="label">'+c.en+'</span></div>'+its.map(x =>
+        '<div class="gr" data-sel="'+x.id+'"><span class="chk"></span><span class="gt">'+esc(x.name)+'<small>'+wTxt(x.w)+(x.status === 'wish' ? ' ・ 欲しい' : '')+'</small></span></div>').join(''); }).join('')
+      : '<div class="empty">追加できるギアがありません。</div>',
+    onMount:(sh, close) => {
+      const b = sh.querySelector('[data-r]'); b.disabled = true;
+      sh.addEventListener('click', e => {
+        const r = e.target.closest('[data-sel]'); if (!r) return;
+        const id = r.dataset.sel; sel.has(id) ? sel.delete(id) : sel.add(id);
+        const ck = r.querySelector('.chk'); ck.classList.toggle('on', sel.has(id)); ck.innerHTML = sel.has(id) ? icon('check', 16, 'var(--paper)') : '';
+        b.disabled = !sel.size; b.textContent = sel.size ? sel.size + ' 件を追加' : '追加';
+      });
+      b.onclick = () => {
+        sel.forEach(id => l.items.push([id, 1]));
+        close(); s._render(); renderLists();
+        setTimeout(() => sel.forEach(id => { const r = s.querySelector('[data-row="'+id+'"] .fg'); if (r) r.classList.add('flash'); }), 200);
+        const tot = s.querySelector('#l-tot'); if (tot) { const v = listTotal(l); tot.dataset.v = v; }
+        toast(sel.size + ' 件を追加しました');
+      };
+    } });
+}
+
+/* ---------- 設定 ---------- */
+function renderSettings(){
+  const p = $('#tp-set');
+  const sc = p.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
+  p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+'<div class="titleRow"><div><div class="label">SETTINGS</div><h1 class="title">設定</h1></div></div></header>'+
+    '<div class="group" style="margin-top:20px">'+
+      '<div class="gr" data-s="cats"><span class="gi">'+icon('type', 22)+'</span><span class="gt">カテゴリ</span><span class="gv">'+CATS.length+' 個</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+      '<div class="gr" data-s="backup"><span class="gi">'+icon('backup', 22)+'</span><span class="gt">データのバックアップ</span><span class="gv"></span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+      '<div class="gr" data-s="ai"><span class="gi">'+icon('ai', 22)+'</span><span class="gt">AI（Gemini）</span><span class="gv">使える</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+    '</div>'+
+    '<div class="ghead"><b>この試作だけの設定</b></div>'+
+    '<p class="hint">アイコンの案を切り替えられます。アプリには入りません。</p>'+
+    '<div class="segc" id="set-seg" style="margin-top:10px"><i class="thumb" style="width:25%;transform:translateX('+SETS.findIndex(x => x.id === SET)*100+'%)"></i>'+
+      SETS.map(x => '<button type="button" class="'+(x.id === SET ? 'on' : '')+'" data-set="'+x.id+'" style="font-size:13px">'+x.name.split(' ')[0]+'</button>').join('')+'</div>'+
+    '<div class="btnrow"><button type="button" class="btn secondary block" data-reset>データを最初に戻す</button></div>'+
+    '<div style="height:60px"></div></div>';
+  p.querySelector('.scroll').scrollTop = top;
+}
+$('#tp-set').addEventListener('click', e => {
+  const st = e.target.closest('[data-set]'); if (st) return setIconSet(st.dataset.set);
+  if (e.target.closest('[data-reset]')) return dialog('最初に戻しますか？', '試作の中で変えた内容がすべて元に戻ります。', [{ label:'キャンセル', value:false }, { label:'戻す', value:true, danger:true }])
+    .then(ok => { if (ok) { S = JSON.parse(JSON.stringify(SEED)); refreshAll(); toast('最初に戻しました'); } });
+  const r = e.target.closest('[data-s]'); if (!r) return;
+  if (r.dataset.s === 'cats') push(() => nav('設定', 'カテゴリ') + '<div class="scroll"><div class="ghead"><b>カテゴリ</b><span class="label">CATEGORIES</span></div><p class="hint">並びと名前を変えられます（この試作では表示のみ）。</p><div class="group">'+
+    CATS.map(c => '<div class="gr static"><span class="gi">'+icon(c.id, 22)+'</span><span class="gt">'+c.label+'<small>'+c.en+'</small></span><span class="gv">'+S.gear.filter(x => x.cat === c.id && x.status === 'owned').length+' 点</span></div>').join('')+'</div><div style="height:40px"></div></div>');
+  if (r.dataset.s === 'backup') push(() => nav('設定', 'バックアップ') + '<div class="scroll"><div class="dhead"><div class="label">BACKUP</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">データのバックアップ</h2><p class="small" style="line-height:1.8">ギアとリストを1つのファイルに書き出します。機種変更のときに取り込めます。</p></div>'+
+    '<div class="btnrow"><button type="button" class="btn primary block" data-fake="書き出しました（試作）">JSON を書き出す</button><button type="button" class="btn secondary block" data-fake="取り込みはこの試作では省略">JSON を取り込む</button></div></div>')
+    .addEventListener('click', e => { const f = e.target.closest('[data-fake]'); if (f) toast(f.dataset.fake); });
+  if (r.dataset.s === 'ai') push(() => nav('設定', 'AI') + '<div class="scroll"><div class="dhead"><div class="label">AI</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">AI（Gemini）</h2><p class="small" style="line-height:1.8">型番タグの読み取りと、別の選択肢探しに使います。AI の結果は「AI推定」として表示され、確かめてから確定にできます。</p></div>'+
+    '<div class="group"><div class="gr static"><span class="gt">API キー</span><span class="gv">設定済み</span></div></div></div>');
+});
+
+function setIconSet(id){
+  SET = id;
+  const seg = $('#set-seg');
+  if (seg) { seg.querySelector('.thumb').style.transform = 'translateX(' + SETS.findIndex(x => x.id === id) * 100 + '%)'; seg.querySelectorAll('[data-set]').forEach(b => b.classList.toggle('on', b.dataset.set === id)); }
+  renderSide();
+  setTimeout(() => { renderTabbar(); buildGearPage(); $('#q').value = UI.q; renderGear(false); renderLists(); stack.slice(1).forEach(s => s._render()); renderSettings(); }, 240);
+}
+function renderSide(){
+  $('#side-set').innerHTML = SETS.map(x => '<button type="button" aria-pressed="'+(x.id === SET)+'" data-sset="'+x.id+'">'+x.name+'</button>').join('');
+}
+$('#side-set').addEventListener('click', e => { const b = e.target.closest('[data-sset]'); if (b) setIconSet(b.dataset.sset); });
+
+/* ---------- 起動 ---------- */
+function fit(){ // PC では端末を画面の高さに収める
+  const ph = $('#phone');
+  ph.style.zoom = innerWidth <= 640 ? '' : String(Math.max(.55, Math.min(1, (innerHeight - 48) / 868)));
+}
+addEventListener('resize', fit); fit();
+renderTabbar(); buildGearPage(); renderGear(true); renderLists(); renderSettings(); renderSide();
+</script>
+</body>
+</html>
