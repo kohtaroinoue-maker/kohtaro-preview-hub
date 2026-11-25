@@ -450,6 +450,11 @@ input{font:inherit;color:inherit}
 .wv.tapv{cursor:pointer;margin:-4px -8px;padding:4px 8px;transition:background .12s}
 .wv.tapv:active{background:var(--press)}
 
+/* シートの見出しが長い時も、左右のボタンを折り返さない */
+.shead{grid-template-columns:auto 1fr auto;gap:4px}
+.shead b{text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.tbtn{white-space:nowrap}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -779,7 +784,7 @@ function actionSheet(opts){
 
 function openSheet({ title, left, right, body, tall, onMount }){
   const bd = el('<div class="backdrop"></div>');
-  const sh = el('<div class="sheet'+(tall?' tall':'')+'" role="dialog"><div class="grab"></div><div class="shead"><button type="button" class="tbtn" data-x>'+(left||'キャンセル')+'</button><b>'+title+'</b>'+(right?'<button type="button" class="tbtn strong" data-r>'+right+'</button>':'<span></span>')+'</div><div class="sbody">'+body+'</div></div>');
+  const sh = el('<div class="sheet'+(tall?' tall':'')+'" role="dialog"><div class="grab"></div><div class="shead"><button type="button" class="tbtn" data-x>'+(left||'キャンセル')+'</button><b'+(title.length > 10 ? ' style="font-size:14.5px"' : '')+'>'+title+'</b>'+(right?'<button type="button" class="tbtn strong" data-r>'+right+'</button>':'<span></span>')+'</div><div class="sbody">'+body+'</div></div>');
   app.append(bd, sh);
   raf2(() => { bd.classList.add('on'); sh.classList.add('on'); if (tall) stackEl.classList.add('recede'); });
   let closed = false;
@@ -1529,7 +1534,7 @@ function openList(lid){
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
         '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
         '<div class="temprow"><button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+coldMini(l)+'</div>'+coldBanner(l)+
-        '<div class="wbox"><div class="wline main"><span class="wl tapl" data-jump="base">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button>'+(tw.whole ? '<span class="badge b-m" style="margin-left:0">全体を実測</span>' : '')+'</span><span class="wv'+(done && l.rec ? '' : ' tapv')+'"'+(done && l.rec ? '' : ' data-basem aria-label="ベース全体の実測を入れる"')+'><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
+        '<div class="wbox"><div class="wline main"><span class="wl tapl" data-jump="base">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button>'+(tw.whole ? '<span class="badge b-m" style="margin-left:0">実測値</span>' : '')+'</span><span class="wv'+(done && l.rec ? '' : ' tapv')+'"'+(done && l.rec ? '' : ' data-basem aria-label="ベースウェイト実測値を入力"')+'><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
         '<div class="bmeas" id="l-bdiff">'+(tw.whole
           ? 'ギアの合計 '+wTxt(tw.gearBase)+' ・ 差 '+(bdiff >= 0 ? '＋' : '−')+wTxt(Math.abs(bdiff))+'（量っていない小物・袋など）'
           : '')+'</div>'+
@@ -1608,7 +1613,7 @@ async function onListClick(e, s, lid, setLeft){
     const consRows = l.items.filter(([gid]) => byId(gid) && tagIn(l, gid) === 'cons').map(([gid, q]) => '<div class="gr static"><span class="gt">＋ '+esc(byId(gid).name)+'</span><span class="gv">'+wTxt(byId(gid).w * q)+'</span></div>').join('');
     return openSheet({ title:'重さの見方', left:'閉じる', tall:true, body:'<div class="dhead" style="padding-top:2px">'+
       '<p style="font-size:14px;line-height:1.85;margin:0 0 6px"><b>ベースウェイト</b>は、装備そのものの重さ。食料・水のように減っていく<b>消耗品</b>と、歩く時に着る服や靴のような<b>行動着</b>は入れません。山行どうしを比べやすい数字です。</p>'+
-      '<p style="font-size:14px;line-height:1.85;margin:0 0 6px">重さは<b>実測</b>を優先し、量っていないギアはアプリの値（カタログ・公表値など）で計算します。ベース全体をまとめて量った値があれば、ベースウェイトはそちらを使います。</p>'+
+      '<p style="font-size:14px;line-height:1.85;margin:0 0 6px">重さは<b>実測</b>を優先し、量っていないギアはアプリの値（カタログ・公表値など）で計算します。ベースウェイト実測値（ザックに詰めてまとめて量った値）があれば、ベースウェイトはそちらを使います。</p>'+
       '<p style="font-size:14px;line-height:1.85;margin:0"><b>パックウェイト</b>は、消耗品も入れた、ザックに入るものすべて。出発する時に背負う重さです。</p></div>'+
       '<div class="group"><div class="gr static"><span class="gt"><b>ベースウェイト</b></span><span class="gv num" style="color:var(--ink)">'+wTxt(base)+'</span></div>'+consRows+
       '<div class="gr static"><span class="gt"><b>＝ パックウェイト</b></span><span class="gv num" style="color:var(--ink)">'+wTxt(pack)+'</span></div>'+
@@ -1683,19 +1688,19 @@ function copyTrip(l){
   setTimeout(() => { openList(n.id); toast('持ち物をコピーして計画を作りました'); }, 200);
 }
 /* 山行を完了 → 使わなかったギアに印 → 投稿へ */
-// ベース全体をまとめて量った値（kg）
+// ベースウェイト実測値（ザックに詰めてまとめて量った値、kg）
 function openBaseMeasure(l, after){
   const gb = listBase(l);
-  openSheet({ title:'ベース全体の実測', right:'保存',
+  openSheet({ title:'ベースウェイト実測値を入力', right:'保存',
     body:'<div style="height:6px"></div><label class="field"><span>ザックに詰めて量った重さ（kg）。食料・水と行動着は入れずに</span><input id="b-w" inputmode="decimal" value="'+(l.baseM != null ? (l.baseM / 1000).toFixed(2) : '')+'" placeholder="例: '+(gb / 1000).toFixed(2)+'"></label>'+
-      '<p class="hint">ギア1つずつの合計は '+wTxt(gb)+'。まとめて量った値を入れると、ベースウェイトはこちらを使い、合計との差も出します。</p>'+
+      '<p class="hint">ギア1つずつの合計は '+wTxt(gb)+'。実測値を入れると、ベースウェイトはこちらを使い、合計との差も出します。</p>'+
       (l.baseM != null ? '<div class="btnrow"><button type="button" class="btn secondary block" data-bclear>消す（ギアの合計に戻す）</button></div>' : ''),
     onMount:(sh, close) => {
       const i = sh.querySelector('#b-w'), b = sh.querySelector('[data-r]');
       const val = () => Math.round(parseFloat(i.value.replace(',', '.')) * 1000);
       const sync = () => b.disabled = !(val() > 0); sync(); i.addEventListener('input', sync);
       setTimeout(() => { i.focus(); i.select(); }, 420);
-      b.onclick = () => { l.baseM = val(); close(); after(); toast('ベース全体の実測 ' + wTxt(l.baseM) + ' を入れました'); };
+      b.onclick = () => { l.baseM = val(); close(); after(); toast('ベースウェイト実測値 ' + wTxt(l.baseM) + ' を入れました'); };
       const c = sh.querySelector('[data-bclear]'); if (c) c.onclick = () => { l.baseM = null; close(); after(); toast('ギアの合計に戻しました'); };
     } });
 }
