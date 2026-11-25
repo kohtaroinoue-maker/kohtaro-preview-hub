@@ -483,6 +483,11 @@ input{font:inherit;color:inherit}
 .aibox .btn{background:var(--blue)}
 .aiout{margin-top:12px;padding-top:10px;border-top:1px solid #D5E1F2;display:flex;flex-direction:column;gap:3px}
 
+/* 雪 */
+.snowbtn{display:inline-flex;align-items:center;gap:4px;margin-top:10px;padding:6px 10px;border:1px solid var(--line);font-size:13px;color:var(--mute);transition:background .15s,color .15s}
+.snowbtn.on{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:700}
+.tstep .snowbtn{margin:0 0 0 auto}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -642,6 +647,7 @@ const NEW = {
   tab_gear:'<path class="f" d="M7 9 C7 6.3 9.2 4.5 12 4.5 C14.8 4.5 17 6.3 17 9 V19 C17 19.8 16.3 20.5 15.5 20.5 H8.5 C7.7 20.5 7 19.8 7 19 Z"/><path d="M10 4.8 V3.5 H14 V4.8"/><path d="M9.5 13 H14.5 V17.5 H9.5 Z"/>',
   heart:'<path d="M12 19.5 C12 19.5 3.5 14.6 3.5 9.2 C3.5 6.6 5.5 4.8 7.8 4.8 C9.6 4.8 11.2 5.9 12 7.4 C12.8 5.9 14.4 4.8 16.2 4.8 C18.5 4.8 20.5 6.6 20.5 9.2 C20.5 14.6 12 19.5 12 19.5 Z"/>',
   heart_on:'<path class="solid" d="M12 19.5 C12 19.5 3.5 14.6 3.5 9.2 C3.5 6.6 5.5 4.8 7.8 4.8 C9.6 4.8 11.2 5.9 12 7.4 C12.8 5.9 14.4 4.8 16.2 4.8 C18.5 4.8 20.5 6.6 20.5 9.2 C20.5 14.6 12 19.5 12 19.5 Z"/>',
+  snow:'<path d="M12 3 V21 M4.2 7.5 L19.8 16.5 M4.2 16.5 L19.8 7.5"/><path d="M9.5 4.5 L12 6.5 L14.5 4.5 M9.5 19.5 L12 17.5 L14.5 19.5"/>',
   temp:'<path class="f" d="M10 4.5 C10 3.4 10.9 2.5 12 2.5 C13.1 2.5 14 3.4 14 4.5 V13.6 C15.2 14.3 16 15.6 16 17 C16 19.2 14.2 21 12 21 C9.8 21 8 19.2 8 17 C8 15.6 8.8 14.3 10 13.6 Z"/><path d="M12 9 V17"/>',
   info:'<circle class="f" cx="12" cy="12" r="8.5"/><path d="M12 11 V16.5"/><circle cx="12" cy="7.9" r=".9" class="dotf"/>',
   image:'<rect class="f" x="3.5" y="5" width="17" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 17.5 L9.5 12.5 L13 15.5 L15.5 13.5 L20 17.5"/>',
@@ -711,7 +717,7 @@ const SEED = {
   ],
   lists: [
     { id:'L1', minTemp:-2, photos:[], name:'テント泊 2泊3日', status:'plan', date:'2026-12-06', days:3, packed:['g1','g3','g5','g7','g13'], unused:[], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2],['g12',1]] },
-    { id:'L3', minTemp:-8, photos:[], name:'雪の小屋泊 1泊', status:'plan', date:'2027-01-10', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] },
+    { id:'L3', snow:true, minTemp:-8, photos:[], name:'雪の小屋泊 1泊', status:'plan', date:'2027-01-10', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] },
     { id:'L2', baseM:1740, minTemp:8, photos:['ph1','ph2','ph3'], name:'日帰り ハイク', status:'done', date:'2026-10-12', days:1, packed:[], unused:['g16'], items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1],['g12',1]] },
     { id:'L4', minTemp:3, photos:['ph4','ph5'], name:'テント泊 1泊2日', status:'done', date:'2026-09-20', days:2, packed:[], unused:['g4','g6'], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g10',1],['g13',1],['g14',1],['g16',2],['g17',1]] },
     { id:'L5', minTemp:-6, photos:['ph6'], name:'冬の小屋泊', status:'done', date:'2026-02-08', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] }
@@ -1457,7 +1463,7 @@ function tripCard(l){
   const done = l.status === 'done', [n, u] = fmtW(tripW(l).base);
   const cold = visibleCold(l), coldTag = cold && cold.level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '';
   const sub = done ? (l.unused && l.unused.length ? '使わなかった ' + l.unused.length + ' 点' : '全部使った') + ((l.photos || []).length ? ' ・ 写真 ' + l.photos.length : '') + ' ・ ' + (tripPosts(l).length ? '投稿あり' : '未投稿')
-    : daysTxt(l.days) + (l.minTemp != null ? ' ・ 最低 ' + tTxt(l.minTemp) : '') + ' ・ ' + leftTxt(l.date) + coldTag;
+    : daysTxt(l.days) + (l.minTemp != null ? ' ・ 最低 ' + tTxt(l.minTemp) : '') + (l.snow ? ' ・ 雪' : '') + ' ・ ' + leftTxt(l.date) + coldTag;
   return '<div class="lcard" data-list="'+l.id+'">'+dblk(l.date, done)+'<div style="min-width:0"><div class="ln">'+esc(l.name)+'</div><div class="small" style="margin-top:3px">'+sub+'</div></div>'+
     '<div class="lw"><div class="small" style="font-size:10.5px">ベース</div><span class="num">'+n+'</span><small class="small"> '+u+'</small></div>'+icon('chev', 16, 'var(--faint)')+'</div>';
 }
@@ -1471,7 +1477,7 @@ function renderLists(){
   if (next) {
     const nw = tripW(next), [n, u] = fmtW(nw.base), pc = packedCount(next), all = next.items.length;
     hero = '<div class="hero" data-list="'+next.id+'"><div class="label">NEXT ・ '+leftTxt(next.date)+'</div>'+
-      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+(next.minTemp != null ? ' ・ 想定最低気温 '+tTxt(next.minTemp) : '')+((visibleCold(next) || {}).level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '')+'</div>'+
+      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+(next.minTemp != null ? ' ・ 想定最低気温 '+tTxt(next.minTemp) : '')+(next.snow ? ' ・ 雪' : '')+((visibleCold(next) || {}).level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '')+'</div>'+
       '<div class="hrow"><div><div class="small">ベースウェイト</div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+'</span><div class="small">食料・水 '+wTxt(nw.cons)+'（パックウェイト '+wTxt(nw.pack)+'）・ '+listCount(next)+' 点</div></div>'+
       '<div class="hp"><div class="small">パッキング '+pc+' / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div></div></div>';
   }
@@ -1491,17 +1497,18 @@ $('#tp-plan').addEventListener('click', e => {
 /* 新しい計画（前の山行からコピーできる） */
 function openNewTrip(){
   const DATES = [['2026-11-28', '今週末'], ['2026-12-05', '来週末'], ['2026-12-12', '再来週末']];
-  let date = DATES[0][0], days = 2, from = '', minT = 5, draft = null;
+  let date = DATES[0][0], days = 2, from = '', minT = 5, draft = null, snow = false;
   const done = S.lists.filter(l => l.status === 'done').sort((a, b) => b.date.localeCompare(a.date));
   openSheet({ title:'新しい計画', right:'作成', tall:true,
-    body:'<div class="aibox"><div class="aih">'+icon('ai', 18, 'var(--blue)')+'<b>ざっくり書くだけ</b><span class="plus">Plus</span></div>'+
+    body:'<div class="aibox"><div class="aih">'+icon('ai', 18, 'var(--blue)')+'<b>YamaGear AI</b><span class="plus">Plus</span></div>'+
         '<textarea id="t-ai" rows="3" placeholder="例: 来週末 テント泊で1泊。夜は−5℃くらい"></textarea>'+
         '<button type="button" class="btn primary block" data-ai disabled>'+icon('ai', 16, 'var(--paper)')+'たたき台を作る</button><div id="t-ai-out"></div></div>'+
       '<div class="or">または自分で</div>'+
       '<label class="field"><span>名前</span><input id="t-name" placeholder="例: テント泊 1泊2日"></label>'+
       '<div class="field" style="margin-bottom:6px"><span>いつ？</span></div><div class="catpick">'+DATES.map(([d, l]) => '<button type="button" class="chip'+(d === date ? ' on' : '')+'" data-d="'+d+'">'+l+' '+jpDate(d).replace(/^\d+月/, m => m)+'</button>').join('')+'</div>'+
       '<div class="field" style="margin-bottom:6px"><span>日程</span></div><div class="catpick">'+[1, 2, 3].map(n => '<button type="button" class="chip'+(n === days ? ' on' : '')+'" data-days="'+n+'">'+daysTxt(n)+'</button>').join('')+'</div>'+
-      '<div class="field" style="margin-bottom:6px"><span>想定最低気温</span></div><div class="tstep"><button type="button" data-ntd="-1" aria-label="下げる">'+icon('minus', 18)+'</button><span class="num" id="nt">'+tTxt(minT)+'</span><button type="button" data-ntd="1" aria-label="上げる">'+icon('plus', 18)+'</button></div>'+
+      '<div class="field" style="margin-bottom:6px"><span>想定最低気温</span></div><div class="tstep"><button type="button" data-ntd="-1" aria-label="下げる">'+icon('minus', 18)+'</button><span class="num" id="nt">'+tTxt(minT)+'</span><button type="button" data-ntd="1" aria-label="上げる">'+icon('plus', 18)+'</button>'+
+        '<button type="button" class="snowbtn" data-nsnow aria-pressed="false">'+icon('snow', 16, 'var(--mute)')+'<span>雪</span></button></div>'+
       '<div class="field" style="margin-bottom:6px"><span>持ち物</span></div>'+
       '<div class="group" style="margin-top:0" id="t-from"><div class="gr check" data-from=""><span class="gt">空から始める</span><span class="gv">'+icon('check', 18, 'var(--blue)')+'</span></div>'+
       done.map(l => '<div class="gr" data-from="'+l.id+'"><span class="gt">'+esc(l.name)+'<small>'+jpDate(l.date)+' ・ '+l.items.length+' 点 ・ '+wTxt(listTotal(l))+'</small></span><span class="gv"></span></div>').join('')+'</div>',
@@ -1510,20 +1517,22 @@ function openNewTrip(){
       const sync = () => b.disabled = !name.value.trim(); sync(); name.addEventListener('input', sync);
       const ai = sh.querySelector('#t-ai'), aib = sh.querySelector('[data-ai]');
       ai.addEventListener('input', () => aib.disabled = !ai.value.trim());
+      const setSnow = () => { const sb = sh.querySelector('[data-nsnow]'); sb.classList.toggle('on', snow); sb.setAttribute('aria-pressed', snow); sb.innerHTML = icon('snow', 16, snow ? 'var(--paper)' : 'var(--mute)')+'<span>雪</span>'; };
       const pickChip = (attr, v) => sh.querySelectorAll('['+attr+']').forEach(x => x.classList.toggle('on', x.getAttribute(attr) === String(v)));
       sh.addEventListener('click', e => {
+        if (e.target.closest('[data-nsnow]')) { snow = !snow; setSnow(); }
         if (e.target.closest('[data-ai]')) {
           const out = sh.querySelector('#t-ai-out');
           out.innerHTML = '<div class="loading" style="padding:14px 0 0"><span class="spin"></span>読み取っています…</div>';
           setTimeout(() => {
             draft = buildDraft(ai.value);
             name.value = draft.name; sync();
-            date = draft.date; days = draft.days; if (draft.minTemp != null) minT = draft.minTemp;
+            date = draft.date; days = draft.days; if (draft.minTemp != null) minT = draft.minTemp; snow = draft.snow; setSnow();
             if (!DATES.some(d => d[0] === date)) { const c = sh.querySelector('.catpick'); c.insertAdjacentHTML('beforeend', '<button type="button" class="chip" data-d="'+date+'">'+jpDate(date)+'</button>'); }
             pickChip('data-d', date); pickChip('data-days', days); sh.querySelector('#nt').textContent = tTxt(minT);
             from = ''; sh.querySelectorAll('[data-from]').forEach(x => { x.classList.remove('check'); x.querySelector('.gv').innerHTML = ''; });
             const w = draft.items.reduce((a, [gid, q]) => a + byId(gid).w * q, 0);
-            out.innerHTML = '<div class="aiout enter"><div><b>'+esc(draft.name)+'</b></div><div class="small">'+jpDate(draft.date)+' ・ '+daysTxt(draft.days)+(draft.minTemp != null ? ' ・ 最低 '+tTxt(draft.minTemp) : '')+'</div>'+
+            out.innerHTML = '<div class="aiout enter"><div><b>'+esc(draft.name)+'</b></div><div class="small">'+jpDate(draft.date)+' ・ '+daysTxt(draft.days)+(draft.minTemp != null ? ' ・ 最低 '+tTxt(draft.minTemp) : '')+(draft.snow ? ' ・ 雪' : '')+'</div>'+
               '<div class="small">持ち物 '+draft.items.length+' 種類 ・ '+wTxt(w)+'（持っているギアから）</div>'+
               (draft.missing.length ? '<div class="small" style="color:var(--warn)">持っていない: '+draft.missing.map(esc).join('、')+'</div>' : '')+'</div>';
           }, 1200);
@@ -1540,7 +1549,7 @@ function openNewTrip(){
       });
       b.onclick = () => {
         const src = from ? listById(from) : null;
-        const l = { id:'L' + (seq++), name:name.value.trim(), status:'plan', date, days, minTemp:minT, style:draft && !src ? draft.style : undefined,
+        const l = { id:'L' + (seq++), name:name.value.trim(), status:'plan', date, days, minTemp:minT, snow, style:draft && !src ? draft.style : undefined,
           items:src ? src.items.map(it => [it[0], it[1]]).filter(it => byId(it[0])) : draft ? draft.items.map(it => [it[0], it[1]]) : [], packed:[], unused:[], photos:[] };
         S.lists.push(l); close(); renderLists();
         setTimeout(() => { openList(l.id); toast(src ? '「' + src.name + '」の持ち物をコピーしました' : draft ? 'たたき台を作りました' : '計画を作りました'); }, 350);
@@ -1551,6 +1560,7 @@ function openNewTrip(){
 
 /* ---------- 持ち物チェック（ルールで判断・無料） ---------- */
 // 山行の形: 日帰り／テント泊／小屋泊（たたき台で決めたもの。無ければ日数と名前から）
+const isSnowGear = x => /チェーンスパイク|アイゼン|クランポン/.test((x.type || '') + x.name);
 const tripStyle = l => l.style || (l.days <= 1 ? 'day' : /小屋/.test(l.name) ? 'hut' : 'tent');
 const ownedBy = f => S.gear.filter(x => x.status === 'owned' && f(x));
 const inTrip = (l, f) => l.items.some(([gid]) => byId(gid) && f(byId(gid)));
@@ -1572,7 +1582,8 @@ function packCheck(l){
     need('マット', x => x.cat === 'sleep' && !isBag(x));
     need('調理道具', x => x.cat === 'cook');
   }
-  if (l.minTemp != null && l.minTemp <= 0) need('防寒着', x => x.cat === 'clothing');
+  if ((l.minTemp != null && l.minTemp <= 0) || l.snow) need('防寒着', x => x.cat === 'clothing');
+  if (l.snow) need('チェーンスパイク・アイゼン', isSnowGear);
   const food = qtyIn(l, x => x.cat === 'food');
   if (food && food < l.days) out.push({ text:'行動食 '+food+' / '+l.days+' 日分', more:ownedBy(x => x.cat === 'food').map(x => x.id).slice(0, 1) });
   return out;
@@ -1626,15 +1637,16 @@ function buildDraft(text){
   add(x => x.cat === 'light'); add(x => x.cat === 'safety'); add(x => x.cat === 'footwear');
   add(x => x.cat === 'water', days > 1 ? 2 : 1); add(x => x.cat === 'food', days);
   if (days > 1) {
-    add(x => isBag(x)); add(x => x.cat === 'sleep' && !isBag(x)); ownedBy(x => x.cat === 'cook').forEach(x => items.push([x.id, 1]));
+    if (style === 'tent') { add(x => isBag(x)); add(x => x.cat === 'sleep' && !isBag(x)); ownedBy(x => x.cat === 'cook').forEach(x => items.push([x.id, 1])); }
     add(x => x.type === 'スタッフサック'); add(x => x.cat === 'electronics'); add(x => x.cat === 'clothing');
     if (style === 'tent') add(x => x.cat === 'tent' && x.type === 'テント');
   } else add(x => x.type === 'ツェルト');
   if (minTemp != null && minTemp <= 0) add(x => x.cat === 'clothing');
   const missing = [];
   if (minTemp != null && minTemp <= 0 && !ownedBy(x => x.cat === 'clothing' && x.type !== '中間着').length) missing.push('防寒着（ダウンなど）');
-  if (/雪|凍結|アイゼン/.test(t)) missing.push('チェーンスパイク・アイゼン');
-  return { name, date, days, minTemp, style, items, missing };
+  const snow = /雪|凍結|アイゼン/.test(t) && !/雪なし|雪は無|雪はな/.test(t);
+  if (snow && !ownedBy(isSnowGear).length) missing.push('チェーンスパイク・アイゼン');
+  return { name, date, days, minTemp, style, items, missing, snow };
 }
 
 /* 山行の詳細 */
@@ -1676,7 +1688,8 @@ function openList(lid){
       '<div class="dhead"><div class="label">'+(done ? 'DONE' : 'PLAN ・ ' + leftTxt(l.date))+'</div>'+
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
         '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
-        '<div class="temprow"><button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+coldMini(l)+'</div>'+coldBanner(l)+
+        '<div class="temprow"><button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+
+          '<button type="button" class="snowbtn'+(l.snow ? ' on' : '')+'" data-snow aria-pressed="'+(l.snow ? 'true' : 'false')+'">'+icon('snow', 16, l.snow ? 'var(--paper)' : 'var(--mute)')+'<span>雪</span></button>'+coldMini(l)+'</div>'+coldBanner(l)+
         '<div class="wbox"><div class="wline main"><span class="wl tapl" data-jump="base">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button>'+(tw.whole ? '<span class="badge b-m" style="margin-left:0">実測値</span>' : '')+'</span><span class="wv'+(done && l.rec ? '' : ' tapv')+'"'+(done && l.rec ? '' : ' data-basem aria-label="ベースウェイト実測値を入力"')+'><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
         '<div class="bmeas" id="l-bdiff">'+(tw.whole
           ? 'ギアの合計 '+wTxt(tw.gearBase)+' ・ 差 '+(bdiff >= 0 ? '＋' : '−')+wTxt(Math.abs(bdiff))+'（量っていない小物・袋など）'
@@ -1729,6 +1742,7 @@ async function onListClick(e, s, lid, setLeft){
   }
   if (e.target.closest('[data-left]')) return setLeft();
   if (e.target.closest('[data-temp]')) return openTempSheet(l, () => { s._render(); renderLists(); });
+  if (e.target.closest('[data-snow]')) { l.snow = !l.snow; s._render(); renderLists(); const b = s.querySelector('[data-snow]'); if (b) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } toast(l.snow ? '雪あり' : '雪なし'); return; }
   const cg = e.target.closest('[data-coldg]'); if (cg) return openDetail(cg.dataset.coldg, '戻る');
   const jp = e.target.closest('[data-jump]');
   if (jp && !e.target.closest('[data-winfo]')) {
