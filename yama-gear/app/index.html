@@ -455,6 +455,13 @@ input{font:inherit;color:inherit}
 .shead b{text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .tbtn{white-space:nowrap}
 
+/* ✕・✓ のボタン */
+.tbtn.x{width:44px;padding:0;display:flex;align-items:center;justify-content:center}
+.tbtn.ok{width:36px;height:36px;padding:0;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;margin-right:4px}
+.tbtn.ok[disabled]{opacity:.25}
+.nav .back{padding:0 10px 0 6px}
+.dialog .db button{display:flex;align-items:center;justify-content:center}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -773,7 +780,7 @@ function dialog(title, msg, buttons){
 function actionSheet(opts){
   return new Promise(res => {
     const bd = el('<div class="backdrop"></div>');
-    const a = el('<div class="asheet"><div class="ag"></div><div class="ag"><button type="button" style="font-weight:700">キャンセル</button></div></div>');
+    const a = el('<div class="asheet"><div class="ag"></div><div class="ag"><button type="button" aria-label="閉じる" style="display:flex;align-items:center;justify-content:center">'+icon('close', 22)+'</button></div></div>');
     opts.forEach(o => { const b = el('<button type="button" class="'+(o.danger?'danger':'')+'">'+o.label+'</button>'); b.onclick = () => { close(); res(o.value); }; a.firstChild.appendChild(b); });
     a.lastChild.firstChild.onclick = () => { close(); res(null); };
     bd.onclick = () => { close(); res(null); };
@@ -782,9 +789,12 @@ function actionSheet(opts){
   });
 }
 
+// シートの右のボタン: 決める系は ✓、内容がはっきりしているものは英語
+const RIGHT_ICON = { '保存':1, '決定':1, '完了':1, '作成':1 };
+const RIGHT_EN = { '投稿':'Post', '送信':'Send', '追加':'Add' };
 function openSheet({ title, left, right, body, tall, onMount }){
   const bd = el('<div class="backdrop"></div>');
-  const sh = el('<div class="sheet'+(tall?' tall':'')+'" role="dialog"><div class="grab"></div><div class="shead"><button type="button" class="tbtn" data-x>'+(left||'キャンセル')+'</button><b'+(title.length > 10 ? ' style="font-size:14.5px"' : '')+'>'+title+'</b>'+(right?'<button type="button" class="tbtn strong" data-r>'+right+'</button>':'<span></span>')+'</div><div class="sbody">'+body+'</div></div>');
+  const sh = el('<div class="sheet'+(tall?' tall':'')+'" role="dialog"><div class="grab"></div><div class="shead"><button type="button" class="tbtn x" data-x aria-label="閉じる">'+icon('close', 22)+'</button><b'+(title.length > 10 ? ' style="font-size:14.5px"' : '')+'>'+title+'</b>'+(right ? '<button type="button" class="tbtn strong'+(RIGHT_ICON[right] ? ' ok' : '')+'" data-r aria-label="'+right+'">'+(RIGHT_ICON[right] ? icon('check', 20, 'var(--paper)') : (RIGHT_EN[right] || right))+'</button>' : '<span></span>')+'</div><div class="sbody">'+body+'</div></div>');
   app.append(bd, sh);
   raf2(() => { bd.classList.add('on'); sh.classList.add('on'); if (tall) stackEl.classList.add('recede'); });
   let closed = false;
@@ -808,7 +818,7 @@ function openSheet({ title, left, right, body, tall, onMount }){
 /* ---------- 画面の積み重ね（進む・戻る・左端スワイプ） ---------- */
 const stack = [$('#root')];
 function nav(backLabel, title, right){
-  return '<header class="nav"><button type="button" class="back" data-back aria-label="戻る">'+icon('back', 26)+'<span>'+esc(backLabel)+'</span></button><div class="ttl">'+esc(title)+'</div><div class="right">'+(right||'')+'</div></header>';
+  return '<header class="nav"><button type="button" class="back" data-back aria-label="戻る">'+icon('back', 26)+'</button><div class="ttl">'+esc(title)+'</div><div class="right">'+(right||'')+'</div></header>';
 }
 function push(render){
   const s = document.createElement('section');
@@ -933,7 +943,7 @@ function renderGear(animate){
   // 気になる・手放したは一段奥に
   const wishItems = S.gear.filter(x => x.status === 'wish'), wp = wishItems.filter(x => x.price != null).reduce((a, x) => a + x.price, 0);
   html += '<div class="group" style="margin-top:28px">'+
-    '<div class="gr" data-stlist="wish"><span class="gi">'+icon('star', 22, 'var(--ink)', true)+'</span><span class="gt">気になるギア<small>欲しいもの・いいなと思ったもの。今のギアとの重さの差を見られます</small></span><span class="gv">'+counts.wish+' 点'+(wp ? ' ・ ' + yen(wp) : '')+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+    '<div class="gr" data-stlist="wish"><span class="gi">'+icon('star', 22, 'var(--ink)', true)+'</span><span class="gt">気になるギア</span><span class="gv">'+counts.wish+' 点'+(wp ? ' ・ ' + yen(wp) : '')+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
     '<div class="gr" data-stlist="retired"><span class="gi">'+icon('backup', 22, 'var(--mute)')+'</span><span class="gt">手放したギア</span><span class="gv">'+counts.retired+' 点</span>'+icon('chev', 16, 'var(--faint)')+'</div></div>';
   $('#g-list').innerHTML = html;
   // 見出しの数字
@@ -962,7 +972,7 @@ function openStatusList(st){
     const wp = items.filter(x => x.price != null).reduce((a, x) => a + x.price, 0);
     return nav('Gear', label) + '<div class="scroll"><div class="dhead"><div class="label">'+(st === 'wish' ? 'WISH LIST' : 'RETIRED')+'</div>'+
       '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+label+'</h2>'+
-      '<p class="small" style="line-height:1.8">'+(st === 'wish' ? items.length + ' 点'+(wp ? ' ・ 合計 ' + yen(wp) + '（参考値）' : '')+(items.some(x => x.plan) ? ' ・ うち買う予定 ' + items.filter(x => x.plan).length + ' 点' : '')+'<br>欲しいもの、いいなと思ったもの。今持っているギアと比べた重さの差を出しています。「…」から「買う予定」の印を付けられます。' : items.length + ' 点。記録として残しています。')+'</p></div>'+
+      '<p class="small" style="line-height:1.8">'+(st === 'wish' ? items.length + ' 点'+(wp ? ' ・ 合計 ' + yen(wp) + '（参考値）' : '')+(items.some(x => x.plan) ? ' ・ うち買う予定 ' + items.filter(x => x.plan).length + ' 点' : '') : items.length + ' 点。記録として残しています。')+'</p></div>'+
       '<div class="list">'+(items.length ? groupedRows(items, false) : '<div class="empty">'+(st === 'wish' ? 'まだありません。ギア詳細の「別の選択肢を探す」から追加できます。' : 'まだありません。')+'</div>')+'</div></div>';
   });
   s.addEventListener('click', e => {
@@ -1024,10 +1034,10 @@ function openDetail(id, backLabel){
           gr('weight', '重さ・出典', isMeas(x) ? '実測' : x.src === 'ai' ? 'AI推定（未実測）' : x.src === 'un' ? '未確認' : 'カタログ値（未実測）', 'weight')+
           gr('type', '種類・カテゴリ', (x.type || '未設定') + ' ・ ' + c.label, 'type')+
           gr('mountain', '山行で使った', useRate === null ? '記録なし' : x.use[0]+' 回中 '+x.use[1]+' 回', 'usage')+
-          (isBag(x) ? gr('temp', '対応温度', x.comfort == null ? '未設定' : tTxt(x.comfort), 'comfort', 'この温度まで快適に眠れる目安') : '')+
+          (isBag(x) ? gr('temp', '対応温度', x.comfort == null ? '未設定' : tTxt(x.comfort), 'comfort', '') : '')+
           gr('note', 'スペック・メモ', '', 'specs')+
         '</div>'+
-        (x.status === 'owned' ? '<div class="group">'+gr('ai', '別の選択肢を探す', '', 'alt', 'AI が同じ種類のギアを探します')+'</div>' : '')+
+        (x.status === 'owned' ? '<div class="group">'+gr('ai', '別の選択肢を探す', '', 'alt')+'</div>' : '')+
         '<div class="btnrow"><button type="button" class="btn secondary block" data-edit>編集</button></div>'+
         gearPosts(x)+
       '</div>';
@@ -1094,7 +1104,7 @@ async function onDetailClick(e, s, id){
     if (r === 'retired' || r === 'owned') { x.status = r; if (r === 'retired') x.retiredAt = '2026-11'; refreshAll(); toast(r === 'retired' ? '「手放したギア」に移しました' : '持っているギアに入れました'); }
     if (r === 'del') {
       const ok = await dialog('削除しますか？', '登録ミスを取り消すためのものです。使わなくなったギアは「…」の「手放したにする」で記録を残せます。',
-        [{ label:'キャンセル', value:false, bold:true }, { label:'削除', value:true, danger:true }]);
+        [{ label:icon('close', 20, 'var(--ink)'), value:false }, { label:'削除', value:true, danger:true }]);
       if (!ok) return;
       pop();
       setTimeout(() => {
@@ -1116,13 +1126,12 @@ function openWeight(id, back){
     const diff = meas && x.cw ? x.m - x.cw : null;
     return nav(back, '重さ・出典') + '<div class="scroll"><div class="dhead"><div class="label">WEIGHT</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">重さ・出典</h2>'+
       '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+(meas ? '<span class="badge b-m">実測</span>' : '<span class="badge b-cat">'+(x.src === 'ai' ? 'AI推定' : x.src === 'un' ? '未確認' : 'カタログ値')+'</span>')+'</div>'+
-      '<p class="small" style="line-height:1.8">'+(meas ? '自分で量った<b>実測</b>を使っています。山行の重さや記録も実測で計算します。'
-        : 'まだ量っていません。アプリが持っている値（'+srcName+'）を使っています。量った重さを入れると、そちらが優先されます。')+'</p></div>'+
+      (meas ? '' : '<p class="small">まだ量っていません</p>')+'</div>'+
       '<div class="group">'+
-        '<div class="gr" data-meas><span class="gi">'+icon('weight', 20)+'</span><span class="gt">実測<small>自分で量った重さ</small></span><span class="gv"'+(meas ? ' style="color:var(--ink);font-weight:700"' : '')+'>'+(meas ? wTxt(x.m) : '未入力')+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+        '<div class="gr" data-meas><span class="gi">'+icon('weight', 20)+'</span><span class="gt">実測</span><span class="gv"'+(meas ? ' style="color:var(--ink);font-weight:700"' : '')+'>'+(meas ? wTxt(x.m) : '未入力')+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
         '<div class="gr static"><span class="gi">'+icon('note', 20)+'</span><span class="gt">アプリの値<small>'+srcName+'</small></span><span class="gv">'+(x.cw ? wTxt(x.cw) : '不明')+'</span></div>'+
         (diff !== null ? '<div class="gr static"><span class="gi"></span><span class="gt">差</span><span class="gv">実測は '+(diff >= 0 ? '＋' : '−')+Math.abs(diff)+' g</span></div>' : '')+
-        '<div class="gr" data-gtag><span class="gi">'+icon('type', 20)+'</span><span class="gt">いつもの数え方<small>山行の重さで、ベース・行動着・食料・水のどれに入れるか</small></span><span class="gv">'+WTAG[defaultTag(x)]+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+        '<div class="gr" data-gtag><span class="gi">'+icon('type', 20)+'</span><span class="gt">いつもの数え方</span><span class="gv">'+WTAG[defaultTag(x)]+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
       '</div>'+
       '<div class="btnrow"><button type="button" class="btn primary block" data-meas>'+icon('weight', 16, 'var(--paper)')+(meas ? '実測を入れ直す' : '量った重さを入れる')+'</button>'+
       (meas ? '<button type="button" class="btn secondary block" data-unmeas>実測を消す（アプリの値に戻す）</button>' : '')+'</div></div>';
@@ -1138,7 +1147,7 @@ function openWeight(id, back){
 function openMeasure(x){
   openSheet({ title:'量った重さ', right:'保存',
     body:'<div style="height:6px"></div><label class="field"><span>'+esc(x.name)+' の実測（g）</span><input id="m-w" inputmode="numeric" value="'+(isMeas(x) ? x.m : '')+'" placeholder="例: '+(x.cw || 300)+'"></label>'+
-      '<p class="hint">スタッフサックなど一緒に持つものも含めるかは、いつも同じにしておくと比べやすいです。'+(x.cw ? 'アプリの値は '+wTxt(x.cw)+'（'+(SRC_NAME[x.src] || '')+'）。' : '')+'</p>',
+      (x.cw ? '<p class="hint">アプリの値 '+wTxt(x.cw)+'（'+(SRC_NAME[x.src] || '')+'）</p>' : ''),
     onMount:(sh, close) => {
       const i = sh.querySelector('#m-w'), b = sh.querySelector('[data-r]');
       const sync = () => b.disabled = !(parseInt(i.value, 10) > 0); sync(); i.addEventListener('input', sync);
@@ -1151,7 +1160,7 @@ function openType(id, back){
     const x = byId(id); if (!x) return nav(back, '') + '<div class="scroll"></div>';
     return nav(back, '種類・カテゴリ') + '<div class="scroll"><div class="ghead"><b>カテゴリ</b><span class="label">CATEGORY</span></div><div class="group" style="margin-top:0">'+
       CATS.map(c => '<div class="gr'+(c.id === x.cat ? ' check' : '')+'" data-pick="'+c.id+'"><span class="gi">'+icon(c.id, 22)+'</span><span class="gt">'+c.label+'</span><span class="gv">'+(c.id === x.cat ? icon('check', 20, 'var(--blue)') : '')+'</span></div>').join('')+
-      '</div><div class="ghead"><b>種類</b><span class="label">TYPE</span></div><p class="hint">種類は、重さの比較や「別の選択肢」探しに使います。分からなければ未設定のままで大丈夫です。</p>'+
+      '</div><div class="ghead"><b>種類</b><span class="label">TYPE</span></div>'+
       '<div class="group"><div class="gr static"><span class="gt">今の種類</span><span class="gv">'+esc(x.type || '未設定')+'</span></div></div><div style="height:40px"></div></div>';
   }).addEventListener('click', e => {
     const p = e.target.closest('[data-pick]'); if (!p) return;
@@ -1187,7 +1196,7 @@ function openAlt(id, back){
     const cands = [['A', .62, 1.4], ['B', .74, 1.1], ['C', .86, .8]].map(([k, r, p]) => ({ k, name:(x.type || 'ギア') + ' ライト ' + k, w:Math.round(x.w * r), price:Math.round((x.price || 20000) * p / 100) * 100 }));
     let body;
     if (state === 'loading') body = '<div class="loading"><span class="spin"></span>AI が同じ種類のギアを探しています…</div><div class="skel"></div><div class="skel"></div><div class="skel"></div>';
-    else body = '<p class="hint" style="padding-top:12px">今の「'+esc(x.name)+'」（'+wTxt(x.w)+'）より軽いもの。価格は変動するため参考値です。</p><div style="margin-top:6px">'+
+    else body = '<p class="hint" style="padding-top:12px">今 '+wTxt(x.w)+' ・ 価格は参考値</p><div style="margin-top:6px">'+
       cands.map(c => '<div class="cand enter"><span>'+icon(x.cat, 24, 'var(--ink)', true)+'</span><div class="cm"><div class="cn">'+esc(c.name)+'</div><div class="cd">'+wTxt(c.w)+'　'+delta(c.w - x.w)+'</div><div class="cp">'+yen(c.price)+'</div></div>'+
         '<button type="button" class="mini'+(added.has(c.k) ? ' done' : '')+'" data-add="'+c.k+'" data-w="'+c.w+'" data-p="'+c.price+'" data-n="'+esc(c.name)+'">'+(added.has(c.k) ? '追加済み' : '気になるに追加')+'</button></div>').join('')+'</div>';
     return nav(back, '別の選択肢') + '<div class="scroll"><div class="dhead"><div class="label">ALTERNATIVES</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0 0">別の選択肢</h2></div>'+body+'<div style="height:40px"></div></div>';
@@ -1210,7 +1219,7 @@ function openEdit(id, focusWeight){
       '<label class="field"><span>名前</span><input id="e-name" value="'+esc(x.name)+'"></label>'+
       '<label class="field"><span>ブランド</span><input id="e-brand" value="'+esc(x.brand)+'"></label>'+
       '<label class="field"><span>実測（g）</span><input id="e-w" inputmode="numeric" value="'+(isMeas(x) ? x.m : '')+'" placeholder="量っていなければ空欄（アプリの値 '+(x.cw ? wTxt(x.cw) : '不明')+'）"></label>'+
-      '<p class="hint">種類・カテゴリ・状態は、詳細画面のそれぞれの行から変えられます。</p>',
+      '',
     onMount:(sh, close) => {
       if (focusWeight) setTimeout(() => { const i = sh.querySelector('#e-w'); i.focus(); i.select(); }, 450);
       sh.querySelector('[data-r]').onclick = () => {
@@ -1282,7 +1291,7 @@ function typeInto(input, text){
 function openCamera(onDone){
   const c = el('<div class="camera"><div class="vf"><div class="msg">タグを枠の中に入れてください</div>'+
     '<div class="tagcard">MODEL: WS-01<br>WIND SHELL<br>WEIGHT: 95g<br>SIZE: M<br>[BRAND]</div><div class="frame"></div><div class="flashw"></div></div>'+
-    '<div class="cbar"><button type="button" class="cx">キャンセル</button><button type="button" class="shutter" aria-label="撮影"><i></i></button></div></div>');
+    '<div class="cbar"><button type="button" class="cx" aria-label="閉じる">'+icon('close', 26, '#fff')+'</button><button type="button" class="shutter" aria-label="撮影"><i></i></button></div></div>');
   app.appendChild(c); raf2(() => c.classList.add('on'));
   const close = () => { c.classList.remove('on'); setTimeout(() => c.remove(), 450); };
   c.querySelector('.cx').onclick = close;
@@ -1332,7 +1341,7 @@ function openViewer(ids, idx, onDelete, ptags){
   im.addEventListener('pointerdown', e => { x0 = e.clientX; });
   im.addEventListener('pointerup', e => { if (x0 === null) return; const dx = e.clientX - x0; x0 = null; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); });
   if (onDelete) v.querySelector('.vd').onclick = async () => {
-    const ok = await dialog('この写真を削除しますか？', 'あとから「元に戻す」で戻せます。', [{ label:'キャンセル', value:false, bold:true }, { label:'削除', value:true, danger:true }]);
+    const ok = await dialog('この写真を削除しますか？', 'あとから「元に戻す」で戻せます。', [{ label:icon('close', 20, 'var(--ink)'), value:false }, { label:'削除', value:true, danger:true }]);
     if (!ok) return; const id = ids[idx]; close(); onDelete(id);
   };
 }
@@ -1344,7 +1353,7 @@ const listCount = l => l.items.reduce((a, it) => a + it[1], 0);
 // 重さの数え方: base＝装備（ベース）、cons＝消耗品（食料・水・燃料）、worn＝行動着（靴・着ている服）
 // ギアごとに「いつもの数え方」（無ければカテゴリから）、山行ごとに上書きできる（l.wtag）
 const WTAG = { base:'ベース', worn:'行動着', cons:'食料・水' };
-const TGROUPS = [['base', 'ベース', 'まだありません'], ['cons', '食料・水', '食料・水はまだありません。行動食や水をここへ移動できます'], ['worn', '行動着', '行動着はありません。靴や歩く時に着る服をここへ移動できます']];
+const TGROUPS = [['base', 'ベース', 'なし'], ['cons', '食料・水', 'なし'], ['worn', '行動着', 'なし']];
 // 決めていなければ: 食料・水＝消耗品、足まわり（靴）＝行動着、それ以外（レインウェア・防寒着も）＝ベース。どれも編集できる
 const defaultTag = x => x.tag || (['food', 'water'].includes(x.cat) ? 'cons' : x.cat === 'footwear' ? 'worn' : 'base');
 // 想定最低気温
@@ -1355,7 +1364,7 @@ function openTempSheet(l, after, opt){
   openSheet({ title:opt.title, right:'決定',
     body:'<div class="tempbig"><button type="button" data-dt="-1" aria-label="下げる">'+icon('minus', 22)+'</button><span class="num" id="tv">'+tTxt(t)+'</span><button type="button" data-dt="1" aria-label="上げる">'+icon('plus', 22)+'</button></div>'+
       '<div class="catpick" style="justify-content:center">'+[10, 5, 0, -5, -10].map(v => '<button type="button" class="chip" data-tv="'+v+'">'+tTxt(v)+'</button>').join('')+'</div>'+
-      '<p class="hint" style="text-align:center">'+opt.hint+'</p>'+
+
       '<div class="btnrow"><button type="button" class="btn secondary block" data-tnone>未設定にする</button></div>',
     onMount:(sh, close) => {
       const tv = sh.querySelector('#tv');
@@ -1373,13 +1382,13 @@ const isBag = x => x && x.type === '寝袋';
 function coldCheck(l){
   if (l.status === 'done' || l.minTemp == null) return null;
   const bags = l.items.map(([gid]) => byId(gid)).filter(isBag);
-  if (!bags.length) return l.days > 1 ? { level:'warn', title:'寝袋が入っていません', text:'泊まりの山行ですが、持ち物に寝袋がありません。' } : null;
+  if (!bags.length) return l.days > 1 ? { level:'warn', title:'寝袋が入っていません', text:'泊まりの山行です' } : null;
   const known = bags.filter(b => b.comfort != null);
-  if (!known.length) return { level:'unknown', title:'寝袋の対応温度が未設定です', text:'対応温度を入れると、想定最低気温 '+tTxt(l.minTemp)+' と比べて知らせます。', gid:bags[0].id };
+  if (!known.length) return { level:'unknown', title:'寝袋の対応温度が未設定', text:'対応温度を入れると比べられます', gid:bags[0].id };
   const best = known.reduce((a, b) => b.comfort < a.comfort ? b : a);
   if (best.comfort > l.minTemp) return { level:'warn', title:'寒いかもしれません',
-    text:'想定最低気温 '+tTxt(l.minTemp)+' に対して、「'+best.name+'」の対応温度は '+tTxt(best.comfort)+'。'+(best.comfort - l.minTemp)+'℃ 足りません。防寒着を足すか、暖かい寝袋を考えましょう。', gid:best.id };
-  return { level:'ok', title:'寝袋は足りそうです', text:'「'+best.name+'」（対応温度 '+tTxt(best.comfort)+'）で、想定最低気温 '+tTxt(l.minTemp)+' に足りる見込みです。', gid:best.id };
+    text:'最低 '+tTxt(l.minTemp)+' ／ 寝袋 '+tTxt(best.comfort)+'（'+(best.comfort - l.minTemp)+'℃ 不足）', gid:best.id };
+  return { level:'ok', title:'寝袋は足りそうです', text:'最低 '+tTxt(l.minTemp)+' ／ 寝袋 '+tTxt(best.comfort), gid:best.id };
 }
 // 隠したときの状況（気温・寝袋・対応温度）を覚えておき、状況が変わったらまた出す
 const coldKey = (l, c) => [c.level, l.minTemp, c.gid || '', c.gid && byId(c.gid) ? byId(c.gid).comfort : ''].join('|');
@@ -1468,7 +1477,7 @@ function openNewTrip(){
       '<div class="field" style="margin-bottom:6px"><span>いつ？</span></div><div class="catpick">'+DATES.map(([d, l]) => '<button type="button" class="chip'+(d === date ? ' on' : '')+'" data-d="'+d+'">'+l+' '+jpDate(d).replace(/^\d+月/, m => m)+'</button>').join('')+'</div>'+
       '<div class="field" style="margin-bottom:6px"><span>日程</span></div><div class="catpick">'+[1, 2, 3].map(n => '<button type="button" class="chip'+(n === days ? ' on' : '')+'" data-days="'+n+'">'+daysTxt(n)+'</button>').join('')+'</div>'+
       '<div class="field" style="margin-bottom:6px"><span>想定最低気温</span></div><div class="tstep"><button type="button" data-ntd="-1" aria-label="下げる">'+icon('minus', 18)+'</button><span class="num" id="nt">'+tTxt(minT)+'</span><button type="button" data-ntd="1" aria-label="上げる">'+icon('plus', 18)+'</button><span class="small">あとから変えられます</span></div>'+
-      '<div class="field" style="margin-bottom:6px"><span>持ち物</span></div><p class="hint" style="margin:-4px 0 8px">前の山行の持ち物をそのまま使えます。あとから足したり外したりできます。</p>'+
+      '<div class="field" style="margin-bottom:6px"><span>持ち物</span></div>'+
       '<div class="group" style="margin-top:0"><div class="gr check" data-from=""><span class="gt">空から始める</span><span class="gv">'+icon('check', 18, 'var(--blue)')+'</span></div>'+
       done.map(l => '<div class="gr" data-from="'+l.id+'"><span class="gt">'+esc(l.name)+'<small>'+jpDate(l.date)+' ・ '+l.items.length+' 点 ・ '+wTxt(listTotal(l))+'</small></span><span class="gv"></span></div>').join('')+'</div>',
     onMount:(sh, close) => {
@@ -1541,10 +1550,10 @@ function openList(lid){
         '<div class="wline tap" data-jump="cons"><span class="wl">食料・水</span><span class="wv"><span class="num" id="l-cons" data-v="'+cons+'">'+fmtW(cons)[0]+'</span><span class="u">'+fmtW(cons)[1]+'</span></span></div>'+
         '<div class="wline paren tap" data-jump="cons"><span class="wl">（パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+pack+'">'+pn+'</span><span class="u">'+pu+'</span>）</span></div>'+
         '<div class="wline tap'+(worn ? '' : ' none')+'" id="l-wornline" data-jump="worn"><span class="wl">行動着</span><span class="wv"><span class="num" id="l-worn" data-v="'+worn+'">'+fmtW(worn)[0]+'</span><span class="u">'+fmtW(worn)[1]+'</span></span></div>'+
-        '<div class="small" style="margin-top:4px" id="l-cnt">'+listCount(l)+' 点 ・ '+(tw.mc === tw.n ? 'すべて実測' : '実測 '+tw.mc+' / '+tw.n+' 種類（残りはカタログ値）')+'</div>'+
+        '<div class="small" style="margin-top:4px" id="l-cnt">'+listCount(l)+' 点 ・ '+(tw.mc === tw.n ? 'すべて実測' : '実測 '+tw.mc+' / '+tw.n+' 種類')+'</div>'+
         (done && l.rec ? '<div class="small" style="margin-top:2px">完了した時の重さ（実測ベース）を記録しています</div>' : '')+'</div></div>'+
       '<div class="ghead" style="padding-top:18px"><b>写真</b><span class="label">PHOTOS</span><span class="small" style="margin-left:auto">'+l.photos.length+' 枚</span></div>'+
-      '<div class="pstrip"><button type="button" class="ptile add" data-addph style="width:76px;height:76px">'+icon('camera', 22)+'<span>追加</span></button>'+l.photos.map(id => phTile(id, 76)).join('')+'</div>'+
+      '<div class="pstrip"><button type="button" class="ptile add" data-addph style="width:76px;height:76px">'+icon('camera', 24)+'</button>'+l.photos.map(id => phTile(id, 76)).join('')+'</div>'+
       '<div class="bar" id="l-bar">'+catW.map((v, i) => '<i style="width:'+(tot ? v.w / tot * 100 : 0)+'%;background:'+BAR[Math.min(i, BAR.length - 1)]+'"></i>').join('')+'</div>'+
       '<div class="legend">'+catW.slice(0, 4).map((v, i) => '<span><i style="background:'+BAR[i]+'"></i>'+v.c.label+' '+wTxt(v.w)+'</span>').join('')+(catW.length > 4 ? '<span>ほか '+(catW.length - 4)+'</span>' : '')+'</div>'+
       (done ? '<div class="packhead"><span class="small">使わなかったギア <b class="num" style="font-size:15px;color:var(--ink)">'+l.unused.length+'</b> 点。丸を押すと切り替えられます</span></div>'
@@ -1555,7 +1564,7 @@ function openList(lid){
       (done ? '<div class="ghead" style="margin-top:10px"><b>この山行の投稿</b><span class="label">POSTS</span></div>'+
           (posts.length ? posts.map(po => '<div class="mpost" data-openpost="'+po.id+'"><div class="mp-h"><span class="label">'+po.date+'</span><b>'+esc(po.list)+'</b></div><div class="pfoot"><p>'+esc(po.text)+'</p>'+likeBtn(po)+'</div></div>').join('')
             : '<div class="empty" style="padding-top:4px">まだ投稿していません。</div>')
-        : '<p class="hint" style="padding-top:14px">丸を押すとパッキング済みに。行を左にスワイプすると「移動」（ベース・食料・水・行動着の間）と「外す」が出ます。</p>')+
+        : '')+
       '<div class="btnrow">'+(done
         ? (posts.length ? '' : '<button type="button" class="btn primary block" data-tpost>'+icon('pen', 16, 'var(--paper)')+'この山行を投稿する</button>')+'<button type="button" class="btn secondary block" data-copy>この持ち物で次の計画を作る</button>'
         : '<button type="button" class="btn secondary block" data-addgear>'+icon('plus', 16)+'ギアを追加</button><button type="button" class="btn primary block" data-done>山行を完了</button>')+'</div></div>';
@@ -1603,7 +1612,7 @@ async function onListClick(e, s, lid, setLeft){
     const box = s.querySelector('.cold'); if (box) { box.style.height = box.offsetHeight + 'px'; void box.offsetHeight; box.classList.add('closing'); }
     setTimeout(() => {
       l.coldHidden = coldKey(l, c); s._render(); renderLists();
-      toast('知らせを隠しました。小さな印を押すとまた開きます');
+      toast('隠しました');
       const m = s.querySelector('.coldmini'); if (m) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
     }, 220);
     return;
@@ -1675,7 +1684,7 @@ async function onListClick(e, s, lid, setLeft){
     if (r === 'rename') openSheet({ title:'名前を変える', right:'保存', body:'<div style="height:8px"></div><label class="field"><span>名前</span><input id="r-name" value="'+esc(l.name)+'"></label>',
       onMount:(sh, close) => { const i = sh.querySelector('#r-name'); setTimeout(() => i.focus(), 420); sh.querySelector('[data-r]').onclick = () => { if (i.value.trim()) l.name = i.value.trim(); close(); refreshAll(); toast('保存しました'); }; } });
     if (r === 'del') {
-      const ok = await dialog('この計画を削除しますか？', 'ギア自体は消えません。', [{ label:'キャンセル', value:false, bold:true }, { label:'削除', value:true, danger:true }]);
+      const ok = await dialog('この計画を削除しますか？', 'ギア自体は消えません。', [{ label:icon('close', 20, 'var(--ink)'), value:false }, { label:'削除', value:true, danger:true }]);
       if (!ok) return;
       pop();
       setTimeout(() => { const i = S.lists.indexOf(l); S.lists.splice(i, 1); refreshAll(); toast('「' + l.name + '」を削除しました', '元に戻す', () => { S.lists.splice(i, 0, l); refreshAll(); }); }, 380);
@@ -1693,7 +1702,7 @@ function openBaseMeasure(l, after){
   const gb = listBase(l);
   openSheet({ title:'ベースウェイト実測値を入力', right:'保存',
     body:'<div style="height:6px"></div><label class="field"><span>ザックに詰めて量った重さ（kg）。食料・水と行動着は入れずに</span><input id="b-w" inputmode="decimal" value="'+(l.baseM != null ? (l.baseM / 1000).toFixed(2) : '')+'" placeholder="例: '+(gb / 1000).toFixed(2)+'"></label>'+
-      '<p class="hint">ギア1つずつの合計は '+wTxt(gb)+'。実測値を入れると、ベースウェイトはこちらを使い、合計との差も出します。</p>'+
+      '<p class="hint">ギアの合計 '+wTxt(gb)+'</p>'+
       (l.baseM != null ? '<div class="btnrow"><button type="button" class="btn secondary block" data-bclear>消す（ギアの合計に戻す）</button></div>' : ''),
     onMount:(sh, close) => {
       const i = sh.querySelector('#b-w'), b = sh.querySelector('[data-r]');
@@ -1738,7 +1747,7 @@ function updateListHead(s, l){
   countTo(s.querySelector('#l-worn'), listWorn(l));
   countTo(s.querySelector('#l-cons'), listCons(l));
   const wl = s.querySelector('#l-wornline'); if (wl) wl.classList.toggle('none', !listWorn(l));
-  s.querySelector('#l-cnt').textContent = listCount(l) + ' 点 ・ ' + (tw.mc === tw.n ? 'すべて実測' : '実測 '+tw.mc+' / '+tw.n+' 種類（残りはカタログ値）');
+  s.querySelector('#l-cnt').textContent = listCount(l) + ' 点 ・ ' + (tw.mc === tw.n ? 'すべて実測' : '実測 '+tw.mc+' / '+tw.n+' 種類');
   const catW = CATS.map(c => ({ c, w:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id).reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).filter(v => v.w).sort((a, b) => b.w - a.w);
   const bars = s.querySelectorAll('#l-bar i');
   if (bars.length === catW.length) catW.forEach((v, i) => bars[i].style.width = (v.w / tot * 100) + '%');
@@ -1790,7 +1799,7 @@ function openAddGear(s, l){
         const r = e.target.closest('[data-sel]'); if (!r) return;
         const id = r.dataset.sel; sel.has(id) ? sel.delete(id) : sel.add(id);
         const ck = r.querySelector('.chk'); ck.classList.toggle('on', sel.has(id)); ck.innerHTML = sel.has(id) ? icon('check', 16, 'var(--paper)') : '';
-        b.disabled = !sel.size; b.textContent = sel.size ? sel.size + ' 件を追加' : '追加';
+        b.disabled = !sel.size; b.textContent = sel.size ? 'Add ' + sel.size : 'Add';
       });
       b.onclick = () => {
         sel.forEach(id => l.items.push([id, 1]));
@@ -1886,7 +1895,7 @@ function openPostDetail(pid, back){
     return nav(back, po.list) + '<div class="scroll">'+postHtml(po, true).replace('class="post"', 'class="post" style="border-top:0"')+
       (tagNames.length ? '<div class="ghead" style="padding-top:8px"><b>写真に写っているギア</b><span class="label">TAGS</span></div><div class="catpick">'+tagNames.map(nm => '<button type="button" class="chip" data-gname="'+esc(nm)+'">'+icon('type', 13)+' '+esc(nm)+'</button>').join('')+'</div>' : '')+
       '<div class="ghead"><b>持っていったギア</b><span class="label">GEAR</span><span class="small" style="margin-left:auto">'+gearCount(po)+' 点</span></div>'+
-      (po.gear ? '' : '<p class="hint" style="margin-top:-2px">いいなと思ったギアは「気になる」で自分の一覧に入れられます。</p>')+
+
       '<div class="group" style="margin-top:'+(po.gear ? 0 : 8)+'px">'+gearHtml+'</div><div style="height:40px"></div></div>';
   });
   s.addEventListener('click', e => {
@@ -1983,7 +1992,7 @@ function openPost(pre, after){
       doneTrips.map(l => '<button type="button" class="chip'+(l.id === pick ? ' on' : '')+'" data-pl="'+l.id+'">'+esc(l.name)+'</button>').join('')+'</div>'+
       '<label class="field"><span>ひとこと</span><textarea id="p-text" rows="5" placeholder="例: 朝は冷えた。行動食は半分余った。"></textarea></label>'+
       '<div class="field" style="margin-bottom:6px"><span id="p-phl">写真</span></div><div class="pstrip" id="p-ph"></div>'+
-      '<p class="hint">背負った重さと持っていったギアは、Trip のリストから自動で入ります。</p>',
+      '',
     onMount:(sh, close) => {
       const ta = sh.querySelector('#p-text'), b = sh.querySelector('[data-r]');
       b.disabled = true; ta.addEventListener('input', () => b.disabled = !ta.value.trim());
@@ -1992,7 +2001,7 @@ function openPost(pre, after){
       function drawPh(added){
         const l = listById(pick), fromTrip = l && (l.photos || []).length;
         sh.querySelector('#p-phl').textContent = '写真 ' + photos.length + ' 枚' + (photos.length ? '（押すと、写っているギアをタグ付けできます）' : '');
-        sh.querySelector('#p-ph').innerHTML = '<button type="button" class="ptile add" data-addph>'+icon('camera', 22)+'<span>追加</span></button>' + photos.map(id => phTile(id, 64, 0, (ptags[id] || []).length)).join('');
+        sh.querySelector('#p-ph').innerHTML = '<button type="button" class="ptile add" data-addph>'+icon('camera', 24)+'</button>' + photos.map(id => phTile(id, 64, 0, (ptags[id] || []).length)).join('');
         if (added) { const t = sh.querySelectorAll('#p-ph .ptile[data-ph]'); const last = t[t.length - 1]; if (last) last.classList.add('pop'); }
       }
       photos = pick && listById(pick) ? (listById(pick).photos || []).slice() : []; drawPh();
@@ -2000,7 +2009,7 @@ function openPost(pre, after){
         const l = listById(pick), names = l ? l.items.map(it => byId(it[0])).filter(Boolean).map(x => x.name) : [];
         const sel = new Set(ptags[id] || []);
         openSheet({ title:'写っているギア', right:'決定',
-          body:'<p class="hint" style="margin:4px 0 10px">選んだギアのページに、この写真が並びます。付けなくても大丈夫です。</p><div class="group" style="margin-top:0">'+
+          body:'<div style="height:6px"></div><div class="group" style="margin-top:0">'+
             names.map(nm => '<div class="gr" data-tg="'+esc(nm)+'"><span class="chk'+(sel.has(nm) ? ' on' : '')+'">'+(sel.has(nm) ? icon('check', 16, 'var(--paper)') : '')+'</span><span class="gt">'+esc(nm)+'</span></div>').join('')+'</div>'+
             '<div class="btnrow"><button type="button" class="btn secondary block danger" data-rmph>この写真を投稿から外す</button></div>',
           onMount:(t, close2) => {
@@ -2037,8 +2046,8 @@ function openSettings(){
     '</div>'+
     '<div class="ghead"><b>フィードバック</b><span class="label">FEEDBACK</span></div>'+
     '<div class="group" style="margin-top:0">'+
-      '<div class="gr" data-s="rate"><span class="gi">'+icon('star', 22)+'</span><span class="gt">Google Play で評価する<small>アプリを気に入ったら、星とひとことで応援してください</small></span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
-      '<div class="gr" data-s="feedback"><span class="gi">'+icon('pen', 22)+'</span><span class="gt">ご意見・不具合を送る<small>使いにくい所、ほしい機能、困ったこと</small></span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+      '<div class="gr" data-s="rate"><span class="gi">'+icon('star', 22)+'</span><span class="gt">Google Play で評価する</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+      '<div class="gr" data-s="feedback"><span class="gi">'+icon('pen', 22)+'</span><span class="gt">ご意見・不具合を送る</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
       '<div class="gr static"><span class="gi"></span><span class="gt">バージョン</span><span class="gv">0.1.0（試作）</span></div>'+
     '</div>'+
     '<div class="ghead"><b>この試作だけの設定</b></div>'+
@@ -2048,10 +2057,10 @@ function openSettings(){
     '<div class="btnrow"><button type="button" class="btn secondary block" data-reset>データを最初に戻す</button></div></div>');
   s.addEventListener('click', e => {
     const st = e.target.closest('[data-set]'); if (st) return setIconSet(st.dataset.set);
-    if (e.target.closest('[data-reset]')) return dialog('最初に戻しますか？', '試作の中で変えた内容がすべて元に戻ります。', [{ label:'キャンセル', value:false }, { label:'戻す', value:true, danger:true }])
+    if (e.target.closest('[data-reset]')) return dialog('最初に戻しますか？', '試作の中で変えた内容がすべて元に戻ります。', [{ label:icon('close', 20, 'var(--ink)'), value:false }, { label:'戻す', value:true, danger:true }])
       .then(ok => { if (ok) { S = JSON.parse(JSON.stringify(SEED)); normAll(); refreshAll(); toast('最初に戻しました'); } });
     const r = e.target.closest('[data-s]'); if (!r) return;
-    if (r.dataset.s === 'cats') push(() => nav('設定', 'カテゴリ') + '<div class="scroll"><div class="ghead"><b>カテゴリ</b><span class="label">CATEGORIES</span></div><p class="hint">並びと名前を変えられます（この試作では表示のみ）。</p><div class="group">'+
+    if (r.dataset.s === 'cats') push(() => nav('設定', 'カテゴリ') + '<div class="scroll"><div class="ghead"><b>カテゴリ</b><span class="label">CATEGORIES</span></div><div class="group">'+
       CATS.map(c => '<div class="gr static"><span class="gi">'+icon(c.id, 22)+'</span><span class="gt">'+c.label+'<small>'+c.en+'</small></span><span class="gv">'+S.gear.filter(x => x.cat === c.id && x.status === 'owned').length+' 点</span></div>').join('')+'</div><div style="height:40px"></div></div>');
     if (r.dataset.s === 'backup') push(() => nav('設定', 'バックアップ') + '<div class="scroll"><div class="dhead"><div class="label">BACKUP</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">データのバックアップ</h2><p class="small" style="line-height:1.8">ギアと山行計画を1つのファイルに書き出します。機種変更のときに取り込めます。</p></div>'+
       '<div class="btnrow"><button type="button" class="btn primary block" data-fake="書き出しました（試作）">JSON を書き出す</button><button type="button" class="btn secondary block" data-fake="取り込みはこの試作では省略">JSON を取り込む</button></div></div>')
@@ -2078,7 +2087,7 @@ function openRate(afterTrip){
       '<p class="hint" style="text-align:center;margin:6px 0 2px">Google Play に公開されます</p>'+
       '<div class="rstars">'+[1, 2, 3, 4, 5].map(n => '<button type="button" data-st="'+n+'" aria-label="星 '+n+'">'+icon('star', 38, 'var(--faint)')+'</button>').join('')+'</div>'+
       '<label class="field"><span>ひとこと（任意）</span><textarea id="r-text" rows="3" placeholder="例: パッキングのチェックが便利"></textarea></label>'+
-      '<p class="hint">本物のアプリでは、ここで Google Play の評価画面が開きます（アプリから出ずに評価できる仕組み）。</p>',
+      '',
     onMount:(sh, close) => {
       const b = sh.querySelector('[data-r]'); b.disabled = true;
       sh.addEventListener('click', e => {
@@ -2097,7 +2106,7 @@ function openFeedback(){
       ['使いにくい所', '不具合', 'ほしい機能', 'その他'].map(k => '<button type="button" class="chip" data-fk="'+k+'">'+k+'</button>').join('')+'</div>'+
       '<label class="field"><span>内容</span><textarea id="f-text" rows="6" placeholder="例: Trip でギアを追加するボタンが分かりにくい"></textarea></label>'+
       '<button type="button" class="bigbtn" data-shot>'+icon('camera', 26)+'<span><b>スクリーンショットを添える</b><small id="f-shot">なし</small></span></button>'+
-      '<p class="hint">返信が必要な場合は、内容に連絡先を書いてください。アプリのバージョンと端末の種類は自動で添えます。</p>',
+      '',
     onMount:(sh, close) => {
       const ta = sh.querySelector('#f-text'), b = sh.querySelector('[data-r]');
       const sync = () => b.disabled = !ta.value.trim() || !kind; sync(); ta.addEventListener('input', sync);
