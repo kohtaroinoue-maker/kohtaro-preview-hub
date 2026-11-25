@@ -425,6 +425,18 @@ input{font:inherit;color:inherit}
 .coldx{position:absolute;right:4px;top:4px;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
 .coldx:active{opacity:.5}
 
+/* 評価・ご意見・寒さの小さな印・重さの行 */
+.rstars{display:flex;justify-content:center;gap:6px;padding:12px 0 18px}
+.rstars button{width:50px;height:50px;display:flex;align-items:center;justify-content:center}
+.temprow{display:flex;align-items:center;gap:8px}
+.coldmini{width:28px;height:28px;margin-top:10px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;background:var(--paper)}
+.coldmini.warn{border-color:var(--warn);background:#FBF1EC}
+.coldmini:active{transform:scale(.9)}
+.wline.tap{cursor:pointer;transition:background .12s;margin:0 -8px;padding-left:8px;padding-right:8px}
+.wline.tap:active{background:var(--press)}
+.thead.hl{animation:hl 1.4s ease-out}
+@keyframes hl{0%,30%{background:var(--tint)}100%{background:var(--paper)}}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -1319,6 +1331,11 @@ function coldCheck(l){
 // 隠したときの状況（気温・寝袋・対応温度）を覚えておき、状況が変わったらまた出す
 const coldKey = (l, c) => [c.level, l.minTemp, c.gid || '', c.gid && byId(c.gid) ? byId(c.gid).comfort : ''].join('|');
 function visibleCold(l){ const c = coldCheck(l); return c && l.coldHidden !== coldKey(l, c) ? c : null; }
+// 隠した知らせの代わりに残す小さな印（押すとまた開く）
+function coldMini(l){
+  const c = coldCheck(l); if (!c || l.coldHidden !== coldKey(l, c)) return '';
+  return '<button type="button" class="coldmini '+c.level+'" data-coldshow aria-label="寒さの知らせを開く">'+icon(c.level === 'ok' ? 'check' : 'temp', 13, c.level === 'warn' ? 'var(--warn)' : c.level === 'ok' ? 'var(--blue)' : 'var(--mute)')+'</button>';
+}
 function coldBanner(l){
   const c = visibleCold(l); if (!c) return '';
   return '<div class="cold '+c.level+'"><button type="button" class="coldx" data-colddis aria-label="この知らせを隠す">'+icon('close', 16, 'var(--mute)')+'</button>'+icon(c.level === 'ok' ? 'check' : 'temp', 20, c.level === 'warn' ? 'var(--warn)' : c.level === 'ok' ? 'var(--blue)' : 'var(--mute)')+
@@ -1452,11 +1469,11 @@ function openList(lid){
       '<div class="dhead"><div class="label">'+(done ? 'DONE' : 'PLAN ・ ' + leftTxt(l.date))+'</div>'+
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
         '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
-        '<button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+coldBanner(l)+
-        '<div class="wbox"><div class="wline main"><span class="wl">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button></span><span class="wv"><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
-        '<div class="wline"><span class="wl">食料・水</span><span class="wv"><span class="num" id="l-cons" data-v="'+cons+'">'+fmtW(cons)[0]+'</span><span class="u">'+fmtW(cons)[1]+'</span></span></div>'+
-        '<div class="wline paren"><span class="wl">（パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+pack+'">'+pn+'</span><span class="u">'+pu+'</span>）</span></div>'+
-        '<div class="wline'+(worn ? '' : ' none')+'" id="l-wornline"><span class="wl">行動着</span><span class="wv"><span class="num" id="l-worn" data-v="'+worn+'">'+fmtW(worn)[0]+'</span><span class="u">'+fmtW(worn)[1]+'</span></span></div>'+
+        '<div class="temprow"><button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+coldMini(l)+'</div>'+coldBanner(l)+
+        '<div class="wbox"><div class="wline main tap" data-jump="base"><span class="wl">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button></span><span class="wv"><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
+        '<div class="wline tap" data-jump="cons"><span class="wl">食料・水</span><span class="wv"><span class="num" id="l-cons" data-v="'+cons+'">'+fmtW(cons)[0]+'</span><span class="u">'+fmtW(cons)[1]+'</span></span></div>'+
+        '<div class="wline paren tap" data-jump="cons"><span class="wl">（パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+pack+'">'+pn+'</span><span class="u">'+pu+'</span>）</span></div>'+
+        '<div class="wline tap'+(worn ? '' : ' none')+'" id="l-wornline" data-jump="worn"><span class="wl">行動着</span><span class="wv"><span class="num" id="l-worn" data-v="'+worn+'">'+fmtW(worn)[0]+'</span><span class="u">'+fmtW(worn)[1]+'</span></span></div>'+
         '<div class="small" style="margin-top:4px" id="l-cnt">'+listCount(l)+' 点</div></div></div>'+
       '<div class="ghead" style="padding-top:18px"><b>写真</b><span class="label">PHOTOS</span><span class="small" style="margin-left:auto">'+l.photos.length+' 枚</span></div>'+
       '<div class="pstrip"><button type="button" class="ptile add" data-addph style="width:76px;height:76px">'+icon('camera', 22)+'<span>追加</span></button>'+l.photos.map(id => phTile(id, 76)).join('')+'</div>'+
@@ -1502,12 +1519,23 @@ async function onListClick(e, s, lid, setLeft){
   if (e.target.closest('[data-left]')) return setLeft();
   if (e.target.closest('[data-temp]')) return openTempSheet(l, () => { s._render(); renderLists(); });
   const cg = e.target.closest('[data-coldg]'); if (cg) return openDetail(cg.dataset.coldg, '戻る');
+  const jp = e.target.closest('[data-jump]');
+  if (jp && !e.target.closest('[data-winfo]')) {
+    const g = s.querySelector('[data-group="'+jp.dataset.jump+'"]'), sc = s.querySelector('.scroll');
+    if (g && sc) {
+      sc.scrollTo({ top:g.offsetTop - 52, behavior:'smooth' });
+      const h = g.querySelector('.thead'); h.classList.remove('hl'); void h.offsetWidth; h.classList.add('hl');
+    }
+    return;
+  }
+  if (e.target.closest('[data-coldshow]')) { l.coldHidden = null; s._render(); renderLists(); return; }
   if (e.target.closest('[data-colddis]')) {
     const c = coldCheck(l); if (!c) return;
     const box = s.querySelector('.cold'); if (box) { box.style.height = box.offsetHeight + 'px'; void box.offsetHeight; box.classList.add('closing'); }
     setTimeout(() => {
       l.coldHidden = coldKey(l, c); s._render(); renderLists();
-      toast('知らせを隠しました。気温や寝袋が変わるとまた出ます', '元に戻す', () => { l.coldHidden = null; s._render(); renderLists(); });
+      toast('知らせを隠しました。小さな印を押すとまた開きます');
+      const m = s.querySelector('.coldmini'); if (m) { m.classList.remove('pop'); void m.offsetWidth; m.classList.add('pop'); }
     }, 220);
     return;
   }
@@ -1918,6 +1946,12 @@ function openSettings(){
       '<div class="gr" data-s="backup"><span class="gi">'+icon('backup', 22)+'</span><span class="gt">データのバックアップ</span><span class="gv"></span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
       '<div class="gr" data-s="ai"><span class="gi">'+icon('ai', 22)+'</span><span class="gt">AI（Gemini）</span><span class="gv">使える</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
     '</div>'+
+    '<div class="ghead"><b>フィードバック</b><span class="label">FEEDBACK</span></div>'+
+    '<div class="group" style="margin-top:0">'+
+      '<div class="gr" data-s="rate"><span class="gi">'+icon('star', 22)+'</span><span class="gt">Google Play で評価する<small>アプリを気に入ったら、星とひとことで応援してください</small></span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+      '<div class="gr" data-s="feedback"><span class="gi">'+icon('pen', 22)+'</span><span class="gt">ご意見・不具合を送る<small>使いにくい所、ほしい機能、困ったこと</small></span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+      '<div class="gr static"><span class="gi"></span><span class="gt">バージョン</span><span class="gv">0.1.0（試作）</span></div>'+
+    '</div>'+
     '<div class="ghead"><b>この試作だけの設定</b></div>'+
     '<p class="hint">アイコンの案を切り替えられます。アプリには入りません。</p>'+
     '<div class="segc" id="set-seg" style="margin-top:10px"><i class="thumb" style="width:25%;transform:translateX('+SETS.findIndex(x => x.id === SET)*100+'%)"></i>'+
@@ -1935,9 +1969,48 @@ function openSettings(){
       .addEventListener('click', e => { const f = e.target.closest('[data-fake]'); if (f) toast(f.dataset.fake); });
     if (r.dataset.s === 'ai') push(() => nav('設定', 'AI') + '<div class="scroll"><div class="dhead"><div class="label">AI</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">AI（Gemini）</h2><p class="small" style="line-height:1.8">型番タグの読み取りと、別の選択肢探しに使います。AI の結果は「AI推定」として表示され、確かめてから確定にできます。</p></div>'+
       '<div class="group"><div class="gr static"><span class="gt">API キー</span><span class="gv">設定済み</span></div></div></div>');
+    if (r.dataset.s === 'rate') openRate();
+    if (r.dataset.s === 'feedback') openFeedback();
   });
 }
 
+// Google Play の評価（本物のアプリでは Google Play の「アプリ内レビュー」の画面が出る。ここはそのまね）
+function openRate(){
+  let stars = 0;
+  openSheet({ title:'山ギアを評価', right:'送信',
+    body:'<p class="hint" style="text-align:center;margin:6px 0 2px">Google Play に公開されます</p>'+
+      '<div class="rstars">'+[1, 2, 3, 4, 5].map(n => '<button type="button" data-st="'+n+'" aria-label="星 '+n+'">'+icon('star', 38, 'var(--faint)')+'</button>').join('')+'</div>'+
+      '<label class="field"><span>ひとこと（任意）</span><textarea id="r-text" rows="3" placeholder="例: パッキングのチェックが便利"></textarea></label>'+
+      '<p class="hint">本物のアプリでは、ここで Google Play の評価画面が開きます（アプリから出ずに評価できる仕組み）。</p>',
+    onMount:(sh, close) => {
+      const b = sh.querySelector('[data-r]'); b.disabled = true;
+      sh.addEventListener('click', e => {
+        const st = e.target.closest('[data-st]'); if (!st) return;
+        stars = +st.dataset.st; b.disabled = false;
+        sh.querySelectorAll('[data-st]').forEach((x, i) => { x.innerHTML = icon(i < stars ? 'star_on' : 'star', 38, i < stars ? '#E8A317' : 'var(--faint)'); if (i === stars - 1) { x.classList.remove('pop'); void x.offsetWidth; x.classList.add('pop'); } });
+      });
+      b.onclick = () => { close(); toast(stars >= 4 ? '評価ありがとうございます！' : '評価ありがとうございます。良くしていきます'); };
+    } });
+}
+// ご意見・不具合を送る
+function openFeedback(){
+  let kind = '', shot = false;
+  openSheet({ title:'ご意見・不具合', right:'送信', tall:true,
+    body:'<div class="field" style="margin-bottom:6px"><span>どんなこと？</span></div><div class="catpick">'+
+      ['使いにくい所', '不具合', 'ほしい機能', 'その他'].map(k => '<button type="button" class="chip" data-fk="'+k+'">'+k+'</button>').join('')+'</div>'+
+      '<label class="field"><span>内容</span><textarea id="f-text" rows="6" placeholder="例: Trip でギアを追加するボタンが分かりにくい"></textarea></label>'+
+      '<button type="button" class="bigbtn" data-shot>'+icon('camera', 26)+'<span><b>スクリーンショットを添える</b><small id="f-shot">なし</small></span></button>'+
+      '<p class="hint">返信が必要な場合は、内容に連絡先を書いてください。アプリのバージョンと端末の種類は自動で添えます。</p>',
+    onMount:(sh, close) => {
+      const ta = sh.querySelector('#f-text'), b = sh.querySelector('[data-r]');
+      const sync = () => b.disabled = !ta.value.trim() || !kind; sync(); ta.addEventListener('input', sync);
+      sh.addEventListener('click', e => {
+        const k = e.target.closest('[data-fk]'); if (k) { kind = k.dataset.fk; sh.querySelectorAll('[data-fk]').forEach(x => x.classList.toggle('on', x === k)); sync(); }
+        if (e.target.closest('[data-shot]')) { shot = !shot; sh.querySelector('#f-shot').textContent = shot ? '1 枚（試作のまね）' : 'なし'; }
+      });
+      b.onclick = () => { close(); toast('送信しました。ありがとうございます'); };
+    } });
+}
 function setIconSet(id){
   SET = id;
   const seg = $('#set-seg');
