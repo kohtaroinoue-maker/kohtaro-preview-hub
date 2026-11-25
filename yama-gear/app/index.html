@@ -243,6 +243,19 @@ input{font:inherit;color:inherit}
 .field textarea{width:100%;border:1px solid var(--line);background:transparent;padding:10px;font:inherit;font-size:16px;line-height:1.7;outline:none;resize:none;border-radius:0}
 .field textarea:focus{border-color:var(--ink)}
 
+.like{display:inline-flex;align-items:center;gap:4px;margin-left:auto;min-height:32px;padding:0 4px;color:var(--mute);font-size:13px;font-variant-numeric:tabular-nums}
+.like.on{color:var(--warn)}
+.like:active svg{transform:scale(.85)}
+.post[data-openpost]{cursor:pointer;transition:background .12s}
+.post[data-openpost]:active{background:var(--press)}
+.pfoot{display:flex;align-items:flex-end;gap:10px}
+.pfoot .pf,.pfoot p{flex:1;min-width:0}
+.mpost{position:relative;margin:0 20px;padding:12px 0;border-top:1px solid var(--hair);cursor:pointer}
+.mpost:active{background:var(--press)}
+.mpost .mp-h{display:flex;gap:10px;align-items:baseline}
+.mpost .mp-h b{font-family:var(--serif);font-size:15px}
+.mpost p{margin:4px 0 0;font-size:13.5px;line-height:1.7;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -313,11 +326,12 @@ input{font:inherit;color:inherit}
     <h1>動く試作</h1>
     <p>アプリと同じように、<b>押す・進む・戻る</b>が動く試作です。スマホで開くと全画面のアプリとして動きます。</p>
     <ul>
-      <li>下のメニューは左から <b>サマリ・山支度・ギア管理</b></li>
-      <li>サマリでは山行の記録を投稿できます。右上の歯車が設定です</li>
-      <li>ギアの行をタップすると詳細へ進み、左端からのスワイプか「‹」で戻ります</li>
-      <li>「ギア管理」の「登録」から、型番タグの撮影（まね）で登録できます</li>
-      <li>「山支度」では個数の ＋－ と左スワイプでの「外す」が動きます</li>
+      <li>下のメニューは左から <b>Posts（投稿）・Trips（山行計画）・Gear（ギア管理）</b></li>
+      <li>Posts では山行を投稿でき、♡でいいねできます。投稿を押すと持っていったギアが見られます</li>
+      <li>ギアの行をタップすると詳細へ。いちばん下に、そのギアが出てくる投稿が並びます</li>
+      <li>戻るのは左上の「‹」か、左端からのスワイプです</li>
+      <li>Gear の「登録」から、型番タグの撮影（まね）で登録できます</li>
+      <li>Trips では個数の ＋－ と左スワイプでの「外す」が動きます</li>
       <li>ギア詳細は、前に相談した<b>2層の作り（最初は大事なことだけ、深い情報は一段奥）</b>の案です</li>
     </ul>
     <p class="small">ギア名は架空です。変更は保存されず、再読み込みで元に戻ります。</p>
@@ -397,6 +411,9 @@ const NEW = {
   note:'<path class="f" d="M6 3.5 H14.5 L18.5 7.5 V20.5 H6 Z"/><path d="M14.5 3.5 V7.5 H18.5"/><path d="M8.8 11.5 H15.6 M8.8 15 H15.6"/>',
   backup:'<path class="f" d="M5 14 V19.5 H19 V14"/><path d="M12 4 V14.5 M8 8 L12 4 L16 8"/>',
   tab_gear:'<path class="f" d="M7 9 C7 6.3 9.2 4.5 12 4.5 C14.8 4.5 17 6.3 17 9 V19 C17 19.8 16.3 20.5 15.5 20.5 H8.5 C7.7 20.5 7 19.8 7 19 Z"/><path d="M10 4.8 V3.5 H14 V4.8"/><path d="M9.5 13 H14.5 V17.5 H9.5 Z"/>',
+  heart:'<path d="M12 19.5 C12 19.5 3.5 14.6 3.5 9.2 C3.5 6.6 5.5 4.8 7.8 4.8 C9.6 4.8 11.2 5.9 12 7.4 C12.8 5.9 14.4 4.8 16.2 4.8 C18.5 4.8 20.5 6.6 20.5 9.2 C20.5 14.6 12 19.5 12 19.5 Z"/>',
+  heart_on:'<path class="solid" d="M12 19.5 C12 19.5 3.5 14.6 3.5 9.2 C3.5 6.6 5.5 4.8 7.8 4.8 C9.6 4.8 11.2 5.9 12 7.4 C12.8 5.9 14.4 4.8 16.2 4.8 C18.5 4.8 20.5 6.6 20.5 9.2 C20.5 14.6 12 19.5 12 19.5 Z"/>',
+  tab_post:'<path class="f" d="M4 5 H20 V16 H11.5 L7 19.5 V16 H4 Z"/><path d="M8 9 H16 M8 12 H13"/>',
   tab_home:'<rect class="f" x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M8 16.5 V12.5 M12 16.5 V8 M16 16.5 V10.5"/>',
   tab_plan:'<path class="f" d="M2.5 20 L9 9 L12.5 14 L15 11 L21.5 20 Z"/><path d="M15 11 V4 L19.2 5.6 L15 7.2"/>',
   gearset:'<path class="f" d="M18.78 9.90 L21.11 10.15 L21.11 13.85 L18.78 14.10 L18.28 15.31 L19.75 17.14 L17.14 19.75 L15.31 18.28 L14.10 18.78 L13.85 21.11 L10.15 21.11 L9.90 18.78 L8.69 18.28 L6.86 19.75 L4.25 17.14 L5.72 15.31 L5.22 14.10 L2.89 13.85 L2.89 10.15 L5.22 9.90 L5.72 8.69 L4.25 6.86 L6.86 4.25 L8.69 5.72 L9.90 5.22 L10.15 2.89 L13.85 2.89 L14.10 5.22 L15.31 5.72 L17.14 4.25 L19.75 6.86 L18.28 8.69 Z"/><circle cx="12" cy="12" r="3"/>',
@@ -429,7 +446,7 @@ function icon(id, size, color, dashed){
 
 /* ---------- データ（架空） ---------- */
 const CATS = [
-  ['tent','シェルター','SHELTER'],['sleep','睡眠','SLEEP'],['backpack','ザック・収納','PACK'],['cook','調理・水まわり','COOK'],
+  ['backpack','ザック・収納','PACK'],['tent','シェルター','SHELTER'],['sleep','睡眠','SLEEP'],['cook','調理・水まわり','COOK'],
   ['clothing','ウェア','WEAR'],['rain','レイン','RAIN'],['footwear','足まわり','FOOTWEAR'],['light','ライト','LIGHT'],
   ['safety','安全・緊急','SAFETY'],['electronics','電子機器','ELECTRONICS'],['food','食料','FOOD'],['water','水','WATER'],['other','その他','OTHER']
 ].map(([id,label,en]) => ({ id, label, en }));
@@ -640,7 +657,7 @@ function refreshAll(){
 }
 
 /* ---------- タブ ---------- */
-const TABS = [['home','tab_home','サマリ'],['plan','tab_plan','山支度'],['gear','tab_gear','ギア管理']];
+const TABS = [['home','tab_post','Posts'],['plan','tab_plan','Trips'],['gear','tab_gear','Gear']];
 let curTab = 'home';
 function renderTabbar(){
   $('#tabbar').innerHTML = TABS.map(([k, ic, l]) => '<button type="button" class="'+(k===curTab?'on':'')+'" data-tab="'+k+'">'+icon(ic, 26)+'<span>'+l+'</span></button>').join('');
@@ -660,10 +677,10 @@ const CONTOUR = '<svg class="contour" viewBox="0 0 300 160" fill="none" stroke="
 function buildGearPage(){
   const p = $('#tp-gear');
   p.innerHTML =
-    '<div class="compact" id="g-compact"><b>ギア管理</b><span class="small" id="gc-sum"></span></div>'+
+    '<div class="compact" id="g-compact"><b>Gear</b><span class="small" id="gc-sum"></span></div>'+
     '<div class="scroll" id="g-scroll">'+
       '<header class="bighead">'+CONTOUR+
-        '<div class="titleRow"><div><div class="label">MY GEAR</div><h1 class="title">ギア管理</h1></div>'+
+        '<div class="titleRow"><div><div class="label">ギア管理</div><h1 class="title">Gear</h1></div>'+
         '<div class="sum"><div><span class="num" id="g-count">0</span></div><div class="small" id="g-sum"></div></div></div>'+
         '<div class="searchRow"><label class="search">'+icon('search', 18, 'var(--mute)')+'<input id="q" type="search" placeholder="名前・ブランドで検索" autocomplete="off"></label>'+
         '<button type="button" class="btn primary" data-act="new">'+icon('plus', 16, 'var(--paper)')+'登録</button></div>'+
@@ -721,7 +738,7 @@ function openStatusList(st){
   const s = push(() => {
     const items = S.gear.filter(x => x.status === st);
     const wp = items.filter(x => x.price != null).reduce((a, x) => a + x.price, 0);
-    return nav('ギア管理', label) + '<div class="scroll"><div class="dhead"><div class="label">'+(st === 'wish' ? 'WISH LIST' : 'RETIRED')+'</div>'+
+    return nav('Gear', label) + '<div class="scroll"><div class="dhead"><div class="label">'+(st === 'wish' ? 'WISH LIST' : 'RETIRED')+'</div>'+
       '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+label+'</h2>'+
       '<p class="small" style="line-height:1.8">'+(st === 'wish' ? items.length + ' 点'+(wp ? ' ・ 合計 ' + yen(wp) + '（参考値）' : '')+'<br>今持っているギアと比べた重さの差を出しています。' : items.length + ' 点。記録として残しています。')+'</p></div>'+
       '<div class="list">'+(items.length ? groupedRows(items, false) : '<div class="empty">'+(st === 'wish' ? 'まだありません。ギア詳細の「別の選択肢を探す」から追加できます。' : 'まだありません。')+'</div>')+'</div></div>';
@@ -759,7 +776,7 @@ function onGearClick(e){
   const c = e.target.closest('[data-cat]'); if (c) { UI.cat = c.dataset.cat || null; renderGear(true); const on = $('#chips .chip.on'); if (on) on.scrollIntoView({ inline:'center', block:'nearest', behavior:'smooth' }); return; }
   if (e.target.closest('[data-favonly]')) { UI.fav = !UI.fav; return renderGear(true); }
   if (e.target.closest('[data-act="new"]')) return openNew();
-  const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open, 'ギア管理');
+  const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open, 'Gear');
 }
 
 /* ---------- ギア詳細（2層: 最初は大事なことだけ、深い情報は一段奥） ---------- */
@@ -779,8 +796,6 @@ function openDetail(id, backLabel){
           '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+(x.src !== 'ok' ? BADGE[x.src].replace('class="badge', 'data-go="weight" class="badge') : '')+'</div>'+
           (ag ? '<div class="wishline">今の'+esc(ag.name)+'より '+delta(x.w - ag.w)+(x.price != null ? '　'+yen(x.price) : '')+'</div>' : '')+
         '</div>'+
-        '<div class="segc" id="segc"><i class="thumb" style="width:33.333%;transform:translateX('+idx*100+'%)"></i>'+
-          STATUS.map(([k, l]) => '<button type="button" class="'+(k===x.status?'on':'')+'" data-status="'+k+'">'+l+'</button>').join('')+'</div>'+
         '<div class="group">'+
           gr('weight', '重さ・出典', x.src === 'ok' ? '確定' : x.src === 'ai' ? 'AI推定' : '未確認', 'weight')+
           gr('type', '種類・カテゴリ', (x.type || '未設定') + ' ・ ' + c.label, 'type')+
@@ -789,9 +804,17 @@ function openDetail(id, backLabel){
         '</div>'+
         (x.status === 'owned' ? '<div class="group">'+gr('ai', '別の選択肢を探す', '', 'alt', 'AI が同じ種類のギアを探します')+'</div>' : '')+
         '<div class="btnrow"><button type="button" class="btn secondary block" data-edit>編集</button></div>'+
+        gearPosts(x)+
       '</div>';
   }, backLabel);
   s.addEventListener('click', e => onDetailClick(e, s, id));
+}
+function gearPosts(x){
+  const ps = S.posts.filter(po => po.gear.includes(x.id));
+  return '<div class="ghead" style="border-top:2px solid var(--ink);padding-top:18px"><b>このギアが出てくる投稿</b><span class="label">POSTS</span><span class="small" style="margin-left:auto">'+ps.length+' 件</span></div>'+
+    (ps.length ? ps.map(po => '<div class="mpost" data-openpost="'+po.id+'"><div class="mp-h"><span class="label">'+po.date+'</span><b>'+esc(po.list)+'</b></div><div class="pfoot"><p>'+esc(po.text)+'</p>'+likeBtn(po)+'</div></div>').join('')
+      : '<div class="empty" style="padding-top:6px">まだありません。山行のあとに投稿すると、持っていったギアの投稿がここに並びます。</div>')+
+    '<div style="height:40px"></div>';
 }
 function gr(ic, title, val, go, sub){
   return '<div class="gr" data-go="'+go+'"><span class="gi">'+icon(ic, 22)+'</span><span class="gt">'+title+(sub ? '<small>'+sub+'</small>' : '')+'</span><span class="gv">'+esc(val)+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>';
@@ -799,19 +822,7 @@ function gr(ic, title, val, go, sub){
 async function onDetailClick(e, s, id){
   const x = byId(id); if (!x) return;
   const f = e.target.closest('[data-fav]'); if (f) return toggleFav(id);
-  const stb = e.target.closest('[data-status]');
-  if (stb) {
-    const k = stb.dataset.status; if (k === x.status) return;
-    const idx = STATUS.findIndex(t => t[0] === k);
-    s.querySelector('.thumb').style.transform = 'translateX(' + idx * 100 + '%)';
-    s.querySelectorAll('[data-status]').forEach(b => b.classList.toggle('on', b === stb));
-    setTimeout(() => {
-      x.status = k; if (k === 'retired') x.retiredAt = '2026-11';
-      refreshAll();
-      toast('「' + STATUS[idx][1] + '」に移しました');
-    }, 260);
-    return;
-  }
+  if (postClick(e, x.name.length > 8 ? '戻る' : x.name)) return;
   const go = e.target.closest('[data-go]');
   if (go) {
     const t = go.dataset.go, name = x.name.length > 8 ? '戻る' : x.name;
@@ -823,10 +834,12 @@ async function onDetailClick(e, s, id){
   }
   if (e.target.closest('[data-edit]')) return openEdit(id);
   if (e.target.closest('[data-more]')) {
-    const r = await actionSheet([{ label:'編集', value:'edit' }, { label:'削除（登録ミス用）', value:'del', danger:true }]);
+    const move = x.status === 'owned' ? { label:'手放したにする', value:'retired' } : x.status === 'wish' ? { label:'買った（持っているへ）', value:'owned' } : { label:'持っているに戻す', value:'owned' };
+    const r = await actionSheet([{ label:'編集', value:'edit' }, move, { label:'削除（登録ミス用）', value:'del', danger:true }]);
     if (r === 'edit') openEdit(id);
+    if (r === 'retired' || r === 'owned') { x.status = r; if (r === 'retired') x.retiredAt = '2026-11'; refreshAll(); toast(r === 'retired' ? '「手放したギア」に移しました' : '持っているギアに入れました'); }
     if (r === 'del') {
-      const ok = await dialog('削除しますか？', '登録ミスを取り消すためのものです。使わなくなったギアは、状態を「手放した」にすると記録が残ります。',
+      const ok = await dialog('削除しますか？', '登録ミスを取り消すためのものです。使わなくなったギアは「…」の「手放したにする」で記録を残せます。',
         [{ label:'キャンセル', value:false, bold:true }, { label:'削除', value:true, danger:true }]);
       if (!ok) return;
       pop();
@@ -1012,7 +1025,7 @@ const listCount = l => l.items.reduce((a, it) => a + it[1], 0);
 function renderLists(){
   const p = $('#tp-plan');
   const sc = p.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
-  p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+'<div class="titleRow"><div><div class="label">PLANS</div><h1 class="title">山支度</h1></div>'+
+  p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+'<div class="titleRow"><div><div class="label">山行計画</div><h1 class="title">Trips</h1></div>'+
     '<button type="button" class="btn primary" data-newlist>'+icon('plus', 16, 'var(--paper)')+'新規</button></div></header>'+
     S.lists.map(l => { const [n, u] = fmtW(listTotal(l)); return '<div class="lcard" data-list="'+l.id+'"><div><div class="ln">'+esc(l.name)+'</div><div class="small" style="margin-top:4px">'+
       '<span class="tag'+(l.status === 'done' ? ' done' : '')+'">'+(l.status === 'done' ? '山行済み' : '計画中')+'</span>'+listCount(l)+' 点'+(l.wentAt ? ' ・ ' + l.wentAt : '')+'</div></div>'+
@@ -1033,11 +1046,11 @@ $('#tp-plan').addEventListener('click', e => {
 
 function openList(lid){
   const s = push(() => {
-    const l = listById(lid); if (!l) return nav('山支度', '') + '<div class="scroll"></div>';
+    const l = listById(lid); if (!l) return nav('Trips', '') + '<div class="scroll"></div>';
     const tot = listTotal(l), [n, u] = fmtW(tot);
     const byCat = CATS.map(c => ({ c, its:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id) })).filter(v => v.its.length);
     const catW = byCat.map(v => ({ c:v.c, w:v.its.reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).sort((a, b) => b.w - a.w);
-    return nav('山支度', l.name) + '<div class="scroll"><div class="dhead"><div class="label">PACK LIST ・ '+(l.status === 'done' ? '山行済み ' + (l.wentAt || '') : '計画中')+'</div>'+
+    return nav('Trips', l.name) + '<div class="scroll"><div class="dhead"><div class="label">PACK LIST ・ '+(l.status === 'done' ? '山行済み ' + (l.wentAt || '') : '計画中')+'</div>'+
       '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
       '<div class="bigw"><span class="num" id="l-tot" data-v="'+tot+'">'+n+'</span><span class="u">'+u+'</span><span class="small" style="margin-left:8px" id="l-cnt">'+listCount(l)+' 点</span></div></div>'+
       '<div class="bar" id="l-bar">'+catW.map((v, i) => '<i style="width:'+(tot ? v.w / tot * 100 : 0)+'%;background:'+BAR[Math.min(i, BAR.length - 1)]+'"></i>').join('')+'</div>'+
@@ -1140,58 +1153,74 @@ function openAddGear(s, l){
     } });
 }
 
-/* ---------- サマリ（投稿など） ---------- */
+/* ---------- Posts（投稿・いいね） ---------- */
 SEED.posts = [
-  { id:'P1', list:'日帰り ハイク', date:'2026-10-12', text:'朝は冷えたけど、歩き出したらレインだけで十分だった。行動食は半分余ったので次は減らす。', photo:true, w:2180, unused:1 },
-  { id:'P2', list:'テント泊 1泊2日', date:'2026-09-20', text:'クッカーを替えてから朝の支度が早い。テント場は風が強め。', photo:false, w:7120, unused:2 }
+  { id:'P1', list:'日帰り ハイク', date:'2026-10-12', text:'朝は冷えたけど、歩き出したらレインだけで十分だった。行動食は半分余ったので次は減らす。', photo:true, w:2180, unused:1, likes:3, liked:false,
+    gear:['g5','g10','g13','g14','g16','g17'] },
+  { id:'P2', list:'テント泊 1泊2日', date:'2026-09-20', text:'クッカーを替えてから朝の支度が早い。テント場は風が強め、ペグは長いのを持っていって正解。', photo:false, w:7120, unused:2, likes:5, liked:true,
+    gear:['g1','g3','g4','g5','g6','g7','g8','g10','g13','g14','g16','g17'] },
+  { id:'P3', list:'冬の小屋泊', date:'2026-02-08', text:'寝袋は0℃で足りた。フリースは小屋の中でずっと着ていた。', photo:true, w:4380, unused:0, likes:1, liked:false,
+    gear:['g3','g5','g9','g13','g14'] }
 ];
 S.posts = JSON.parse(JSON.stringify(SEED.posts));
+const postById = id => S.posts.find(p => p.id === id);
+function likeBtn(po){
+  return '<button type="button" class="like'+(po.liked ? ' on' : '')+'" data-like="'+po.id+'" aria-label="いいね">'+
+    icon(po.liked ? 'heart_on' : 'heart', 20, po.liked ? 'var(--warn)' : 'var(--mute)')+'<span>'+po.likes+'</span></button>';
+}
 function renderHome(){
   const p = $('#tp-home');
   const sc = p.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
-  const owned = S.gear.filter(x => x.status === 'owned'), wish = S.gear.filter(x => x.status === 'wish');
-  const plans = S.lists.filter(l => l.status === 'plan');
-  const next = plans[0];
-  const favs = owned.filter(x => x.use).sort((a, b) => b.use[1] / b.use[0] - a.use[1] / a.use[0] || b.use[1] - a.use[1]).slice(0, 3);
   p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+
-    '<div class="titleRow"><div><div class="label">SUMMARY</div><h1 class="title">サマリ</h1></div>'+
-    '<button type="button" class="iconbtn" data-settings aria-label="設定" style="margin-right:-10px">'+icon('gearset', 26)+'</button></div></header>'+
-    '<div class="tiles">'+
-      '<button type="button" class="tile" data-goto="gear"><div class="small">持っているギア</div><span class="num">'+owned.length+'</span><span class="small"> 点</span><div class="small">'+wTxt(owned.reduce((a, x) => a + x.w, 0))+'</div></button>'+
-      '<button type="button" class="tile" data-goto="plan"><div class="small">山支度</div><span class="num">'+plans.length+'</span><span class="small"> 件</span><div class="small">計画中</div></button>'+
-      '<button type="button" class="tile" data-wish><div class="small">欲しいギア</div><span class="num">'+wish.length+'</span><span class="small"> 点</span><div class="small">'+(wish.length ? yen(wish.reduce((a, x) => a + (x.price || 0), 0)) : '—')+'</div></button>'+
-    '</div>'+
-    (next ? '<div class="ghead"><b>次の山支度</b><span class="label">NEXT</span></div><div class="group" style="margin-top:0">'+
-      '<div class="lcard" data-list="'+next.id+'"><div><div class="ln">'+esc(next.name)+'</div><div class="small" style="margin-top:4px"><span class="tag">計画中</span>'+listCount(next)+' 点</div></div>'+
-      '<div class="lw"><span class="num">'+fmtW(listTotal(next))[0]+'</span><small class="small"> '+fmtW(listTotal(next))[1]+'</small></div>'+icon('chev', 16, 'var(--faint)')+'</div></div>' : '')+
-    '<div class="ghead"><b>山行の記録</b><span class="label">LOG</span><button type="button" class="mini" data-post style="margin-left:auto;display:flex;align-items:center;gap:4px">'+icon('pen', 15)+'投稿する</button></div>'+
-    '<div id="posts">'+(S.posts.length ? S.posts.map(postHtml).join('') : '<div class="empty">まだ記録がありません。</div>')+'</div>'+
-    (favs.length ? '<div class="ghead"><b>よく使うギア</b><span class="label">FAVORITES</span></div><div class="group" style="margin-top:0">'+
-      favs.map(x => '<div class="gr" data-open="'+x.id+'"><span class="gi">'+icon(x.cat, 22)+'</span><span class="gt">'+esc(x.name)+'<small>'+x.use[0]+' 回中 '+x.use[1]+' 回使用</small></span><span class="gv">'+Math.round(x.use[1] / x.use[0] * 100)+'%</span>'+icon('chev', 16, 'var(--faint)')+'</div>').join('')+'</div>' : '')+
+    '<div class="titleRow"><div><div class="label">投稿</div><h1 class="title">Posts</h1></div>'+
+    '<div style="display:flex;align-items:center;gap:4px"><button type="button" class="iconbtn" data-settings aria-label="設定">'+icon('gearset', 24)+'</button>'+
+    '<button type="button" class="btn primary" data-post>'+icon('pen', 16, 'var(--paper)')+'投稿</button></div></div></header>'+
+    '<div id="posts">'+(S.posts.length ? S.posts.map(po => postHtml(po)).join('') : '<div class="empty">まだ投稿がありません。山行のあとに「投稿」から残しましょう。</div>')+'</div>'+
     '<div style="height:100px"></div></div>';
   p.querySelector('.scroll').scrollTop = top;
 }
-function postHtml(po){
-  return '<article class="post" data-post-id="'+po.id+'"><div class="label">'+po.date+'</div><div class="pt">'+esc(po.list)+'</div>'+
-    (po.photo ? '<div class="photo">'+CONTOUR.replace('class="contour"', 'class="contour" style="right:auto;left:-20px;top:-6px;width:120%;height:180px" stroke="#B9CBE8"').replace('stroke="#E2E2D8"', 'stroke="#B9CBE8"')+'<span>写真</span></div>' : '')+
-    '<p>'+esc(po.text)+'</p><div class="pf"><span>背負った重さ '+wTxt(po.w)+'</span><span>使わなかったギア '+po.unused+' 点</span></div></article>';
+function postHtml(po, full){
+  const photo = po.photo ? '<div class="photo">'+CONTOUR.replace('class="contour"', 'class="contour" style="right:auto;left:-20px;top:-6px;width:120%;height:180px"').replace('stroke="#E2E2D8"', 'stroke="#B9CBE8"')+'<span>写真</span></div>' : '';
+  return '<article class="post" data-post-id="'+po.id+'"'+(full ? '' : ' data-openpost="'+po.id+'"')+'><div class="label">'+po.date+'</div><div class="pt">'+esc(po.list)+'</div>'+photo+
+    '<p>'+esc(po.text)+'</p><div class="pfoot"><div class="pf"><span>背負った重さ '+wTxt(po.w)+'</span><span>ギア '+po.gear.length+' 点</span>'+(po.unused ? '<span>使わなかった '+po.unused+' 点</span>' : '')+'</div>'+likeBtn(po)+'</div></article>';
+}
+function toggleLike(id){
+  const po = postById(id); po.liked = !po.liked; po.likes += po.liked ? 1 : -1;
+  refreshAll();
+  document.querySelectorAll('[data-like="'+id+'"] svg').forEach(s => { s.classList.remove('pop'); void s.offsetWidth; s.classList.add('pop'); });
+}
+function postClick(e, back){
+  const lk = e.target.closest('[data-like]'); if (lk) { e.stopPropagation(); toggleLike(lk.dataset.like); return true; }
+  const op = e.target.closest('[data-openpost]'); if (op) { openPostDetail(op.dataset.openpost, back); return true; }
+  return false;
+}
+function openPostDetail(pid, back){
+  const s = push(() => {
+    const po = postById(pid); if (!po) return nav(back, '') + '<div class="scroll"></div>';
+    const items = po.gear.map(byId).filter(Boolean);
+    return nav(back, po.list) + '<div class="scroll">'+postHtml(po, true).replace('class="post"', 'class="post" style="border-top:0"')+
+      '<div class="ghead"><b>持っていったギア</b><span class="label">GEAR</span><span class="small" style="margin-left:auto">'+items.length+' 点</span></div>'+
+      '<div class="group" style="margin-top:0">'+items.map(x => '<div class="gr" data-open="'+x.id+'"><span class="gi">'+icon(x.cat, 22)+'</span><span class="gt">'+esc(x.name)+'</span><span class="gv">'+wTxt(x.w)+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>').join('')+'</div>'+
+      '<div style="height:40px"></div></div>';
+  });
+  s.addEventListener('click', e => {
+    if (postClick(e, back)) return;
+    const o = e.target.closest('[data-open]'); if (o) openDetail(o.dataset.open, '戻る');
+  });
 }
 $('#tp-home').addEventListener('click', e => {
   if (e.target.closest('[data-settings]')) return openSettings();
-  const t = e.target.closest('[data-goto]'); if (t) return $('#tabbar [data-tab="'+t.dataset.goto+'"]').click();
-  if (e.target.closest('[data-wish]')) return openStatusList('wish');
-  const l = e.target.closest('[data-list]'); if (l) return openList(l.dataset.list);
-  const o = e.target.closest('[data-open]'); if (o) return openDetail(o.dataset.open, 'サマリ');
   if (e.target.closest('[data-post]')) return openPost();
+  postClick(e, 'Posts');
 });
 function openPost(){
   let pick = (S.lists.find(l => l.status === 'done') || S.lists[0] || {}).id, photo = false;
-  openSheet({ title:'山行の記録', right:'投稿', tall:true,
+  openSheet({ title:'投稿', right:'投稿', tall:true,
     body:'<div class="field" style="margin-bottom:6px"><span>どの山行？</span></div><div class="catpick">'+
       S.lists.map(l => '<button type="button" class="chip'+(l.id === pick ? ' on' : '')+'" data-pl="'+l.id+'">'+esc(l.name)+'</button>').join('')+'</div>'+
       '<label class="field"><span>ひとこと</span><textarea id="p-text" rows="5" placeholder="例: 朝は冷えた。行動食は半分余った。"></textarea></label>'+
       '<button type="button" class="bigbtn" data-photo>'+icon('camera', 26)+'<span><b>写真を添える</b><small id="p-photo">なし</small></span></button>'+
-      '<p class="hint">背負った重さと、使わなかったギアの数は、山支度のリストから自動で入ります。</p>',
+      '<p class="hint">背負った重さと持っていったギアは、Trips のリストから自動で入ります。</p>',
     onMount:(sh, close) => {
       const ta = sh.querySelector('#p-text'), b = sh.querySelector('[data-r]');
       b.disabled = true; ta.addEventListener('input', () => b.disabled = !ta.value.trim());
@@ -1202,16 +1231,16 @@ function openPost(){
       });
       b.onclick = () => {
         const l = listById(pick);
-        const po = { id:'P' + (seq++), list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), photo, w:l ? listTotal(l) : 0, unused:0 };
-        S.posts.unshift(po); close(); renderHome();
-        setTimeout(() => { const a = document.querySelector('[data-post-id="'+po.id+'"]'); if (a) { a.scrollIntoView({ block:'center', behavior:'smooth' }); a.classList.add('flash'); } toast('投稿しました'); }, 380);
+        const po = { id:'P' + (seq++), list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), photo, w:l ? listTotal(l) : 0, unused:0, likes:0, liked:false, gear:l ? l.items.map(i => i[0]) : [] };
+        S.posts.unshift(po); close(); refreshAll();
+        setTimeout(() => { const a = document.querySelector('#posts [data-post-id="'+po.id+'"]'); if (a) { a.scrollIntoView({ block:'center', behavior:'smooth' }); a.classList.add('flash'); } toast('投稿しました'); }, 380);
       };
     } });
 }
 
-/* ---------- 設定（サマリ右上の歯車から） ---------- */
+/* ---------- 設定（Posts 右上の歯車から） ---------- */
 function openSettings(){
-  const s = push(() => nav('サマリ', '設定') + '<div class="scroll"><div class="dhead"><div class="label">SETTINGS</div><h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">設定</h2></div>'+
+  const s = push(() => nav('Posts', '設定') + '<div class="scroll"><div class="dhead"><div class="label">SETTINGS</div><h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">設定</h2></div>'+
     '<div class="group" style="margin-top:14px">'+
       '<div class="gr" data-s="cats"><span class="gi">'+icon('type', 22)+'</span><span class="gt">カテゴリ</span><span class="gv">'+CATS.length+' 個</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
       '<div class="gr" data-s="backup"><span class="gi">'+icon('backup', 22)+'</span><span class="gt">データのバックアップ</span><span class="gv"></span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
@@ -1229,7 +1258,7 @@ function openSettings(){
     const r = e.target.closest('[data-s]'); if (!r) return;
     if (r.dataset.s === 'cats') push(() => nav('設定', 'カテゴリ') + '<div class="scroll"><div class="ghead"><b>カテゴリ</b><span class="label">CATEGORIES</span></div><p class="hint">並びと名前を変えられます（この試作では表示のみ）。</p><div class="group">'+
       CATS.map(c => '<div class="gr static"><span class="gi">'+icon(c.id, 22)+'</span><span class="gt">'+c.label+'<small>'+c.en+'</small></span><span class="gv">'+S.gear.filter(x => x.cat === c.id && x.status === 'owned').length+' 点</span></div>').join('')+'</div><div style="height:40px"></div></div>');
-    if (r.dataset.s === 'backup') push(() => nav('設定', 'バックアップ') + '<div class="scroll"><div class="dhead"><div class="label">BACKUP</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">データのバックアップ</h2><p class="small" style="line-height:1.8">ギアと山支度を1つのファイルに書き出します。機種変更のときに取り込めます。</p></div>'+
+    if (r.dataset.s === 'backup') push(() => nav('設定', 'バックアップ') + '<div class="scroll"><div class="dhead"><div class="label">BACKUP</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">データのバックアップ</h2><p class="small" style="line-height:1.8">ギアと山行計画を1つのファイルに書き出します。機種変更のときに取り込めます。</p></div>'+
       '<div class="btnrow"><button type="button" class="btn primary block" data-fake="書き出しました（試作）">JSON を書き出す</button><button type="button" class="btn secondary block" data-fake="取り込みはこの試作では省略">JSON を取り込む</button></div></div>')
       .addEventListener('click', e => { const f = e.target.closest('[data-fake]'); if (f) toast(f.dataset.fake); });
     if (r.dataset.s === 'ai') push(() => nav('設定', 'AI') + '<div class="scroll"><div class="dhead"><div class="label">AI</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">AI（Gemini）</h2><p class="small" style="line-height:1.8">型番タグの読み取りと、別の選択肢探しに使います。AI の結果は「AI推定」として表示され、確かめてから確定にできます。</p></div>'+
