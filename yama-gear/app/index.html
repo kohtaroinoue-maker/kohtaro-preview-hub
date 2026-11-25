@@ -437,6 +437,14 @@ input{font:inherit;color:inherit}
 .thead.hl{animation:hl 1.4s ease-out}
 @keyframes hl{0%,30%{background:var(--tint)}100%{background:var(--paper)}}
 
+/* 実測 */
+.b-m{color:var(--paper);background:var(--ink);border-color:var(--ink)}
+.b-cat{color:var(--mute);border-color:var(--line)}
+.bigw .badge{cursor:pointer}
+.bmeas{font-size:12px;color:var(--mute);padding:0 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+.wlink{display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:12.5px;font-weight:700;padding:2px 0}
+.wlink:active{opacity:.5}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -666,12 +674,23 @@ const SEED = {
   lists: [
     { id:'L1', minTemp:-2, photos:[], name:'テント泊 2泊3日', status:'plan', date:'2026-12-06', days:3, packed:['g1','g3','g5','g7','g13'], unused:[], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g9',1],['g10',1],['g11',1],['g13',1],['g14',1],['g15',1],['g16',3],['g17',2],['g12',1]] },
     { id:'L3', minTemp:-8, photos:[], name:'雪の小屋泊 1泊', status:'plan', date:'2027-01-10', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] },
-    { id:'L2', minTemp:8, photos:['ph1','ph2','ph3'], name:'日帰り ハイク', status:'done', date:'2026-10-12', days:1, packed:[], unused:['g16'], items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1],['g12',1]] },
+    { id:'L2', baseM:1740, minTemp:8, photos:['ph1','ph2','ph3'], name:'日帰り ハイク', status:'done', date:'2026-10-12', days:1, packed:[], unused:['g16'], items:[['g5',1],['g10',1],['g13',1],['g14',1],['g16',1],['g17',1],['g12',1]] },
     { id:'L4', minTemp:3, photos:['ph4','ph5'], name:'テント泊 1泊2日', status:'done', date:'2026-09-20', days:2, packed:[], unused:['g4','g6'], items:[['g1',1],['g3',1],['g4',1],['g5',1],['g6',1],['g7',1],['g8',1],['g10',1],['g13',1],['g14',1],['g16',2],['g17',1]] },
     { id:'L5', minTemp:-6, photos:['ph6'], name:'冬の小屋泊', status:'done', date:'2026-02-08', days:2, packed:[], unused:[], items:[['g3',1],['g5',1],['g9',1],['g13',1],['g14',1]] }
   ]
 };
 let S = JSON.parse(JSON.stringify(SEED));
+// 重さは2種類: cw＝アプリが持っている値（カタログ・公表値／AI推定／未確認。src で区別）、m＝実測（自分で量った値）
+// 表示と計算は実測を優先する（w＝実測があれば実測、無ければ cw）
+const measDelta = id => [3, -2, 8, 0, 12, -5, 4][parseInt(String(id).replace(/\D/g, ''), 10) % 7];
+function normGear(x){
+  if (x.cw === undefined) { x.cw = x.w; if (x.src === 'ok') { x.src = 'cat'; x.m = x.w + measDelta(x.id); } }
+  x.w = x.m != null ? x.m : (x.cw || 0);
+}
+const normAll = () => S.gear.forEach(normGear);
+normAll();
+const isMeas = x => x && x.m != null;
+const SRC_NAME = { cat:'カタログ・公表値', ai:'AI 推定（型番タグ）', un:'未確認' };
 let seq = 100;
 const byId = id => S.gear.find(x => x.id === id);
 const listById = id => S.lists.find(x => x.id === id);
@@ -679,7 +698,9 @@ const fmtW = gr => gr >= 1000 ? [(gr/1000).toFixed(2), 'kg'] : [String(Math.roun
 const wTxt = gr => fmtW(gr).join(' ');
 const yen = n => '約 ¥' + n.toLocaleString('en-US');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-const BADGE = { ai:'<span class="badge b-ai">AI推定</span>', un:'<span class="badge b-un">未確認</span>', ok:'' };
+const BADGE = { ai:'<span class="badge b-ai">AI推定</span>', un:'<span class="badge b-un">未確認</span>', ok:'', cat:'' };
+// 一覧の印: 実測は黒い「実測」、量っていなければ出典（カタログ値は印なし・AI推定・未確認）
+const wBadge = x => isMeas(x) ? '<span class="badge b-m">実測</span>' : (BADGE[x.src] || '');
 
 function wishAgainst(w){
   const owned = S.gear.filter(x => x.status === 'owned');
@@ -842,6 +863,7 @@ function edgeSwipe(s){
   s.addEventListener('pointerup', end); s.addEventListener('pointercancel', end);
 }
 function refreshAll(){
+  normAll();
   renderGear(false); renderLists(); renderHome();
   stack.slice(1).forEach(s => s._render());
 }
@@ -943,8 +965,8 @@ function rowHtml(x, i){
   const wish = x.status === 'wish', ret = x.status === 'retired';
   const [n, u] = fmtW(x.w);
   let sub;
-  if (wish) sub = (x.plan ? '<span class="badge b-plan" style="margin:0 4px 0 0">買う予定</span>' : '')+'<span>'+(x.price != null ? yen(x.price) : '価格不明')+'</span>'+BADGE[x.src];
-  else sub = [x.type || '種類未設定', x.brand].map((p, k) => '<span'+(k?' class="dot"':'')+'>'+esc(p)+'</span>').join('') + (ret ? '<span class="dot">'+(x.retiredAt||'')+' 手放した</span>' : BADGE[x.src]);
+  if (wish) sub = (x.plan ? '<span class="badge b-plan" style="margin:0 4px 0 0">買う予定</span>' : '')+'<span>'+(x.price != null ? yen(x.price) : '価格不明')+'</span>'+wBadge(x);
+  else sub = [x.type || '種類未設定', x.brand].map((p, k) => '<span'+(k?' class="dot"':'')+'>'+esc(p)+'</span>').join('') + (ret ? '<span class="dot">'+(x.retiredAt||'')+' 手放した</span>' : wBadge(x));
   const ag = wish ? wishAgainst(x) : null;
   return '<div class="row'+(ret?' muted':'')+(i >= 0 ? ' enter' : '')+'" data-open="'+x.id+'"'+(i >= 0 ? ' style="animation-delay:'+Math.min(i, 10) * 22+'ms"' : '')+'>'+
     '<span class="ic">'+icon(CAT[x.cat].id, 24, ret ? 'var(--mute)' : 'var(--ink)', wish)+'</span>'+
@@ -983,13 +1005,13 @@ function openDetail(id, backLabel){
         '<div class="dhead"><div class="label">'+c.en+' ・ '+c.label+'</div>'+
           '<div class="dname"><h2>'+esc(x.name)+'</h2><button type="button" class="star" data-fav="'+x.id+'" aria-label="お気に入り" style="margin-top:2px">'+icon(x.fav ? 'star_on' : 'star', 24, x.fav ? 'var(--ink)' : 'var(--faint)')+'</button></div>'+
           '<div class="brand">'+esc(x.brand)+'</div>'+
-          '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+(x.src !== 'ok' ? BADGE[x.src].replace('class="badge', 'data-go="weight" class="badge') : '')+'</div>'+
+          '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+(isMeas(x) ? '<span class="badge b-m" data-go="weight">実測</span>' : '<span class="badge b-cat" data-go="weight">'+(x.src === 'ai' ? 'AI推定' : x.src === 'un' ? '未確認' : 'カタログ値')+'</span>')+'</div>'+
           (ag ? '<div class="wishline">今の'+esc(ag.name)+'より '+delta(x.w - ag.w)+(x.price != null ? '　'+yen(x.price) : '')+'</div>' : '')+
           (x.plan ? '<div style="margin-top:6px"><span class="badge b-plan">買う予定</span></div>' : '')+
           '<div class="comm"><span><b class="num">'+community(x).own+'</b> 人が持っている</span><span><b class="num">'+community(x).interest+'</b> 人が気になる</span></div>'+
         '</div>'+
         '<div class="group">'+
-          gr('weight', '重さ・出典', x.src === 'ok' ? '確定' : x.src === 'ai' ? 'AI推定' : '未確認', 'weight')+
+          gr('weight', '重さ・出典', isMeas(x) ? '実測' : x.src === 'ai' ? 'AI推定（未実測）' : x.src === 'un' ? '未確認' : 'カタログ値（未実測）', 'weight')+
           gr('type', '種類・カテゴリ', (x.type || '未設定') + ' ・ ' + c.label, 'type')+
           gr('mountain', '山行で使った', useRate === null ? '記録なし' : x.use[0]+' 回中 '+x.use[1]+' 回', 'usage')+
           (isBag(x) ? gr('temp', '対応温度', x.comfort == null ? '未設定' : tTxt(x.comfort), 'comfort', 'この温度まで快適に眠れる目安') : '')+
@@ -1080,24 +1102,39 @@ async function onDetailClick(e, s, id){
 function openWeight(id, back){
   push(() => {
     const x = byId(id); if (!x) return nav(back, '') + '<div class="scroll"></div>';
-    const [n, u] = fmtW(x.w);
-    const srcTxt = { ai:'AI が型番から推定した値です。メーカーの公表値や、量った値に直せます。', un:'まだ確かめていない値です。', ok:'確定した値です。' }[x.src];
+    const [n, u] = fmtW(x.w), meas = isMeas(x), srcName = SRC_NAME[x.src] || '—';
+    const diff = meas && x.cw ? x.m - x.cw : null;
     return nav(back, '重さ・出典') + '<div class="scroll"><div class="dhead"><div class="label">WEIGHT</div><h2 style="font-family:var(--serif);font-size:22px;margin:4px 0">重さ・出典</h2>'+
-      '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+BADGE[x.src]+'</div>'+
-      '<p class="small" style="line-height:1.8">'+srcTxt+'</p></div>'+
+      '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span>'+(meas ? '<span class="badge b-m">実測</span>' : '<span class="badge b-cat">'+(x.src === 'ai' ? 'AI推定' : x.src === 'un' ? '未確認' : 'カタログ値')+'</span>')+'</div>'+
+      '<p class="small" style="line-height:1.8">'+(meas ? '自分で量った<b>実測</b>を使っています。山行の重さや記録も実測で計算します。'
+        : 'まだ量っていません。アプリが持っている値（'+srcName+'）を使っています。量った重さを入れると、そちらが優先されます。')+'</p></div>'+
       '<div class="group">'+
-        '<div class="gr static"><span class="gt">出典</span><span class="gv">'+(x.src === 'ai' ? 'AI 推定（型番タグ）' : x.src === 'ok' ? '自分で量った' : '不明')+'</span></div>'+
-        '<div class="gr" data-gtag><span class="gt">いつもの数え方<small>山行の重さで、ベース・行動着・消耗品のどれに入れるか</small></span><span class="gv">'+WTAG[defaultTag(x)]+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+        '<div class="gr" data-meas><span class="gi">'+icon('weight', 20)+'</span><span class="gt">実測<small>自分で量った重さ</small></span><span class="gv"'+(meas ? ' style="color:var(--ink);font-weight:700"' : '')+'>'+(meas ? wTxt(x.m) : '未入力')+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
+        '<div class="gr static"><span class="gi">'+icon('note', 20)+'</span><span class="gt">アプリの値<small>'+srcName+'</small></span><span class="gv">'+(x.cw ? wTxt(x.cw) : '不明')+'</span></div>'+
+        (diff !== null ? '<div class="gr static"><span class="gi"></span><span class="gt">差</span><span class="gv">実測は '+(diff >= 0 ? '＋' : '−')+Math.abs(diff)+' g</span></div>' : '')+
+        '<div class="gr" data-gtag><span class="gi">'+icon('type', 20)+'</span><span class="gt">いつもの数え方<small>山行の重さで、ベース・行動着・食料・水のどれに入れるか</small></span><span class="gv">'+WTAG[defaultTag(x)]+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>'+
       '</div>'+
-      '<div class="btnrow">'+(x.src !== 'ok' ? '<button type="button" class="btn primary block" data-confirm>この重さで確定にする</button>' : '')+
-      '<button type="button" class="btn secondary block" data-reweigh>量った重さを入れる</button></div></div>';
+      '<div class="btnrow"><button type="button" class="btn primary block" data-meas>'+icon('weight', 16, 'var(--paper)')+(meas ? '実測を入れ直す' : '量った重さを入れる')+'</button>'+
+      (meas ? '<button type="button" class="btn secondary block" data-unmeas>実測を消す（アプリの値に戻す）</button>' : '')+'</div></div>';
   }).addEventListener('click', e => {
     const x = byId(id);
-    if (e.target.closest('[data-confirm]')) { x.src = 'ok'; refreshAll(); toast('確定にしました'); }
-    if (e.target.closest('[data-reweigh]')) openEdit(id, true);
+    if (e.target.closest('[data-meas]')) return openMeasure(x);
+    if (e.target.closest('[data-unmeas]')) { const old = x.m; x.m = null; normGear(x); refreshAll(); toast('実測を消しました', '元に戻す', () => { x.m = old; normGear(x); refreshAll(); }); return; }
     if (e.target.closest('[data-gtag]')) actionSheet([{ label:'ベース（装備）', value:'base' }, { label:'行動着（歩く時に着る服・靴など）', value:'worn' }, { label:'食料・水（燃料など減っていく物も）', value:'cons' }])
       .then(r => { if (!r) return; x.tag = r; refreshAll(); toast('いつもの数え方を「' + WTAG[r] + '」にしました'); });
   });
+}
+// 量った重さを入れる
+function openMeasure(x){
+  openSheet({ title:'量った重さ', right:'保存',
+    body:'<div style="height:6px"></div><label class="field"><span>'+esc(x.name)+' の実測（g）</span><input id="m-w" inputmode="numeric" value="'+(isMeas(x) ? x.m : '')+'" placeholder="例: '+(x.cw || 300)+'"></label>'+
+      '<p class="hint">スタッフサックなど一緒に持つものも含めるかは、いつも同じにしておくと比べやすいです。'+(x.cw ? 'アプリの値は '+wTxt(x.cw)+'（'+(SRC_NAME[x.src] || '')+'）。' : '')+'</p>',
+    onMount:(sh, close) => {
+      const i = sh.querySelector('#m-w'), b = sh.querySelector('[data-r]');
+      const sync = () => b.disabled = !(parseInt(i.value, 10) > 0); sync(); i.addEventListener('input', sync);
+      setTimeout(() => { i.focus(); i.select(); }, 420);
+      b.onclick = () => { x.m = parseInt(i.value, 10); normGear(x); close(); refreshAll(); toast('実測 ' + wTxt(x.m) + ' を入れました'); };
+    } });
 }
 function openType(id, back){
   push(() => {
@@ -1162,7 +1199,7 @@ function openEdit(id, focusWeight){
     body:'<div style="height:8px"></div>'+
       '<label class="field"><span>名前</span><input id="e-name" value="'+esc(x.name)+'"></label>'+
       '<label class="field"><span>ブランド</span><input id="e-brand" value="'+esc(x.brand)+'"></label>'+
-      '<label class="field"><span>重さ（g）</span><input id="e-w" inputmode="numeric" value="'+x.w+'"></label>'+
+      '<label class="field"><span>実測（g）</span><input id="e-w" inputmode="numeric" value="'+(isMeas(x) ? x.m : '')+'" placeholder="量っていなければ空欄（アプリの値 '+(x.cw ? wTxt(x.cw) : '不明')+'）"></label>'+
       '<p class="hint">種類・カテゴリ・状態は、詳細画面のそれぞれの行から変えられます。</p>',
     onMount:(sh, close) => {
       if (focusWeight) setTimeout(() => { const i = sh.querySelector('#e-w'); i.focus(); i.select(); }, 450);
@@ -1170,7 +1207,7 @@ function openEdit(id, focusWeight){
         const w = parseInt(sh.querySelector('#e-w').value, 10);
         x.name = sh.querySelector('#e-name').value.trim() || x.name;
         x.brand = sh.querySelector('#e-brand').value.trim() || x.brand;
-        if (w > 0 && w !== x.w) { x.w = w; x.src = 'ok'; }
+        x.m = w > 0 ? w : null; normGear(x);
         close(); refreshAll(); toast('保存しました');
       };
     } });
@@ -1187,6 +1224,7 @@ function openNew(){
       '<label class="field"><span>名前</span><input id="n-name" placeholder="例: レインジャケット"></label>'+
       '<label class="field"><span>ブランド</span><input id="n-brand" placeholder="分からなければ空欄で大丈夫"></label>'+
       '<label class="field"><span>重さ（g）</span><input id="n-w" inputmode="numeric" placeholder="分からなければ空欄"></label>'+
+      '<div class="catpick" style="margin-top:-8px"><button type="button" class="chip on" data-wk="m">量った（実測）</button><button type="button" class="chip" data-wk="cat">カタログ・公表値</button></div>'+
       '<div class="field" style="margin-bottom:6px"><span>カテゴリ</span></div><div class="catpick" id="n-cats">'+
       CATS.map(c => '<button type="button" class="chip" data-nc="'+c.id+'">'+c.label+'</button>').join('')+'</div>',
     onMount:(sh, close) => {
@@ -1197,6 +1235,7 @@ function openNew(){
       sh.addEventListener('click', e => {
         const ns = e.target.closest('[data-ns]');
         if (ns) { status = ns.dataset.ns; sh.querySelector('#n-seg .thumb').style.transform = 'translateX(' + (status === 'wish' ? 100 : 0) + '%)'; sh.querySelectorAll('[data-ns]').forEach(b => b.classList.toggle('on', b === ns)); }
+        const wkb = e.target.closest('[data-wk]'); if (wkb) sh.querySelectorAll('[data-wk]').forEach(b2 => b2.classList.toggle('on', b2 === wkb));
         const nc = e.target.closest('[data-nc]');
         if (nc) { pickedCat = nc.dataset.nc; sh.querySelectorAll('[data-nc]').forEach(b => b.classList.toggle('on', b === nc)); sync(); }
         if (e.target.closest('[data-cam]')) openCamera(r => {
@@ -1204,12 +1243,16 @@ function openNew(){
           typeInto(sh.querySelector('#n-name'), r.name); typeInto(sh.querySelector('#n-brand'), r.brand); typeInto(sh.querySelector('#n-w'), String(r.w));
           ['#n-name', '#n-brand', '#n-w'].forEach(s => sh.querySelector(s).parentElement.classList.add('ai'));
           pickedCat = r.cat; sh.querySelectorAll('[data-nc]').forEach(b => b.classList.toggle('on', b.dataset.nc === r.cat));
+          sh.querySelectorAll('[data-wk]').forEach(b2 => b2.classList.toggle('on', b2.dataset.wk === 'cat'));
           setTimeout(sync, 700);
         });
       });
       save.onclick = () => {
         const w = parseInt(sh.querySelector('#n-w').value, 10) || 0;
-        const it = { id:'n' + (seq++), name:name.value.trim(), brand:sh.querySelector('#n-brand').value.trim() || '—', cat:pickedCat, type:null, w, src:aiFilled ? 'ai' : (w ? 'ok' : 'un'), fav:false, status, use:null };
+        const wk = (sh.querySelector('[data-wk].on') || {}).dataset ? sh.querySelector('[data-wk].on').dataset.wk : 'm';
+        const it = { id:'n' + (seq++), name:name.value.trim(), brand:sh.querySelector('#n-brand').value.trim() || '—', cat:pickedCat, type:null,
+          cw:aiFilled || wk === 'cat' ? (w || null) : null, m:!aiFilled && wk === 'm' && w ? w : null, src:aiFilled ? 'ai' : (w && wk === 'cat' ? 'cat' : 'un'), fav:false, status, use:null };
+        normGear(it);
         S.gear.push(it);
         close();
         UI.cat = null; UI.fav = false; UI.q = ''; $('#q').value = '';
@@ -1347,6 +1390,16 @@ const listBase = l => sumBy(l, t => t === 'base');   // ベースウェイト＝
 const listPack = l => sumBy(l, t => t !== 'worn');   // パックウェイト＝ザックに入る全部（消耗品込み）
 const listWorn = l => sumBy(l, t => t === 'worn');   // 行動着
 const listCons = l => sumBy(l, t => t === 'cons');   // 食料・水（消耗品）
+// ベース全体をまとめて量った値（l.baseM）があればそれを使う。ギアの合計と合わないことがあるので差も見せる
+const effBase = l => l.baseM != null ? l.baseM : listBase(l);
+const measCount = l => l.items.filter(([gid]) => isMeas(byId(gid))).length;
+// 山行の重さ。完了した山行は、完了した時の値（実測ベース）を記録として使う
+function tripW(l){
+  if (l.status === 'done' && l.rec) return l.rec;
+  const base = effBase(l), cons = listCons(l);
+  return { base, gearBase:listBase(l), cons, pack:base + cons, worn:listWorn(l), mc:measCount(l), n:l.items.filter(([gid]) => byId(gid)).length, whole:l.baseM != null };
+}
+const wKind = w => w.whole || w.mc === w.n ? '実測' : '一部カタログ値';
 const TODAY = new Date('2026-11-25T00:00:00');
 const dObj = d => new Date(d + 'T00:00:00');
 const daysLeft = d => Math.round((dObj(d) - TODAY) / 864e5);
@@ -1361,7 +1414,7 @@ function dblk(d, muted){
   return '<div class="dblk'+(muted ? ' muted' : '')+'"><span class="m">'+(x.getMonth() + 1)+'月</span><span class="d num">'+x.getDate()+'</span><span class="w">（'+WD[x.getDay()]+'）</span></div>';
 }
 function tripCard(l){
-  const done = l.status === 'done', [n, u] = fmtW(listBase(l));
+  const done = l.status === 'done', [n, u] = fmtW(tripW(l).base);
   const cold = visibleCold(l), coldTag = cold && cold.level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '';
   const sub = done ? (l.unused && l.unused.length ? '使わなかった ' + l.unused.length + ' 点' : '全部使った') + ((l.photos || []).length ? ' ・ 写真 ' + l.photos.length : '') + ' ・ ' + (tripPosts(l).length ? '投稿あり' : '未投稿')
     : daysTxt(l.days) + (l.minTemp != null ? ' ・ 最低 ' + tTxt(l.minTemp) : '') + ' ・ ' + leftTxt(l.date) + coldTag;
@@ -1376,10 +1429,10 @@ function renderLists(){
   const next = plans[0];
   let hero = '';
   if (next) {
-    const [n, u] = fmtW(listBase(next)), pc = packedCount(next), all = next.items.length;
+    const nw = tripW(next), [n, u] = fmtW(nw.base), pc = packedCount(next), all = next.items.length;
     hero = '<div class="hero" data-list="'+next.id+'"><div class="label">NEXT ・ '+leftTxt(next.date)+'</div>'+
       '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+(next.minTemp != null ? ' ・ 想定最低気温 '+tTxt(next.minTemp) : '')+((visibleCold(next) || {}).level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '')+'</div>'+
-      '<div class="hrow"><div><div class="small">ベースウェイト</div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+'</span><div class="small">食料・水 '+wTxt(listCons(next))+'（パックウェイト '+wTxt(listPack(next))+'）・ '+listCount(next)+' 点</div></div>'+
+      '<div class="hrow"><div><div class="small">ベースウェイト</div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+'</span><div class="small">食料・水 '+wTxt(nw.cons)+'（パックウェイト '+wTxt(nw.pack)+'）・ '+listCount(next)+' 点</div></div>'+
       '<div class="hp"><div class="small">パッキング '+pc+' / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div></div></div>';
   }
   p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+'<div class="titleRow"><div><div class="label">山行計画</div><h1 class="title">Trip</h1></div>'+
@@ -1443,7 +1496,8 @@ function openList(lid){
     const byCat = CATS.map(c => ({ c, its:items.filter(([gid]) => byId(gid).cat === c.id) })).filter(v => v.its.length);
     const catW = CATS.map(c => ({ c, w:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id).reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).filter(v => v.w).sort((a, b) => b.w - a.w);
     const pc = packedCount(l), all = l.items.length;
-    const base = listBase(l), [bn, bu] = fmtW(base), pack = listPack(l), [pn, pu] = fmtW(pack), worn = listWorn(l), cons = listCons(l);
+    const tw = tripW(l), base = tw.base, [bn, bu] = fmtW(base), pack = tw.pack, [pn, pu] = fmtW(pack), worn = tw.worn, cons = tw.cons;
+    const bdiff = tw.whole ? tw.base - tw.gearBase : 0;
     const posts = tripPosts(l);
     const rowOf = ([gid, q]) => {
         const x = byId(gid), packed = l.packed.includes(gid), unused = l.unused.includes(gid);
@@ -1470,11 +1524,15 @@ function openList(lid){
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
         '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
         '<div class="temprow"><button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+coldMini(l)+'</div>'+coldBanner(l)+
-        '<div class="wbox"><div class="wline main tap" data-jump="base"><span class="wl">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button></span><span class="wv"><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
+        '<div class="wbox"><div class="wline main tap" data-jump="base"><span class="wl">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button>'+(tw.whole ? '<span class="badge b-m" style="margin-left:0">全体を実測</span>' : '')+'</span><span class="wv"><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
+        '<div class="bmeas" id="l-bdiff">'+(tw.whole
+          ? 'ギアの合計 '+wTxt(tw.gearBase)+' ・ 差 '+(bdiff >= 0 ? '＋' : '−')+wTxt(Math.abs(bdiff))+'（量っていない小物・袋など）'+(done && l.rec ? '' : '<button type="button" class="wlink" data-basem>直す</button>')
+          : (done && l.rec ? '' : '<button type="button" class="wlink" data-basem>'+icon('weight', 14, 'var(--blue)')+'ベース全体を量った値を入れる</button>'))+'</div>'+
         '<div class="wline tap" data-jump="cons"><span class="wl">食料・水</span><span class="wv"><span class="num" id="l-cons" data-v="'+cons+'">'+fmtW(cons)[0]+'</span><span class="u">'+fmtW(cons)[1]+'</span></span></div>'+
         '<div class="wline paren tap" data-jump="cons"><span class="wl">（パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+pack+'">'+pn+'</span><span class="u">'+pu+'</span>）</span></div>'+
         '<div class="wline tap'+(worn ? '' : ' none')+'" id="l-wornline" data-jump="worn"><span class="wl">行動着</span><span class="wv"><span class="num" id="l-worn" data-v="'+worn+'">'+fmtW(worn)[0]+'</span><span class="u">'+fmtW(worn)[1]+'</span></span></div>'+
-        '<div class="small" style="margin-top:4px" id="l-cnt">'+listCount(l)+' 点</div></div></div>'+
+        '<div class="small" style="margin-top:4px" id="l-cnt">'+listCount(l)+' 点 ・ '+(tw.mc === tw.n ? 'すべて実測' : '実測 '+tw.mc+' / '+tw.n+' 種類（残りはカタログ値）')+'</div>'+
+        (done && l.rec ? '<div class="small" style="margin-top:2px">完了した時の重さ（実測ベース）を記録しています</div>' : '')+'</div></div>'+
       '<div class="ghead" style="padding-top:18px"><b>写真</b><span class="label">PHOTOS</span><span class="small" style="margin-left:auto">'+l.photos.length+' 枚</span></div>'+
       '<div class="pstrip"><button type="button" class="ptile add" data-addph style="width:76px;height:76px">'+icon('camera', 22)+'<span>追加</span></button>'+l.photos.map(id => phTile(id, 76)).join('')+'</div>'+
       '<div class="bar" id="l-bar">'+catW.map((v, i) => '<i style="width:'+(tot ? v.w / tot * 100 : 0)+'%;background:'+BAR[Math.min(i, BAR.length - 1)]+'"></i>').join('')+'</div>'+
@@ -1528,6 +1586,7 @@ async function onListClick(e, s, lid, setLeft){
     }
     return;
   }
+  if (e.target.closest('[data-basem]')) return openBaseMeasure(l, () => { s._render(); renderLists(); });
   if (e.target.closest('[data-coldshow]')) { l.coldHidden = null; s._render(); renderLists(); return; }
   if (e.target.closest('[data-colddis]')) {
     const c = coldCheck(l); if (!c) return;
@@ -1540,10 +1599,11 @@ async function onListClick(e, s, lid, setLeft){
     return;
   }
   if (e.target.closest('[data-winfo]')) {
-    const base = listBase(l), pack = listPack(l), worn = listWorn(l), tot = listTotal(l);
+    const tw = tripW(l), base = tw.base, pack = tw.pack, worn = tw.worn, tot = pack + worn;
     const consRows = l.items.filter(([gid]) => byId(gid) && tagIn(l, gid) === 'cons').map(([gid, q]) => '<div class="gr static"><span class="gt">＋ '+esc(byId(gid).name)+'</span><span class="gv">'+wTxt(byId(gid).w * q)+'</span></div>').join('');
     return openSheet({ title:'重さの見方', left:'閉じる', tall:true, body:'<div class="dhead" style="padding-top:2px">'+
       '<p style="font-size:14px;line-height:1.85;margin:0 0 6px"><b>ベースウェイト</b>は、装備そのものの重さ。食料・水のように減っていく<b>消耗品</b>と、歩く時に着る服や靴のような<b>行動着</b>は入れません。山行どうしを比べやすい数字です。</p>'+
+      '<p style="font-size:14px;line-height:1.85;margin:0 0 6px">重さは<b>実測</b>を優先し、量っていないギアはアプリの値（カタログ・公表値など）で計算します。ベース全体をまとめて量った値があれば、ベースウェイトはそちらを使います。</p>'+
       '<p style="font-size:14px;line-height:1.85;margin:0"><b>パックウェイト</b>は、消耗品も入れた、ザックに入るものすべて。出発する時に背負う重さです。</p></div>'+
       '<div class="group"><div class="gr static"><span class="gt"><b>ベースウェイト</b></span><span class="gv num" style="color:var(--ink)">'+wTxt(base)+'</span></div>'+consRows+
       '<div class="gr static"><span class="gt"><b>＝ パックウェイト</b></span><span class="gv num" style="color:var(--ink)">'+wTxt(pack)+'</span></div>'+
@@ -1556,11 +1616,11 @@ async function onListClick(e, s, lid, setLeft){
     const gid = mv.dataset.mv, x = byId(gid), cur = tagIn(l, gid);
     const r = await actionSheet(TGROUPS.filter(g => g[0] !== cur).map(([tg, label]) => ({ label:label + ' へ移動', value:tg })));
     if (!r) { const fg = s.querySelector('[data-row="'+gid+'"] .fg'); if (fg) fg.style.transform = ''; return; }
-    const ob = listBase(l), op = listPack(l), ow = listWorn(l), oc = listCons(l), before = (l.wtag || {})[gid];
+    const ob = effBase(l), op = effBase(l) + listCons(l), ow = listWorn(l), oc = listCons(l), before = (l.wtag || {})[gid];
     const setTag = t => { l.wtag = l.wtag || {}; if (t === undefined || t === defaultTag(x)) delete l.wtag[gid]; else l.wtag[gid] = t; };
     setTag(r);
     s._render(); renderLists();
-    [['#l-base', ob, listBase(l)], ['#l-cons', oc, listCons(l)], ['#l-tot', op, listPack(l)], ['#l-worn', ow, listWorn(l)]].forEach(([q, o, n]) => { const el2 = s.querySelector(q); if (el2) { el2.dataset.v = o; countTo(el2, n); } });
+    [['#l-base', ob, effBase(l)], ['#l-cons', oc, listCons(l)], ['#l-tot', op, effBase(l) + listCons(l)], ['#l-worn', ow, listWorn(l)]].forEach(([q, o, n]) => { const el2 = s.querySelector(q); if (el2) { el2.dataset.v = o; countTo(el2, n); } });
     const row = s.querySelector('[data-row="'+gid+'"] .fg'); if (row) { row.classList.add('flash'); row.scrollIntoView({ block:'center', behavior:'smooth' }); }
     toast('「' + x.name + '」を' + WTAG[r] + 'へ移動しました', '元に戻す', () => { setTag(before === undefined ? cur : before); s._render(); renderLists(); });
     return;
@@ -1618,6 +1678,22 @@ function copyTrip(l){
   setTimeout(() => { openList(n.id); toast('持ち物をコピーして計画を作りました'); }, 200);
 }
 /* 山行を完了 → 使わなかったギアに印 → 投稿へ */
+// ベース全体をまとめて量った値（kg）
+function openBaseMeasure(l, after){
+  const gb = listBase(l);
+  openSheet({ title:'ベース全体の実測', right:'保存',
+    body:'<div style="height:6px"></div><label class="field"><span>ザックに詰めて量った重さ（kg）。食料・水と行動着は入れずに</span><input id="b-w" inputmode="decimal" value="'+(l.baseM != null ? (l.baseM / 1000).toFixed(2) : '')+'" placeholder="例: '+(gb / 1000).toFixed(2)+'"></label>'+
+      '<p class="hint">ギア1つずつの合計は '+wTxt(gb)+'。まとめて量った値を入れると、ベースウェイトはこちらを使い、合計との差も出します。</p>'+
+      (l.baseM != null ? '<div class="btnrow"><button type="button" class="btn secondary block" data-bclear>消す（ギアの合計に戻す）</button></div>' : ''),
+    onMount:(sh, close) => {
+      const i = sh.querySelector('#b-w'), b = sh.querySelector('[data-r]');
+      const val = () => Math.round(parseFloat(i.value.replace(',', '.')) * 1000);
+      const sync = () => b.disabled = !(val() > 0); sync(); i.addEventListener('input', sync);
+      setTimeout(() => { i.focus(); i.select(); }, 420);
+      b.onclick = () => { l.baseM = val(); close(); after(); toast('ベース全体の実測 ' + wTxt(l.baseM) + ' を入れました'); };
+      const c = sh.querySelector('[data-bclear]'); if (c) c.onclick = () => { l.baseM = null; close(); after(); toast('ギアの合計に戻しました'); };
+    } });
+}
 function openFinish(s, l){
   const unused = new Set();
   openSheet({ title:'山行を完了', right:'完了', tall:true,
@@ -1633,6 +1709,7 @@ function openFinish(s, l){
         r.querySelector('[data-lbl]').textContent = on ? '使わなかった' : '使った';
       });
       sh.querySelector('[data-r]').onclick = async () => {
+        l.rec = tripW(l);   // 完了した時の重さを記録（実測を優先、無いギアはカタログ値）
         l.status = 'done'; if (daysLeft(l.date) > 0) l.date = '2026-11-25';
         l.unused = [...unused]; l.packed = [];
         l.items.forEach(([gid]) => { const x = byId(gid); if (!x) return; x.use = x.use || [0, 0]; x.use[0]++; if (!unused.has(gid)) x.use[1]++; });
@@ -1644,12 +1721,14 @@ function openFinish(s, l){
 }
 function updateListHead(s, l){
   const tot = listTotal(l);
-  countTo(s.querySelector('#l-tot'), listPack(l));
-  countTo(s.querySelector('#l-base'), listBase(l));
+  const tw = tripW(l);
+  countTo(s.querySelector('#l-tot'), tw.pack);
+  countTo(s.querySelector('#l-base'), tw.base);
+  const bd = s.querySelector('#l-bdiff'); if (bd && tw.whole) { const d = tw.base - tw.gearBase; bd.firstChild.textContent = 'ギアの合計 '+wTxt(tw.gearBase)+' ・ 差 '+(d >= 0 ? '＋' : '−')+wTxt(Math.abs(d))+'（量っていない小物・袋など）'; }
   countTo(s.querySelector('#l-worn'), listWorn(l));
   countTo(s.querySelector('#l-cons'), listCons(l));
   const wl = s.querySelector('#l-wornline'); if (wl) wl.classList.toggle('none', !listWorn(l));
-  s.querySelector('#l-cnt').textContent = listCount(l) + ' 点';
+  s.querySelector('#l-cnt').textContent = listCount(l) + ' 点 ・ ' + (tw.mc === tw.n ? 'すべて実測' : '実測 '+tw.mc+' / '+tw.n+' 種類（残りはカタログ値）');
   const catW = CATS.map(c => ({ c, w:l.items.filter(([gid]) => byId(gid) && byId(gid).cat === c.id).reduce((a, [gid, q]) => a + byId(gid).w * q, 0) })).filter(v => v.w).sort((a, b) => b.w - a.w);
   const bars = s.querySelectorAll('#l-bar i');
   if (bars.length === catW.length) catW.forEach((v, i) => bars[i].style.width = (v.w / tot * 100) + '%');
@@ -1768,7 +1847,7 @@ function postHtml(po, full){
   return '<article class="post" data-post-id="'+po.id+'"'+(full ? '' : ' data-openpost="'+po.id+'"')+'>'+
     '<div class="ph">'+avatar(po.author, 40)+'<div class="pu"><b data-user="'+po.author+'">'+esc(u.name)+'</b><span class="small">@'+u.handle+' ・ '+shortDate(po.date)+'</span></div></div>'+
     '<div class="pt">'+esc(po.list)+'</div>'+photo+
-    '<p>'+esc(po.text)+'</p><div class="pfoot"><div class="pf"><span>背負った重さ '+wTxt(po.w)+'</span><span>ギア '+gearCount(po)+' 点</span>'+(po.unused ? '<span>使わなかった '+po.unused+' 点</span>' : '')+'</div>'+likeBtn(po)+'</div></article>';
+    '<p>'+esc(po.text)+'</p><div class="pfoot"><div class="pf"><span>背負った重さ '+wTxt(po.w)+(po.wKind ? '（'+po.wKind+'）' : '')+'</span><span>ギア '+gearCount(po)+' 点</span>'+(po.unused ? '<span>使わなかった '+po.unused+' 点</span>' : '')+'</div>'+likeBtn(po)+'</div></article>';
 }
 function toggleLike(id){
   const po = postById(id); po.liked = !po.liked; po.likes += po.liked ? 1 : -1;
@@ -1931,7 +2010,7 @@ function openPost(pre, after){
       });
       b.onclick = () => {
         const l = listById(pick);
-        const po = { id:'P' + (seq++), author:'me', trip:l ? l.id : null, list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), photos:photos.slice(), ptags:Object.fromEntries(Object.entries(ptags).filter(([k, v]) => photos.includes(k) && v.length)), w:l ? listTotal(l) : 0, unused:l ? (l.unused || []).length : 0, likes:0, liked:false, gear:l ? l.items.map(i => i[0]) : [] };
+        const po = { id:'P' + (seq++), author:'me', trip:l ? l.id : null, list:l ? l.name : '山行', date:'2026-11-25', text:ta.value.trim(), wKind:l ? wKind(tripW(l)) : null, photos:photos.slice(), ptags:Object.fromEntries(Object.entries(ptags).filter(([k, v]) => photos.includes(k) && v.length)), w:l ? tripW(l).pack : 0, unused:l ? (l.unused || []).length : 0, likes:0, liked:false, gear:l ? l.items.map(i => i[0]) : [] };
         S.posts.unshift(po); close(); refreshAll();
         setTimeout(() => { const a = document.querySelector('#posts [data-post-id="'+po.id+'"]'); if (a) { a.scrollIntoView({ block:'center', behavior:'smooth' }); a.classList.add('flash'); } toast('投稿しました'); if (after) after(); }, 380);
       };
@@ -1960,7 +2039,7 @@ function openSettings(){
   s.addEventListener('click', e => {
     const st = e.target.closest('[data-set]'); if (st) return setIconSet(st.dataset.set);
     if (e.target.closest('[data-reset]')) return dialog('最初に戻しますか？', '試作の中で変えた内容がすべて元に戻ります。', [{ label:'キャンセル', value:false }, { label:'戻す', value:true, danger:true }])
-      .then(ok => { if (ok) { S = JSON.parse(JSON.stringify(SEED)); refreshAll(); toast('最初に戻しました'); } });
+      .then(ok => { if (ok) { S = JSON.parse(JSON.stringify(SEED)); normAll(); refreshAll(); toast('最初に戻しました'); } });
     const r = e.target.closest('[data-s]'); if (!r) return;
     if (r.dataset.s === 'cats') push(() => nav('設定', 'カテゴリ') + '<div class="scroll"><div class="ghead"><b>カテゴリ</b><span class="label">CATEGORIES</span></div><p class="hint">並びと名前を変えられます（この試作では表示のみ）。</p><div class="group">'+
       CATS.map(c => '<div class="gr static"><span class="gi">'+icon(c.id, 22)+'</span><span class="gt">'+c.label+'<small>'+c.en+'</small></span><span class="gv">'+S.gear.filter(x => x.cat === c.id && x.status === 'owned').length+' 点</span></div>').join('')+'</div><div style="height:40px"></div></div>');
