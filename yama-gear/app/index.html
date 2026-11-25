@@ -444,6 +444,11 @@ input{font:inherit;color:inherit}
 .bmeas{font-size:12px;color:var(--mute);padding:0 0 6px;display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
 .wlink{display:inline-flex;align-items:center;gap:4px;color:var(--blue);font-size:12.5px;font-weight:700;padding:2px 0}
 .wlink:active{opacity:.5}
+.bmeas:empty{display:none}
+.wl.tapl{cursor:pointer;margin:-4px -8px;padding:4px 8px;transition:background .12s}
+.wl.tapl:active{background:var(--press)}
+.wv.tapv{cursor:pointer;margin:-4px -8px;padding:4px 8px;transition:background .12s}
+.wv.tapv:active{background:var(--press)}
 
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
@@ -1524,10 +1529,10 @@ function openList(lid){
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
         '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
         '<div class="temprow"><button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+coldMini(l)+'</div>'+coldBanner(l)+
-        '<div class="wbox"><div class="wline main tap" data-jump="base"><span class="wl">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button>'+(tw.whole ? '<span class="badge b-m" style="margin-left:0">全体を実測</span>' : '')+'</span><span class="wv"><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
+        '<div class="wbox"><div class="wline main"><span class="wl tapl" data-jump="base">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button>'+(tw.whole ? '<span class="badge b-m" style="margin-left:0">全体を実測</span>' : '')+'</span><span class="wv'+(done && l.rec ? '' : ' tapv')+'"'+(done && l.rec ? '' : ' data-basem aria-label="ベース全体の実測を入れる"')+'><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
         '<div class="bmeas" id="l-bdiff">'+(tw.whole
-          ? 'ギアの合計 '+wTxt(tw.gearBase)+' ・ 差 '+(bdiff >= 0 ? '＋' : '−')+wTxt(Math.abs(bdiff))+'（量っていない小物・袋など）'+(done && l.rec ? '' : '<button type="button" class="wlink" data-basem>直す</button>')
-          : (done && l.rec ? '' : '<button type="button" class="wlink" data-basem>'+icon('weight', 14, 'var(--blue)')+'ベース全体を量った値を入れる</button>'))+'</div>'+
+          ? 'ギアの合計 '+wTxt(tw.gearBase)+' ・ 差 '+(bdiff >= 0 ? '＋' : '−')+wTxt(Math.abs(bdiff))+'（量っていない小物・袋など）'
+          : '')+'</div>'+
         '<div class="wline tap" data-jump="cons"><span class="wl">食料・水</span><span class="wv"><span class="num" id="l-cons" data-v="'+cons+'">'+fmtW(cons)[0]+'</span><span class="u">'+fmtW(cons)[1]+'</span></span></div>'+
         '<div class="wline paren tap" data-jump="cons"><span class="wl">（パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+pack+'">'+pn+'</span><span class="u">'+pu+'</span>）</span></div>'+
         '<div class="wline tap'+(worn ? '' : ' none')+'" id="l-wornline" data-jump="worn"><span class="wl">行動着</span><span class="wv"><span class="num" id="l-worn" data-v="'+worn+'">'+fmtW(worn)[0]+'</span><span class="u">'+fmtW(worn)[1]+'</span></span></div>'+
