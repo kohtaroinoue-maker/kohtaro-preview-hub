@@ -488,6 +488,26 @@ input{font:inherit;color:inherit}
 .snowbtn.on{background:var(--ink);border-color:var(--ink);color:var(--paper);font-weight:700}
 .tstep .snowbtn{margin:0 0 0 auto}
 
+/* ギアの写真（スライド）・口コミ */
+.gcount{position:absolute;right:56px;top:12px;font-size:11.5px;color:#fff;background:rgba(20,20,20,.45);padding:1px 8px;border-radius:10px;font-variant-numeric:tabular-nums}
+.gadd{position:absolute;right:10px;top:6px;width:36px;height:36px;border-radius:50%;background:rgba(250,250,246,.92);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.gadd:active{transform:scale(.92)}
+.empty-car .gadd{top:10px}
+.rvavg{margin-left:auto;display:flex;align-items:center;gap:2px}
+.rvavg b{font-size:16px;margin-left:4px}
+.rv{margin:0 20px;padding:12px 0;border-top:1px solid var(--hair)}
+.rv-h{display:flex;align-items:center;gap:8px}
+.rv-h b{font-size:14px;cursor:pointer}
+.rv-s{display:flex;gap:1px}
+.rv-h .small{margin-left:auto;font-size:11.5px}
+.rv p{margin:6px 0 4px;font-size:14px;line-height:1.75}
+.rv-f{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.helpful{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--mute);border:1px solid var(--line);padding:3px 8px;transition:background .15s}
+.helpful.on{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.rv-btns{display:flex;gap:10px;padding:12px 20px 4px}
+.rv-btns .btn{flex:1;min-height:40px;font-size:14px}
+.rv-btns:empty{display:none}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -706,7 +726,7 @@ const SEED = {
     g('g10','レインジャケット','rain','レインウェア上',290,'ok',{use:[6,6]}),
     g('g11','レインパンツ','rain','レインウェア下',220,'un'),
     g('g12','トレッキングシューズ','footwear','登山靴',1240,'ok',{use:[6,6]}),
-    g('g13','ヘッドランプ 400','light','ヘッドランプ',75,'ai',{use:[6,6]}),
+    g('g13','ヘッドランプ 400','light','ヘッドランプ',75,'ai',{use:[6,6],photos:['ph20','ph21']}),
     g('g14','ファーストエイドキット','safety','救急セット',180,'ok',{use:[6,6]}),
     g('g15','モバイルバッテリー 10000','electronics','バッテリー',190,'ok'),
     g('g16','行動食セット 1日分','food','行動食',450,'ok'),
@@ -1048,7 +1068,7 @@ function openDetail(id, backLabel){
     const ag = x.status === 'wish' ? wishAgainst(x) : null;
     const useRate = x.use ? Math.round(x.use[1] / x.use[0] * 100) : null;
     return nav(backLabel, x.name, '<button type="button" class="iconbtn" data-more aria-label="その他">'+icon('more', 24)+'</button>') +
-      '<div class="scroll">'+gearPhotos(x)+
+      '<div class="scroll">'+gearPhotos(x, true)+
         '<div class="dhead"><div class="label">'+c.en+' ・ '+c.label+'</div>'+
           '<div class="dname"><h2>'+esc(x.name)+'</h2><button type="button" class="star" data-fav="'+x.id+'" aria-label="お気に入り" style="margin-top:2px">'+icon(x.fav ? 'star_on' : 'star', 24, x.fav ? 'var(--ink)' : 'var(--faint)')+'</button></div>'+
           '<div class="brand">'+esc(x.brand)+'</div>'+
@@ -1066,14 +1086,11 @@ function openDetail(id, backLabel){
         '</div>'+
         (x.status === 'owned' ? '<div class="group">'+gr('ai', '別の選択肢を探す', '', 'alt')+'</div>' : '')+
         '<div class="btnrow"><button type="button" class="btn secondary block" data-edit>編集</button></div>'+
+        reviewBlock(x, x.status !== 'wish')+
         gearPosts(x)+
       '</div>';
   }, backLabel);
-  s._after = sc => {
-    const tr = sc.querySelector('.gtrack'); if (!tr) return;
-    const dots = sc.querySelectorAll('.gdots i');
-    tr.addEventListener('scroll', () => { const i = Math.round(tr.scrollLeft / tr.clientWidth); dots.forEach((d, k) => d.classList.toggle('on', k === i)); }, { passive:true });
-  };
+  s._after = bindSlides;
   s._after(s);
   s.addEventListener('click', e => onDetailClick(e, s, id));
 }
@@ -1087,16 +1104,95 @@ function taggedPosts(x){
 }
 // みんなの数（試作では名前から作った架空の数）
 function community(x){ let h = 0; for (const c of x.name) h = (h * 31 + c.charCodeAt(0)) % 997; return { own:12 + h % 180, interest:4 + h % 57 }; }
-function gearPhotos(x){
-  const tagged = taggedPosts(x), r = REP_PHOTO[x.name];
-  let pick = null, curated = false;
-  if (r && postById(r[0]) && postById(r[0]).photos.includes(r[1])) { pick = { po:postById(r[0]), ph:r[1] }; curated = true; }
-  else if (tagged.length) pick = tagged.slice().sort((a, b) => b.po.date.localeCompare(a.po.date))[0];
-  if (!pick) return '<div class="gcar empty-car"><div class="gslide" style="background:var(--hair)">'+icon('image', 40, 'var(--faint)')+'<span class="gnone">まだ写真がありません。投稿の写真にこのギアをタグ付けすると、ここに並びます。</span></div></div>';
-  const u = S.users[pick.po.author];
-  return '<div class="gcar"><div class="gslide" data-openpost="'+pick.po.id+'" style="background:'+phTint(pick.ph)+'">'+icon('image', 48, '#7C93BC')+
-    '<span class="gcap"><span class="gcap-t">'+esc(u.name)+' ・ '+esc(pick.po.list)+'</span>'+likeBtn(pick.po, true)+'</span></div>'+
-    '<span class="gtag">'+(curated ? '代表写真（運営が選んだもの）' : '新しい投稿から')+'</span></div>';
+// ギアの写真: 自分の写真 → 運営の代表写真 → タグ付き投稿の写真（新しい順）。最大 8 枚をスライドで
+function gearSlides(x){
+  const out = [], seen = new Set();
+  (x.photos || []).forEach(ph => { out.push({ ph, kind:'own' }); seen.add(ph); });
+  const r = REP_PHOTO[x.name];
+  if (r && postById(r[0]) && postById(r[0]).photos.includes(r[1]) && !seen.has(r[1])) { out.push({ ph:r[1], kind:'rep', po:postById(r[0]) }); seen.add(r[1]); }
+  taggedPosts(x).sort((a2, b2) => b2.po.date.localeCompare(a2.po.date)).forEach(({ po, ph }) => { if (!seen.has(ph)) { out.push({ ph, kind:'post', po }); seen.add(ph); } });
+  return out.slice(0, 8);
+}
+function gearPhotos(x, canAdd){
+  const sl = gearSlides(x);
+  const add = canAdd ? '<button type="button" class="gadd" data-gph aria-label="写真を追加">'+icon('camera', 18, 'var(--ink)')+'</button>' : '';
+  if (!sl.length) return '<div class="gcar empty-car"><div class="gslide" style="background:var(--hair)">'+icon('image', 40, 'var(--faint)')+'</div>'+add+'</div>';
+  return '<div class="gcar"><div class="gtrack">'+sl.map((o, i) => {
+      const tag = o.kind === 'own' ? '自分' : o.kind === 'rep' ? '代表' : esc(S.users[o.po.author].name);
+      return '<div class="gslide" data-gslide="'+i+'" style="background:'+phTint(o.ph)+'">'+icon('image', 48, '#7C93BC')+'<span class="gtag">'+tag+'</span>'+
+        (o.po ? '<span class="gcap"><span class="gcap-t">'+esc(o.po.list)+'</span>'+likeBtn(o.po, true)+'</span>' : '')+'</div>';
+    }).join('')+'</div>'+
+    (sl.length > 1 ? '<span class="gcount">1 / '+sl.length+'</span><div class="gdots">'+sl.map((_, i) => '<i class="'+(i ? '' : 'on')+'"></i>').join('')+'</div>' : '')+add+'</div>';
+}
+// スライドの位置（点と「1 / 5」）
+function bindSlides(sc){
+  const tr = sc.querySelector('.gtrack'); if (!tr) return;
+  const dots = sc.querySelectorAll('.gdots i'), ct = sc.querySelector('.gcount'), n = dots.length;
+  tr.addEventListener('scroll', () => { const i = Math.round(tr.scrollLeft / tr.clientWidth); dots.forEach((d, k) => d.classList.toggle('on', k === i)); if (ct) ct.textContent = (i + 1) + ' / ' + n; }, { passive:true });
+}
+// スライドを押したら大きく見る。自分の写真だけ削除できる
+function slideViewer(x, i, after){
+  const sl = gearSlides(x), ids = sl.map(o => o.ph);
+  openViewer(ids, i, id => {
+    if (!(x.photos || []).includes(id)) return toast('自分の写真だけ削除できます');
+    const k = x.photos.indexOf(id); x.photos.splice(k, 1); after();
+    toast('削除しました', '元に戻す', () => { x.photos.splice(k, 0, id); after(); });
+  });
+}
+async function addGearPhoto(x, s){
+  const r = await actionSheet([{ label:'写真を撮る', value:1 }, { label:'ライブラリから選ぶ（2 枚）', value:2 }]);
+  if (!r) return;
+  x.photos = x.photos || [];
+  const add = Array.from({ length:r }, newPhoto); x.photos.unshift(...add);
+  s._render();
+  toast(r + ' 枚追加しました');
+}
+
+/* ---------- 口コミ ---------- */
+const reviewsOf = name => S.reviews.filter(r => r.gear === name);
+const starsHtml = (n, size) => [1, 2, 3, 4, 5].map(k => icon(k <= Math.round(n) ? 'star_on' : 'star', size || 13, k <= Math.round(n) ? '#E8A317' : 'var(--line)')).join('');
+function reviewCard(r){
+  const u = S.users[r.user];
+  return '<div class="rv"><div class="rv-h">'+avatar(r.user, 26)+'<b data-user="'+r.user+'">'+esc(u.name)+'</b><span class="rv-s">'+starsHtml(r.stars)+'</span><span class="small">'+shortDate(r.date)+'</span></div>'+
+    '<p>'+esc(r.text)+'</p><div class="rv-f"><span class="small">'+(r.trips ? r.trips + ' 回の山行で使用' : '')+'</span>'+
+    '<button type="button" class="helpful'+(r.helped ? ' on' : '')+'" data-help="'+r.id+'">'+icon('check', 13, r.helped ? 'var(--paper)' : 'var(--mute)')+'参考になった '+r.helpful+'</button></div></div>';
+}
+function reviewBlock(x, canWrite){
+  const rs = reviewsOf(x.name).sort((a, b) => b.helpful - a.helpful);
+  const avg = rs.length ? rs.reduce((a, r) => a + r.stars, 0) / rs.length : 0;
+  const mineDone = rs.some(r => r.user === 'me');
+  return '<div class="ghead" style="border-top:2px solid var(--ink);padding-top:18px"><b>口コミ</b><span class="label">REVIEWS</span>'+
+      (rs.length ? '<span class="rvavg">'+starsHtml(avg, 14)+'<b class="num">'+avg.toFixed(1)+'</b><span class="small">（'+rs.length+'）</span></span>' : '')+'</div>'+
+    (rs.length ? rs.slice(0, 2).map(reviewCard).join('') : '<div class="empty" style="padding-top:4px">まだありません</div>')+
+    '<div class="rv-btns">'+(rs.length > 2 ? '<button type="button" class="btn secondary" data-rvall>すべて（'+rs.length+'）</button>' : '')+
+      (canWrite && !mineDone ? '<button type="button" class="btn primary" data-rvwrite>'+icon('pen', 15, 'var(--paper)')+'書く</button>' : '')+'</div>';
+}
+function openReviews(x, back){
+  push(() => nav(back, '口コミ') + '<div class="scroll"><div class="dhead"><div class="label">REVIEWS</div><h2 style="font-family:var(--serif);font-weight:900;font-size:22px;margin:4px 0 0">'+esc(x.name)+'</h2></div>'+
+    reviewsOf(x.name).sort((a, b) => b.helpful - a.helpful).map(reviewCard).join('')+'<div style="height:40px"></div></div>')
+    .addEventListener('click', e => { if (reviewClick(e)) return; postClick(e, '口コミ'); });
+}
+function reviewClick(e){
+  const h = e.target.closest('[data-help]');
+  if (h) { const r = S.reviews.find(v => v.id === h.dataset.help); r.helped = !r.helped; r.helpful += r.helped ? 1 : -1; refreshAll(); return true; }
+  return false;
+}
+function openWriteReview(x){
+  let stars = 0;
+  openSheet({ title:'口コミ', right:'投稿',
+    body:'<div class="rstars">'+[1, 2, 3, 4, 5].map(n => '<button type="button" data-rs="'+n+'" aria-label="星 '+n+'">'+icon('star', 36, 'var(--faint)')+'</button>').join('')+'</div>'+
+      '<label class="field"><textarea id="rv-text" rows="5" placeholder="使ってみてどうだった？"></textarea></label>'+
+      (x.use ? '<p class="hint">'+x.use[1]+' 回の山行で使用</p>' : ''),
+    onMount:(sh, close) => {
+      const ta = sh.querySelector('#rv-text'), b = sh.querySelector('[data-r]');
+      const sync = () => b.disabled = !stars || !ta.value.trim(); sync(); ta.addEventListener('input', sync);
+      sh.addEventListener('click', e => {
+        const st = e.target.closest('[data-rs]'); if (!st) return;
+        stars = +st.dataset.rs; sync();
+        sh.querySelectorAll('[data-rs]').forEach((y, i) => { y.innerHTML = icon(i < stars ? 'star_on' : 'star', 36, i < stars ? '#E8A317' : 'var(--faint)'); if (i === stars - 1) { y.classList.remove('pop'); void y.offsetWidth; y.classList.add('pop'); } });
+      });
+      b.onclick = () => { S.reviews.push({ id:'R' + (seq++), gear:x.name, user:'me', stars, text:ta.value.trim(), date:'2026-11-25', trips:x.use ? x.use[1] : 0, helpful:0 }); close(); refreshAll(); toast('投稿しました'); };
+    } });
 }
 function gearPosts(x){
   const ps = taggedPosts(x).sort((a, b) => b.po.likes - a.po.likes);
@@ -1111,7 +1207,12 @@ function gr(ic, title, val, go, sub){
 async function onDetailClick(e, s, id){
   const x = byId(id); if (!x) return;
   const f = e.target.closest('[data-fav]'); if (f) return toggleFav(id);
+  if (reviewClick(e)) return;
   if (postClick(e, x.name.length > 8 ? '戻る' : x.name)) return;
+  if (e.target.closest('[data-gph]')) return addGearPhoto(x, s);
+  const gs = e.target.closest('[data-gslide]'); if (gs) return slideViewer(x, +gs.dataset.gslide, () => s._render());
+  if (e.target.closest('[data-rvall]')) return openReviews(x, x.name.length > 8 ? '戻る' : x.name);
+  if (e.target.closest('[data-rvwrite]')) return openWriteReview(x);
   const go = e.target.closest('[data-go]');
   if (go) {
     const t = go.dataset.go, name = x.name.length > 8 ? '戻る' : x.name;
@@ -1992,6 +2093,17 @@ SEED.posts = [
 ];
 S.users = JSON.parse(JSON.stringify(SEED.users));
 S.posts = JSON.parse(JSON.stringify(SEED.posts));
+SEED.reviews = [
+  { id:'R1', gear:'ヘッドランプ 400', user:'sora', stars:5, text:'軽いのに明るい。電池の持ちも十分で、テント場で困らなかった。', date:'2026-11-02', trips:8, helpful:12 },
+  { id:'R2', gear:'ヘッドランプ 400', user:'haru', stars:4, text:'ボタンが少し固い。手袋だと押しにくい。', date:'2026-10-21', trips:3, helpful:5 },
+  { id:'R3', gear:'ヘッドランプ 400', user:'koke', stars:4, text:'赤色の明かりがあるのが地味に便利。小屋で周りを起こさない。', date:'2026-09-30', trips:5, helpful:3 },
+  { id:'R4', gear:'40L ザック', user:'koke', stars:4, text:'背面の通気が良くて夏も快適。雨蓋の収納は少なめ。', date:'2026-10-05', trips:10, helpful:7 },
+  { id:'R5', gear:'40L ザック', user:'sora', stars:3, text:'軽さを追うなら少し重い。でも背負い心地は抜群。', date:'2026-08-14', trips:4, helpful:9 },
+  { id:'R6', gear:'ダウン寝袋 0℃', user:'haru', stars:5, text:'0℃ 表記だけど 2℃ くらいが快適の目安。ダウンジャケットを足せば −3℃ でも眠れた。', date:'2026-11-10', trips:6, helpful:15 },
+  { id:'R7', gear:'ソフトボトル 1L', user:'koke', stars:5, text:'飲み終わったら丸めて小さくなる。', date:'2026-07-19', trips:12, helpful:4 },
+  { id:'R8', gear:'チタンクッカー 750', user:'sora', stars:4, text:'ガス缶とバーナーがぴったり収まる。', date:'2026-06-02', trips:9, helpful:6 }
+];
+S.reviews = JSON.parse(JSON.stringify(SEED.reviews));
 const postById = id => S.posts.find(p => p.id === id);
 const gearCount = po => (po.gear || po.items || []).length;
 const shortDate = d => { const [y, m, dd] = d.split('-'); return (y === '2026' ? '' : y + '/') + Number(m) + '/' + Number(dd); };
@@ -2089,10 +2201,14 @@ function openGearPage(name, cat, w, back){
         '<div class="comm"><span><b class="num">'+cm.own+'</b> 人が持っている</span><span><b class="num">'+cm.interest+'</b> 人が気になる</span></div></div>'+
       '<div class="btnrow" style="padding-bottom:20px">'+(had ? '<button type="button" class="btn secondary block" data-mine>'+icon('check', 16)+'気になるギアに入っています</button>'
         : '<button type="button" class="btn primary block" data-interest>'+icon('plus', 16, 'var(--paper)')+'気になるに追加</button>')+'</div>'+
-      gearPosts(x)+'</div>';
+      reviewBlock(x, false)+gearPosts(x)+'</div>';
   });
+  s._after = bindSlides; s._after(s);
   s.addEventListener('click', e => {
+    if (reviewClick(e)) return;
     if (postClick(e, name.length > 8 ? '戻る' : name)) return;
+    const gs = e.target.closest('[data-gslide]'); if (gs) return slideViewer({ name, photos:[] }, +gs.dataset.gslide, () => {});
+    if (e.target.closest('[data-rvall]')) return openReviews({ name }, name.length > 8 ? '戻る' : name);
     if (e.target.closest('[data-interest]')) return addInterest(name, cat, w);
     if (e.target.closest('[data-mine]')) { const g = S.gear.find(x => x.name === name); if (g) openDetail(g.id, '戻る'); }
   });
