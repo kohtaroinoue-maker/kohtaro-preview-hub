@@ -395,6 +395,17 @@ input{font:inherit;color:inherit}
 .tstep button{width:36px;height:36px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
 .tstep .num{font-size:20px;min-width:64px;text-align:center}
 
+/* 寒さの知らせ */
+.cold{display:flex;align-items:flex-start;gap:10px;margin-top:12px;padding:12px;border:1px solid var(--line);animation:rin .3s var(--ease) both}
+.cold.warn{border-color:var(--warn);background:#FBF1EC}
+.cold.ok{border-color:#C9D8EF;background:#F3F7FC}
+.cold .cm{flex:1;min-width:0}
+.cold .cm b{font-size:14px}
+.cold.warn .cm b{color:var(--warn)}
+.cold .cm p{margin:2px 0 0;font-size:12.5px;line-height:1.7;color:var(--mute)}
+.cold .mini{align-self:center}
+.coldtag{display:inline-block;margin-left:6px;font-size:10.5px;padding:0 6px;border:1px solid var(--warn);color:var(--warn);line-height:1.6}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -602,7 +613,7 @@ const SEED = {
   gear: [
     g('g1','シングルウォールテント 2P','tent','テント',980,'ai',{fav:true,use:[6,5],price:52000}),
     g('g2','ツェルト','tent','ツェルト',280,'ok',{use:[6,2]}),
-    g('g3','ダウン寝袋 0℃','sleep','寝袋',620,'ok',{fav:true,use:[6,5]}),
+    g('g3','ダウン寝袋 0℃','sleep','寝袋',620,'ok',{fav:true,use:[6,5],comfort:0}),
     g('g4','エアマット レギュラー','sleep',null,340,'un',{use:[6,5]}),
     g('g5','40L ザック','backpack','ザック',1150,'ok',{use:[6,6]}),
     g('g6','スタッフサック 3点','backpack','スタッフサック',60,'ok'),
@@ -950,6 +961,7 @@ function openDetail(id, backLabel){
           gr('weight', '重さ・出典', x.src === 'ok' ? '確定' : x.src === 'ai' ? 'AI推定' : '未確認', 'weight')+
           gr('type', '種類・カテゴリ', (x.type || '未設定') + ' ・ ' + c.label, 'type')+
           gr('mountain', '山行で使った', useRate === null ? '記録なし' : x.use[0]+' 回中 '+x.use[1]+' 回', 'usage')+
+          (isBag(x) ? gr('temp', '対応温度', x.comfort == null ? '未設定' : tTxt(x.comfort), 'comfort', 'この温度まで快適に眠れる目安') : '')+
           gr('note', 'スペック・メモ', '', 'specs')+
         '</div>'+
         (x.status === 'owned' ? '<div class="group">'+gr('ai', '別の選択肢を探す', '', 'alt', 'AI が同じ種類のギアを探します')+'</div>' : '')+
@@ -1007,6 +1019,7 @@ async function onDetailClick(e, s, id){
     if (t === 'type') return openType(id, name);
     if (t === 'usage') return openUsage(id, name);
     if (t === 'specs') return openSpecs(id, name);
+    if (t === 'comfort') return openTempSheet(x, () => refreshAll(), { key:'comfort', title:'対応温度', hint:'寝袋のタグや説明書の「快適温度（コンフォート）」を入れてください。山行の想定最低気温と比べて知らせます。' });
     if (t === 'alt') return openAlt(id, name);
   }
   if (e.target.closest('[data-edit]')) return openEdit(id);
@@ -1251,12 +1264,13 @@ const WTAG = { base:'ベース', worn:'行動着', cons:'消耗品' };
 const defaultTag = x => x.tag || (['food', 'water'].includes(x.cat) ? 'cons' : x.cat === 'footwear' ? 'worn' : 'base');
 // 想定最低気温
 const tTxt = t => t == null ? '未設定' : (t < 0 ? '−' + Math.abs(t) : t) + '℃';
-function openTempSheet(l, after){
-  let t = l.minTemp == null ? 5 : l.minTemp;
-  openSheet({ title:'想定最低気温', right:'決定',
+function openTempSheet(l, after, opt){
+  opt = Object.assign({ key:'minTemp', title:'想定最低気温', hint:'寝袋や防寒着を選ぶ目安になります。天気予報や前の記録を見て入れてください。' }, opt || {});
+  let t = l[opt.key] == null ? 5 : l[opt.key];
+  openSheet({ title:opt.title, right:'決定',
     body:'<div class="tempbig"><button type="button" data-dt="-1" aria-label="下げる">'+icon('minus', 22)+'</button><span class="num" id="tv">'+tTxt(t)+'</span><button type="button" data-dt="1" aria-label="上げる">'+icon('plus', 22)+'</button></div>'+
       '<div class="catpick" style="justify-content:center">'+[10, 5, 0, -5, -10].map(v => '<button type="button" class="chip" data-tv="'+v+'">'+tTxt(v)+'</button>').join('')+'</div>'+
-      '<p class="hint" style="text-align:center">寝袋や防寒着を選ぶ目安になります。天気予報や前の記録を見て入れてください。</p>'+
+      '<p class="hint" style="text-align:center">'+opt.hint+'</p>'+
       '<div class="btnrow"><button type="button" class="btn secondary block" data-tnone>未設定にする</button></div>',
     onMount:(sh, close) => {
       const tv = sh.querySelector('#tv');
@@ -1264,10 +1278,28 @@ function openTempSheet(l, after){
       sh.addEventListener('click', e => {
         const d = e.target.closest('[data-dt]'); if (d) set(t + Number(d.dataset.dt));
         const v = e.target.closest('[data-tv]'); if (v) set(Number(v.dataset.tv));
-        if (e.target.closest('[data-tnone]')) { l.minTemp = null; close(); after(); }
+        if (e.target.closest('[data-tnone]')) { l[opt.key] = null; close(); after(); }
       });
-      sh.querySelector('[data-r]').onclick = () => { l.minTemp = t; close(); after(); toast('想定最低気温を ' + tTxt(t) + ' にしました'); };
+      sh.querySelector('[data-r]').onclick = () => { l[opt.key] = t; close(); after(); toast(opt.title + 'を ' + tTxt(t) + ' にしました'); };
     } });
+}
+// 寝袋の寒さチェック: 山行の想定最低気温と、持ち物の寝袋の対応温度（快適）を比べる
+const isBag = x => x && x.type === '寝袋';
+function coldCheck(l){
+  if (l.status === 'done' || l.minTemp == null) return null;
+  const bags = l.items.map(([gid]) => byId(gid)).filter(isBag);
+  if (!bags.length) return l.days > 1 ? { level:'warn', title:'寝袋が入っていません', text:'泊まりの山行ですが、持ち物に寝袋がありません。' } : null;
+  const known = bags.filter(b => b.comfort != null);
+  if (!known.length) return { level:'unknown', title:'寝袋の対応温度が未設定です', text:'対応温度を入れると、想定最低気温 '+tTxt(l.minTemp)+' と比べて知らせます。', gid:bags[0].id };
+  const best = known.reduce((a, b) => b.comfort < a.comfort ? b : a);
+  if (best.comfort > l.minTemp) return { level:'warn', title:'寒いかもしれません',
+    text:'想定最低気温 '+tTxt(l.minTemp)+' に対して、「'+best.name+'」の対応温度は '+tTxt(best.comfort)+'。'+(best.comfort - l.minTemp)+'℃ 足りません。防寒着を足すか、暖かい寝袋を考えましょう。', gid:best.id };
+  return { level:'ok', title:'寝袋は足りそうです', text:'「'+best.name+'」（対応温度 '+tTxt(best.comfort)+'）で、想定最低気温 '+tTxt(l.minTemp)+' に足りる見込みです。', gid:best.id };
+}
+function coldBanner(l){
+  const c = coldCheck(l); if (!c) return '';
+  return '<div class="cold '+c.level+'">'+icon(c.level === 'ok' ? 'check' : 'temp', 20, c.level === 'warn' ? 'var(--warn)' : c.level === 'ok' ? 'var(--blue)' : 'var(--mute)')+
+    '<div class="cm"><b>'+c.title+'</b><p>'+esc(c.text)+'</p></div>'+(c.gid ? '<button type="button" class="mini" data-coldg="'+c.gid+'">寝袋を見る</button>' : '')+'</div>';
 }
 const tagIn = (l, gid) => ((l.wtag || {})[gid]) || defaultTag(byId(gid));
 const sumBy = (l, f) => l.items.reduce((a, [gid, q]) => { const x = byId(gid); return a + (x && f(tagIn(l, gid)) ? x.w * q : 0); }, 0);
@@ -1290,8 +1322,9 @@ function dblk(d, muted){
 }
 function tripCard(l){
   const done = l.status === 'done', [n, u] = fmtW(listBase(l));
+  const cold = coldCheck(l), coldTag = cold && cold.level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '';
   const sub = done ? (l.unused && l.unused.length ? '使わなかった ' + l.unused.length + ' 点' : '全部使った') + ((l.photos || []).length ? ' ・ 写真 ' + l.photos.length : '') + ' ・ ' + (tripPosts(l).length ? '投稿あり' : '未投稿')
-    : daysTxt(l.days) + (l.minTemp != null ? ' ・ 最低 ' + tTxt(l.minTemp) : '') + ' ・ ' + leftTxt(l.date);
+    : daysTxt(l.days) + (l.minTemp != null ? ' ・ 最低 ' + tTxt(l.minTemp) : '') + ' ・ ' + leftTxt(l.date) + coldTag;
   return '<div class="lcard" data-list="'+l.id+'">'+dblk(l.date, done)+'<div style="min-width:0"><div class="ln">'+esc(l.name)+'</div><div class="small" style="margin-top:3px">'+sub+'</div></div>'+
     '<div class="lw"><div class="small" style="font-size:10.5px">ベース</div><span class="num">'+n+'</span><small class="small"> '+u+'</small></div>'+icon('chev', 16, 'var(--faint)')+'</div>';
 }
@@ -1305,7 +1338,7 @@ function renderLists(){
   if (next) {
     const [n, u] = fmtW(listBase(next)), pc = packedCount(next), all = next.items.length;
     hero = '<div class="hero" data-list="'+next.id+'"><div class="label">NEXT ・ '+leftTxt(next.date)+'</div>'+
-      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+(next.minTemp != null ? ' ・ 想定最低気温 '+tTxt(next.minTemp) : '')+'</div>'+
+      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+(next.minTemp != null ? ' ・ 想定最低気温 '+tTxt(next.minTemp) : '')+((coldCheck(next) || {}).level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '')+'</div>'+
       '<div class="hrow"><div><div class="small">ベースウェイト</div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+'</span><div class="small">食料・水 '+wTxt(listCons(next))+'（パックウェイト '+wTxt(listPack(next))+'）・ '+listCount(next)+' 点</div></div>'+
       '<div class="hp"><div class="small">パッキング '+pc+' / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div></div></div>';
   }
@@ -1389,7 +1422,7 @@ function openList(lid){
       '<div class="dhead"><div class="label">'+(done ? 'DONE' : 'PLAN ・ ' + leftTxt(l.date))+'</div>'+
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
         '<div class="small" style="margin-top:2px">'+jpDate(l.date)+(done ? ' に行った ・ ' : ' から ')+daysTxt(l.days)+'</div>'+
-        '<button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+
+        '<button type="button" class="tempbtn'+(l.minTemp == null ? ' unset' : '')+'" data-temp>'+icon('temp', 17)+'<span>想定最低気温</span><b class="num">'+tTxt(l.minTemp)+'</b>'+icon('chev', 14, 'var(--faint)')+'</button>'+coldBanner(l)+
         '<div class="wbox"><div class="wline main"><span class="wl">ベースウェイト<button type="button" class="winfo" data-winfo aria-label="ベースウェイトとは">'+icon('info', 15, 'var(--mute)')+'</button></span><span class="wv"><span class="num" id="l-base" data-v="'+base+'">'+bn+'</span><span class="u">'+bu+'</span></span></div>'+
         '<div class="wline"><span class="wl">食料・水</span><span class="wv"><span class="num" id="l-cons" data-v="'+cons+'">'+fmtW(cons)[0]+'</span><span class="u">'+fmtW(cons)[1]+'</span></span></div>'+
         '<div class="wline paren"><span class="wl">（パックウェイト</span><span class="wv"><span class="num" id="l-tot" data-v="'+pack+'">'+pn+'</span><span class="u">'+pu+'</span>）</span></div>'+
@@ -1438,6 +1471,7 @@ async function onListClick(e, s, lid, setLeft){
   }
   if (e.target.closest('[data-left]')) return setLeft();
   if (e.target.closest('[data-temp]')) return openTempSheet(l, () => { s._render(); renderLists(); });
+  const cg = e.target.closest('[data-coldg]'); if (cg) return openDetail(cg.dataset.coldg, '戻る');
   if (e.target.closest('[data-winfo]')) {
     const base = listBase(l), pack = listPack(l), worn = listWorn(l), tot = listTotal(l);
     const consRows = l.items.filter(([gid]) => byId(gid) && tagIn(l, gid) === 'cons').map(([gid, q]) => '<div class="gr static"><span class="gt">＋ '+esc(byId(gid).name)+'</span><span class="gv">'+wTxt(byId(gid).w * q)+'</span></div>').join('');
