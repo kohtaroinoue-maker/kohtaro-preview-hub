@@ -646,6 +646,7 @@ const NEW = {
   electronics:'<rect class="f" x="6.5" y="4" width="11" height="17" rx="2.5"/><path d="M10.2 2.5 H13.8"/><path d="M12.9 8 L10.1 12.8 H13.9 L11.1 17.6"/>',
   food:'<path class="f" d="M12 4 C13.1 4 13.9 4.6 14.5 5.6 L20.1 15.5 C21.2 17.5 19.8 20 17.6 20 H6.4 C4.2 20 2.8 17.5 3.9 15.5 L9.5 5.6 C10.1 4.6 10.9 4 12 4 Z"/><path d="M8.8 20 V14.8 H15.2 V20"/>',
   water:'<path d="M10 2.5 H14 V5 H10 Z"/><path class="f" d="M10 5 C10 6.6 7.5 7.6 7.5 10 V19 C7.5 20.4 8.6 21.5 10 21.5 H14 C15.4 21.5 16.5 20.4 16.5 19 V10 C16.5 7.6 14 6.6 14 5 Z"/><path d="M12 11.5 C12 11.5 10 14 10 15.3 C10 16.4 10.9 17.3 12 17.3 C13.1 17.3 14 16.4 14 15.3 C14 14 12 11.5 12 11.5 Z"/>',
+  small:'<path class="f" d="M7.5 9 C7.5 7.4 9.3 6.5 12 6.5 C14.7 6.5 16.5 7.4 16.5 9 L17.6 17.8 C17.8 19.4 16.6 20.5 15 20.5 H9 C7.4 20.5 6.2 19.4 6.4 17.8 Z"/><path d="M8.2 7.2 C8.8 5 15.2 5 15.8 7.2"/><path d="M10.5 9.5 H13.5"/>',
   other:'<rect class="f" x="4" y="4" width="16" height="16" rx="4"/><circle cx="8.5" cy="12" r=".9" class="dotf"/><circle cx="12" cy="12" r=".9" class="dotf"/><circle cx="15.5" cy="12" r=".9" class="dotf"/>',
   star:'<path d="M12 3.8 L14.5 9 L20.2 9.7 L16 13.6 L17.1 19.3 L12 16.5 L6.9 19.3 L8 13.6 L3.8 9.7 L9.5 9 Z"/>',
   star_on:'<path class="solid" d="M12 3.8 L14.5 9 L20.2 9.7 L16 13.6 L17.1 19.3 L12 16.5 L6.9 19.3 L8 13.6 L3.8 9.7 L9.5 9 Z"/>',
@@ -705,9 +706,9 @@ function icon(id, size, color, dashed){
 
 /* ---------- データ（架空） ---------- */
 const CATS = [
-  ['backpack','ザック・収納','PACK'],['tent','シェルター','SHELTER'],['sleep','睡眠','SLEEP'],['cook','調理・水まわり','COOK'],
+  ['backpack','ザック・サブバッグ','PACK'],['tent','シェルター','SHELTER'],['sleep','睡眠','SLEEP'],['cook','調理・水まわり','COOK'],
   ['clothing','ウェア','WEAR'],['rain','レイン','RAIN'],['footwear','足まわり','FOOTWEAR'],['light','ライト','LIGHT'],
-  ['safety','安全・緊急','SAFETY'],['electronics','電子機器','ELECTRONICS'],['food','食料','FOOD'],['water','水','WATER'],['other','その他','OTHER']
+  ['safety','安全・緊急','SAFETY'],['electronics','電子機器','ELECTRONICS'],['food','食料','FOOD'],['water','水','WATER'],['small','小物','SMALL'],['other','その他','OTHER']
 ].map(([id,label,en]) => ({ id, label, en }));
 const CAT = Object.fromEntries(CATS.map(c => [c.id, c]));
 const B = '[ブランド]';
@@ -719,7 +720,8 @@ const SEED = {
     g('g3','ダウン寝袋 0℃','sleep','寝袋',620,'ok',{fav:true,use:[6,5],comfort:0}),
     g('g4','エアマット レギュラー','sleep',null,340,'un',{use:[6,5]}),
     g('g5','40L ザック','backpack','ザック',1150,'ok',{use:[6,6]}),
-    g('g6','スタッフサック 3点','backpack','スタッフサック',60,'ok'),
+    g('g6','スタッフサック 3点','small','スタッフサック',60,'ok'),
+    g('g18','サコッシュ','backpack','サブバッグ',95,'ok',{use:[6,4]}),
     g('g7','チタンクッカー 750','cook','クッカー',103,'ok',{fav:true,use:[6,6]}),
     g('g8','ガスストーブ','cook','ストーブ',88,'ai',{use:[6,5]}),
     g('g9','フリースジャケット','clothing','中間着',310,'ok'),
