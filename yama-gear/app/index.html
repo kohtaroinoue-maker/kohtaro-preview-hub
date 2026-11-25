@@ -321,6 +321,26 @@ input{font:inherit;color:inherit}
 .vnav{display:flex;justify-content:space-between;padding:12px 12px calc(20px + var(--bottom))}
 .vnav button{width:52px;height:52px;display:flex;align-items:center;justify-content:center}
 
+/* 右下の投稿ボタン */
+.fab{position:absolute;right:18px;bottom:18px;width:58px;height:58px;border-radius:50%;background:var(--ink);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(0,0,0,.25);z-index:7;transition:transform .3s var(--ease),opacity .25s}
+.fab:active{transform:scale(.92)}
+.fab.hide{transform:translateY(90px) scale(.7);opacity:0;pointer-events:none}
+/* ギア詳細の写真（人気の投稿から） */
+.gcar{position:relative;margin:0 0 6px}
+.gtrack{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+.gtrack::-webkit-scrollbar{display:none}
+.gslide{flex:none;width:100%;height:210px;scroll-snap-align:start;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.gcap{position:absolute;left:0;right:0;bottom:0;padding:22px 14px 10px;background:linear-gradient(transparent,rgba(20,20,20,.55));color:#fff;font-size:12.5px;text-align:left;display:flex;align-items:center;gap:4px}
+.gtag{position:absolute;left:12px;top:10px;background:rgba(250,250,246,.9);font-size:11px;padding:2px 8px;color:var(--ink)}
+.gdots{position:absolute;left:0;right:0;bottom:-14px;display:flex;justify-content:center;gap:6px}
+.gdots i{width:6px;height:6px;border-radius:50%;background:var(--line);transition:background .2s}
+.gdots i.on{background:var(--ink)}
+.empty-car .gslide{height:150px}
+.gnone{font-size:12px;color:var(--mute);max-width:260px;text-align:center;line-height:1.7}
+.gcar + .dhead{padding-top:18px}
+.mpost .mp-h .small{margin-left:auto;font-size:12px}
+.toast.high{bottom:calc(150px + var(--bottom))}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -599,6 +619,7 @@ function toast(msg, action, onAction){
   document.querySelectorAll('.toast').forEach(t => t.remove());
   const t = el('<div class="toast" role="status"><span>'+esc(msg)+'</span>'+(action ? '<button type="button">'+action+'</button>' : '')+'</div>');
   if (stack.length > 1) t.classList.add('low');
+  else if (curTab === 'home') t.classList.add('high'); // 右下の投稿ボタンに重ねない
   app.appendChild(t);
   raf2(() => t.classList.add('on'));
   if (action) t.querySelector('button').onclick = () => { onAction(); hide(); };
@@ -860,7 +881,7 @@ function openDetail(id, backLabel){
     const ag = x.status === 'wish' ? wishAgainst(x) : null;
     const useRate = x.use ? Math.round(x.use[1] / x.use[0] * 100) : null;
     return nav(backLabel, x.name, '<button type="button" class="iconbtn" data-more aria-label="その他">'+icon('more', 24)+'</button>') +
-      '<div class="scroll">'+
+      '<div class="scroll">'+gearPhotos(x)+
         '<div class="dhead"><div class="label">'+c.en+' ・ '+c.label+'</div>'+
           '<div class="dname"><h2>'+esc(x.name)+'</h2><button type="button" class="star" data-fav="'+x.id+'" aria-label="お気に入り" style="margin-top:2px">'+icon(x.fav ? 'star_on' : 'star', 24, x.fav ? 'var(--ink)' : 'var(--faint)')+'</button></div>'+
           '<div class="brand">'+esc(x.brand)+'</div>'+
@@ -878,12 +899,31 @@ function openDetail(id, backLabel){
         gearPosts(x)+
       '</div>';
   }, backLabel);
+  s._after = sc => {
+    const tr = sc.querySelector('.gtrack'); if (!tr) return;
+    const dots = sc.querySelectorAll('.gdots i');
+    tr.addEventListener('scroll', () => { const i = Math.round(tr.scrollLeft / tr.clientWidth); dots.forEach((d, k) => d.classList.toggle('on', k === i)); }, { passive:true });
+  };
+  s._after(s);
   s.addEventListener('click', e => onDetailClick(e, s, id));
 }
+// このギアが出てくる投稿（自分の投稿はギアID、他の人の投稿は同じ名前のギアで探す）
+const postsWithGear = x => S.posts.filter(po => (po.gear && po.gear.includes(x.id)) || (po.items && po.items.some(it => it[0] === x.name)));
+// ギア詳細の一番上の写真: システムが人気の投稿（いいね順）から選ぶ。1投稿1枚、最大5枚
+function gearPhotos(x){
+  const picks = postsWithGear(x).filter(po => po.photos && po.photos.length).sort((a, b) => b.likes - a.likes).slice(0, 5);
+  if (!picks.length) return '<div class="gcar empty-car"><div class="gslide" style="background:var(--hair)">'+icon('image', 40, 'var(--faint)')+
+    '<span class="gnone">まだ写真がありません。このギアを持って行った山行を投稿すると、人気の投稿からここに並びます。</span></div></div>';
+  return '<div class="gcar"><div class="gtrack">'+picks.map(po => { const u = S.users[po.author];
+    return '<button type="button" class="gslide" data-openpost="'+po.id+'" style="background:'+phTint(po.photos[0])+'">'+icon('image', 48, '#7C93BC')+
+      '<span class="gcap">'+icon('heart_on', 13, '#fff')+' '+po.likes+'　'+esc(u.name)+' ・ '+esc(po.list)+'</span></button>'; }).join('')+'</div>'+
+    '<span class="gtag">人気の投稿から</span>'+
+    (picks.length > 1 ? '<div class="gdots">'+picks.map((p, i) => '<i class="'+(i ? '' : 'on')+'"></i>').join('')+'</div>' : '')+'</div>';
+}
 function gearPosts(x){
-  const ps = S.posts.filter(po => po.gear && po.gear.includes(x.id));
+  const ps = postsWithGear(x);
   return '<div class="ghead" style="border-top:2px solid var(--ink);padding-top:18px"><b>このギアが出てくる投稿</b><span class="label">POSTS</span><span class="small" style="margin-left:auto">'+ps.length+' 件</span></div>'+
-    (ps.length ? ps.map(po => '<div class="mpost" data-openpost="'+po.id+'"><div class="mp-h"><span class="label">'+po.date+'</span><b>'+esc(po.list)+'</b></div><div class="pfoot"><p>'+esc(po.text)+'</p>'+likeBtn(po)+'</div></div>').join('')
+    (ps.length ? ps.map(po => '<div class="mpost" data-openpost="'+po.id+'"><div class="mp-h"><span class="label">'+po.date+'</span><b>'+esc(po.list)+'</b><span class="small">'+esc(S.users[po.author].name)+'</span></div><div class="pfoot"><p>'+esc(po.text)+'</p>'+likeBtn(po)+'</div></div>').join('')
       : '<div class="empty" style="padding-top:6px">まだありません。山行のあとに投稿すると、持っていったギアの投稿がここに並びます。</div>')+
     '<div style="height:40px"></div>';
 }
@@ -1436,11 +1476,11 @@ SEED.users = {
 };
 SEED.posts = [
   { id:'O1', author:'sora', list:'縦走 2泊3日', date:'2026-11-20', text:'シェルターをツェルトに替えて 400 g 減。夜は少し寒かったので、マットは厚めに戻すつもり。', photos:['ph7','ph8'], w:6420, unused:0, likes:24, liked:false,
-    items:[['ツェルト ライト','tent',300],['エアマット ショート','sleep',230],['ザック 30L','backpack',720],['チタンクッカー 550','cook',78],['ウインドシェル','clothing',95]] },
+    items:[['ツェルト ライト','tent',300],['エアマット ショート','sleep',230],['ザック 30L','backpack',720],['チタンクッカー 550','cook',78],['ウインドシェル','clothing',95],['ダウン寝袋 0℃','sleep',620],['ヘッドランプ 400','light',75]] },
   { id:'O2', author:'haru', list:'日帰り 紅葉', date:'2026-11-18', text:'行動食はナッツとドライフルーツ。ソフトボトル 2 本で足りた。', photos:['ph9'], w:2650, unused:1, likes:9, liked:true,
     items:[['ソフトボトル 1L','water',36],['ヘッドランプ 200','light',60],['ウインドシェル','clothing',95],['デイパック 20L','backpack',480]] },
-  { id:'O3', author:'koke', list:'小屋泊 1泊', date:'2026-11-02', text:'初めての冬靴。重いけど安心感がちがう。', photos:[], w:5120, unused:0, likes:15, liked:false,
-    items:[['冬靴','footwear',1650],['ダウンジャケット','clothing',380],['チェーンスパイク','safety',340]] },
+  { id:'O3', author:'koke', list:'小屋泊 1泊', date:'2026-11-02', text:'初めての冬靴。重いけど安心感がちがう。', photos:['ph10'], w:5120, unused:0, likes:15, liked:false,
+    items:[['冬靴','footwear',1650],['ダウンジャケット','clothing',380],['チェーンスパイク','safety',340],['40L ザック','backpack',1150],['ヘッドランプ 400','light',75]] },
   { id:'P1', author:'me', trip:'L2', list:'日帰り ハイク', date:'2026-10-12', text:'朝は冷えたけど、歩き出したらレインだけで十分だった。行動食は半分余ったので次は減らす。', photos:['ph1','ph2','ph3'], w:2180, unused:1, likes:3, liked:false,
     gear:['g5','g10','g13','g14','g16','g17'] },
   { id:'P2', author:'me', trip:'L4', list:'テント泊 1泊2日', date:'2026-09-20', text:'クッカーを替えてから朝の支度が早い。テント場は風が強め、ペグは長いのを持っていって正解。', photos:[], w:7120, unused:2, likes:5, liked:false,
@@ -1466,11 +1506,15 @@ function renderHome(){
   const sc = p.querySelector('.scroll'), top = sc ? sc.scrollTop : 0;
   p.innerHTML = '<div class="scroll"><header class="bighead">'+CONTOUR+
     '<div class="titleRow"><div><div class="label">タイムライン</div><h1 class="title">Home</h1></div>'+
-    '<div style="display:flex;align-items:center;gap:12px"><button type="button" class="btn primary" data-post>'+icon('pen', 16, 'var(--paper)')+'投稿</button>'+
-    '<button type="button" class="avbtn" data-me aria-label="自分のプロフィール">'+avatar('me', 38)+'</button></div></div></header>'+
+    '<button type="button" class="avbtn" data-me aria-label="自分のプロフィール">'+avatar('me', 38)+'</button></div></header>'+
     '<div id="posts">'+S.posts.map(po => postHtml(po)).join('')+'</div>'+
-    '<div style="height:100px"></div></div>';
-  p.querySelector('.scroll').scrollTop = top;
+    '<div style="height:100px"></div></div>'+
+    '<button type="button" class="fab" data-post aria-label="投稿する">'+icon('pen', 24, 'var(--paper)')+'</button>';
+  const sc2 = p.querySelector('.scroll'), fab = p.querySelector('.fab');
+  sc2.scrollTop = top;
+  // 下へ読み進めると引っ込み、上に戻すと出てくる
+  let last = sc2.scrollTop;
+  sc2.addEventListener('scroll', () => { const y = sc2.scrollTop; if (Math.abs(y - last) > 6) { fab.classList.toggle('hide', y > last && y > 80); last = y; } }, { passive:true });
 }
 function postHtml(po, full){
   const u = S.users[po.author];
