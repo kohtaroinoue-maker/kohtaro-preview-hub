@@ -1566,6 +1566,8 @@ function postClick(e, back){
   const lk = e.target.closest('[data-like]'); if (lk) { e.stopPropagation(); toggleLike(lk.dataset.like); return true; }
   const us = e.target.closest('[data-user]'); if (us) { e.stopPropagation(); openProfile(us.dataset.user, back); return true; }
   const ph = e.target.closest('[data-ph]'), pa = ph && ph.closest('[data-post-id]');
+  // 一覧（タイムライン・プロフィール）では写真を押しても投稿へ。投稿の詳細の中でだけ写真を大きく見る
+  if (pa && pa.hasAttribute('data-openpost')) { e.stopPropagation(); openPostDetail(pa.dataset.postId, back); return true; }
   if (pa) { e.stopPropagation(); const po = postById(pa.dataset.postId); openViewer(po.photos, po.photos.indexOf(ph.dataset.ph), null, po.ptags); return true; }
   const op = e.target.closest('[data-openpost]'); if (op) { openPostDetail(op.dataset.openpost, back); return true; }
   return false;
