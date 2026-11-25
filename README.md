@@ -20,6 +20,19 @@
     └── ...
 ```
 
+## 公開のしかた（スクリプト）
+
+```bash
+scripts/publish.sh <project> "<変更の一言>"
+```
+
+個人情報・鍵のチェック → noindex の確認 → commit/push → 公開 URL に反映されるまで待つ、を一度に行う。チェックに引っかかったら止まる（終了コード 1）。
+
+## 動くデモの土台
+
+新しいアプリの「押して動く試作」は `_template/app-demo/index.html` をコピーして始める（使い方はファイル先頭のコメント）。
+見本: https://kohtaroinoue-maker.github.io/kohtaro-preview-hub/_template/app-demo/
+
 ## 現在の案件
 
 | project | 内容 | URL |
