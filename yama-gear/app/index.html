@@ -406,6 +406,25 @@ input{font:inherit;color:inherit}
 .cold .mini{align-self:center}
 .coldtag{display:inline-block;margin-left:6px;font-size:10.5px;padding:0 6px;border:1px solid var(--warn);color:var(--warn);line-height:1.6}
 
+/* 持ち物の大枠・移動・寒さの知らせを隠す */
+.tgroup{margin-top:18px}
+.thead{display:flex;align-items:baseline;gap:10px;padding:10px 20px 8px;border-top:2px solid var(--ink);border-bottom:1px solid var(--line);background:var(--paper)}
+.thead b{font-family:var(--serif);font-size:18px}
+.thead .num{margin-left:auto;font-size:17px}
+.tgroup[data-group="cons"] .thead{border-top-color:var(--warn)}
+.tgroup[data-group="worn"] .thead{border-top-color:var(--blue)}
+.sec.sub{padding-top:12px}
+.sec.sub .h{font-size:15px}
+.tempty{padding:12px 20px;font-size:12.5px;color:var(--faint)}
+.swipe .acts{position:absolute;right:0;top:0;bottom:0;display:flex}
+.swipe .acts button{position:static;width:76px;color:#fff;font-weight:700;font-size:14px}
+.swipe .acts .mv{background:var(--blue)}
+.swipe .acts .del{background:var(--red)}
+.cold{position:relative;padding-right:34px;overflow:hidden;transition:height .22s var(--ease),opacity .22s,margin .22s,padding .22s}
+.cold.closing{height:0 !important;opacity:0;margin-top:0;padding-top:0;padding-bottom:0}
+.coldx{position:absolute;right:4px;top:4px;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
+.coldx:active{opacity:.5}
+
 /* シート・ダイアログ・トースト */
 .backdrop{position:absolute;inset:0;background:rgba(10,10,10,.32);opacity:0;transition:opacity .32s;z-index:80}
 .backdrop.on{opacity:1}
@@ -1064,7 +1083,7 @@ function openWeight(id, back){
     const x = byId(id);
     if (e.target.closest('[data-confirm]')) { x.src = 'ok'; refreshAll(); toast('確定にしました'); }
     if (e.target.closest('[data-reweigh]')) openEdit(id, true);
-    if (e.target.closest('[data-gtag]')) actionSheet([{ label:'ベース（装備）', value:'base' }, { label:'行動着（歩く時に着る服・靴など）', value:'worn' }, { label:'消耗品（食料・水・燃料など）', value:'cons' }])
+    if (e.target.closest('[data-gtag]')) actionSheet([{ label:'ベース（装備）', value:'base' }, { label:'行動着（歩く時に着る服・靴など）', value:'worn' }, { label:'食料・水（燃料など減っていく物も）', value:'cons' }])
       .then(r => { if (!r) return; x.tag = r; refreshAll(); toast('いつもの数え方を「' + WTAG[r] + '」にしました'); });
   });
 }
@@ -1259,7 +1278,8 @@ const listTotal = l => l.items.reduce((a, [gid, q]) => { const x = byId(gid); re
 const listCount = l => l.items.reduce((a, it) => a + it[1], 0);
 // 重さの数え方: base＝装備（ベース）、cons＝消耗品（食料・水・燃料）、worn＝行動着（靴・着ている服）
 // ギアごとに「いつもの数え方」（無ければカテゴリから）、山行ごとに上書きできる（l.wtag）
-const WTAG = { base:'ベース', worn:'行動着', cons:'消耗品' };
+const WTAG = { base:'ベース', worn:'行動着', cons:'食料・水' };
+const TGROUPS = [['base', 'ベース', 'まだありません'], ['cons', '食料・水', '食料・水はまだありません。行動食や水をここへ移動できます'], ['worn', '行動着', '行動着はありません。靴や歩く時に着る服をここへ移動できます']];
 // 決めていなければ: 食料・水＝消耗品、足まわり（靴）＝行動着、それ以外（レインウェア・防寒着も）＝ベース。どれも編集できる
 const defaultTag = x => x.tag || (['food', 'water'].includes(x.cat) ? 'cons' : x.cat === 'footwear' ? 'worn' : 'base');
 // 想定最低気温
@@ -1296,9 +1316,12 @@ function coldCheck(l){
     text:'想定最低気温 '+tTxt(l.minTemp)+' に対して、「'+best.name+'」の対応温度は '+tTxt(best.comfort)+'。'+(best.comfort - l.minTemp)+'℃ 足りません。防寒着を足すか、暖かい寝袋を考えましょう。', gid:best.id };
   return { level:'ok', title:'寝袋は足りそうです', text:'「'+best.name+'」（対応温度 '+tTxt(best.comfort)+'）で、想定最低気温 '+tTxt(l.minTemp)+' に足りる見込みです。', gid:best.id };
 }
+// 隠したときの状況（気温・寝袋・対応温度）を覚えておき、状況が変わったらまた出す
+const coldKey = (l, c) => [c.level, l.minTemp, c.gid || '', c.gid && byId(c.gid) ? byId(c.gid).comfort : ''].join('|');
+function visibleCold(l){ const c = coldCheck(l); return c && l.coldHidden !== coldKey(l, c) ? c : null; }
 function coldBanner(l){
-  const c = coldCheck(l); if (!c) return '';
-  return '<div class="cold '+c.level+'">'+icon(c.level === 'ok' ? 'check' : 'temp', 20, c.level === 'warn' ? 'var(--warn)' : c.level === 'ok' ? 'var(--blue)' : 'var(--mute)')+
+  const c = visibleCold(l); if (!c) return '';
+  return '<div class="cold '+c.level+'"><button type="button" class="coldx" data-colddis aria-label="この知らせを隠す">'+icon('close', 16, 'var(--mute)')+'</button>'+icon(c.level === 'ok' ? 'check' : 'temp', 20, c.level === 'warn' ? 'var(--warn)' : c.level === 'ok' ? 'var(--blue)' : 'var(--mute)')+
     '<div class="cm"><b>'+c.title+'</b><p>'+esc(c.text)+'</p></div>'+(c.gid ? '<button type="button" class="mini" data-coldg="'+c.gid+'">寝袋を見る</button>' : '')+'</div>';
 }
 const tagIn = (l, gid) => ((l.wtag || {})[gid]) || defaultTag(byId(gid));
@@ -1322,7 +1345,7 @@ function dblk(d, muted){
 }
 function tripCard(l){
   const done = l.status === 'done', [n, u] = fmtW(listBase(l));
-  const cold = coldCheck(l), coldTag = cold && cold.level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '';
+  const cold = visibleCold(l), coldTag = cold && cold.level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '';
   const sub = done ? (l.unused && l.unused.length ? '使わなかった ' + l.unused.length + ' 点' : '全部使った') + ((l.photos || []).length ? ' ・ 写真 ' + l.photos.length : '') + ' ・ ' + (tripPosts(l).length ? '投稿あり' : '未投稿')
     : daysTxt(l.days) + (l.minTemp != null ? ' ・ 最低 ' + tTxt(l.minTemp) : '') + ' ・ ' + leftTxt(l.date) + coldTag;
   return '<div class="lcard" data-list="'+l.id+'">'+dblk(l.date, done)+'<div style="min-width:0"><div class="ln">'+esc(l.name)+'</div><div class="small" style="margin-top:3px">'+sub+'</div></div>'+
@@ -1338,7 +1361,7 @@ function renderLists(){
   if (next) {
     const [n, u] = fmtW(listBase(next)), pc = packedCount(next), all = next.items.length;
     hero = '<div class="hero" data-list="'+next.id+'"><div class="label">NEXT ・ '+leftTxt(next.date)+'</div>'+
-      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+(next.minTemp != null ? ' ・ 想定最低気温 '+tTxt(next.minTemp) : '')+((coldCheck(next) || {}).level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '')+'</div>'+
+      '<div class="hn">'+esc(next.name)+'</div><div class="small">'+jpDate(next.date)+' から '+daysTxt(next.days)+(next.minTemp != null ? ' ・ 想定最低気温 '+tTxt(next.minTemp) : '')+((visibleCold(next) || {}).level === 'warn' ? '<span class="coldtag">寒さ注意</span>' : '')+'</div>'+
       '<div class="hrow"><div><div class="small">ベースウェイト</div><span class="num" style="font-size:34px">'+n+'</span><span class="small"> '+u+'</span><div class="small">食料・水 '+wTxt(listCons(next))+'（パックウェイト '+wTxt(listPack(next))+'）・ '+listCount(next)+' 点</div></div>'+
       '<div class="hp"><div class="small">パッキング '+pc+' / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div></div></div>';
   }
@@ -1405,19 +1428,26 @@ function openList(lid){
     const pc = packedCount(l), all = l.items.length;
     const base = listBase(l), [bn, bu] = fmtW(base), pack = listPack(l), [pn, pu] = fmtW(pack), worn = listWorn(l), cons = listCons(l);
     const posts = tripPosts(l);
-    const rows = byCat.map(v => '<div class="sec"><span class="h">'+v.c.label+'</span><span class="label">'+v.c.en+'</span></div>'+
-      v.its.map(([gid, q]) => {
+    const rowOf = ([gid, q]) => {
         const x = byId(gid), packed = l.packed.includes(gid), unused = l.unused.includes(gid);
         const ck = done
           ? '<button type="button" class="ck'+(unused ? ' off' : ' on')+'" data-unused="'+gid+'" aria-label="使った・使わなかった">'+(unused ? icon('minus', 14, 'var(--mute)') : icon('check', 14, 'var(--paper)'))+'</button>'
           : '<button type="button" class="ck'+(packed ? ' on' : '')+'" data-pack="'+gid+'" aria-label="パッキング済み">'+(packed ? icon('check', 14, 'var(--paper)') : '')+'</button>';
         const dim = done ? unused : packed;
-        return '<div class="swipe" data-row="'+gid+'"><button type="button" class="del" data-rm="'+gid+'">外す</button><div class="fg'+(dim ? ' dim' : '')+'">'+ck+
-          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(q > 1 ? ' × ' + q : '')+(x.status === 'wish' ? ' ・ 気になる' : '')+(done && unused ? ' ・ 使わなかった' : '')+
-            '<button type="button" class="wtag t-'+tagIn(l, gid)+'" data-wtag="'+gid+'" aria-label="この山行での数え方">'+WTAG[tagIn(l, gid)]+'</button></div></div>'+
+        return '<div class="swipe" data-row="'+gid+'"><div class="acts"><button type="button" class="mv" data-mv="'+gid+'">移動</button><button type="button" class="del" data-rm="'+gid+'">外す</button></div><div class="fg'+(dim ? ' dim' : '')+'">'+ck+
+          '<div class="rm" data-open="'+gid+'"><div class="nm">'+esc(x.name)+'</div><div class="small">'+wTxt(x.w)+(q > 1 ? ' × ' + q : '')+(x.status === 'wish' ? ' ・ 気になる' : '')+(done && unused ? ' ・ 使わなかった' : '')+'</div></div>'+
           (done ? '' : '<div class="step"><button type="button" data-q="-1" data-g="'+gid+'" aria-label="減らす">'+icon('minus', 16)+'</button><span class="q">'+q+'</span><button type="button" data-q="1" data-g="'+gid+'" aria-label="増やす">'+icon('plus', 16)+'</button></div>')+
           '<span class="lw2 num" style="font-size:15px">'+wTxt(x.w * q)+'</span></div></div>';
-      }).join('')).join('');
+    };
+    // 大枠: ベース（中はカテゴリ別）／食料・水／行動着
+    const rows = TGROUPS.map(([tg, label, empty]) => {
+      const its = items.filter(([gid]) => tagIn(l, gid) === tg);
+      const inner = tg === 'base'
+        ? CATS.map(c => ({ c, its:its.filter(([gid]) => byId(gid).cat === c.id) })).filter(v => v.its.length).map(v => '<div class="sec sub"><span class="h">'+v.c.label+'</span><span class="label">'+v.c.en+'</span></div>'+v.its.map(rowOf).join('')).join('')
+        : its.map(rowOf).join('');
+      return '<div class="tgroup" data-group="'+tg+'"><div class="thead"><b>'+label+'</b><span class="small">'+its.length+' 点</span><span class="num">'+wTxt(sumBy(l, t => t === tg))+'</span></div>'+
+        (inner || '<div class="tempty">'+(onlyLeft && !done ? 'ここは全部パッキングできました' : empty)+'</div>')+'</div>';
+    }).join('');
     return nav('Trip', l.name, '<button type="button" class="iconbtn" data-tmore aria-label="その他">'+icon('more', 24)+'</button>') + '<div class="scroll">'+
       '<div class="dhead"><div class="label">'+(done ? 'DONE' : 'PLAN ・ ' + leftTxt(l.date))+'</div>'+
         '<h2 style="font-family:var(--serif);font-weight:900;font-size:24px;margin:4px 0 0">'+esc(l.name)+'</h2>'+
@@ -1436,11 +1466,11 @@ function openList(lid){
         : '<div class="ghead" style="padding-top:22px"><b>持ち物</b><span class="label">ITEMS</span><button type="button" class="mini addg" data-addgear>'+icon('plus', 15)+'ギアを追加</button></div>'+
           '<div class="packhead" style="padding-top:6px"><div style="flex:1"><div class="small">パッキング <b class="num" style="font-size:15px;color:var(--ink)" id="pc">'+pc+'</b> / '+all+'</div><div class="pbar"><i style="width:'+(all ? pc / all * 100 : 0)+'%"></i></div></div>'+
           '<button type="button" class="chip'+(onlyLeft ? ' on' : '')+'" data-left>まだのものだけ</button></div>')+
-      (l.items.length ? (rows || '<div class="empty">全部パッキングできました。</div>') : '<div class="empty">まだギアがありません。上の「ギアを追加」から選ぶか、前の山行からコピーできます。</div>')+
+      (l.items.length ? rows : '<div class="empty">まだギアがありません。上の「ギアを追加」から選ぶか、前の山行からコピーできます。</div>')+
       (done ? '<div class="ghead" style="margin-top:10px"><b>この山行の投稿</b><span class="label">POSTS</span></div>'+
           (posts.length ? posts.map(po => '<div class="mpost" data-openpost="'+po.id+'"><div class="mp-h"><span class="label">'+po.date+'</span><b>'+esc(po.list)+'</b></div><div class="pfoot"><p>'+esc(po.text)+'</p>'+likeBtn(po)+'</div></div>').join('')
             : '<div class="empty" style="padding-top:4px">まだ投稿していません。</div>')
-        : '<p class="hint" style="padding-top:14px">丸を押すとパッキング済みに。行を左にスワイプすると「外す」が出ます。</p>')+
+        : '<p class="hint" style="padding-top:14px">丸を押すとパッキング済みに。行を左にスワイプすると「移動」（ベース・食料・水・行動着の間）と「外す」が出ます。</p>')+
       '<div class="btnrow">'+(done
         ? (posts.length ? '' : '<button type="button" class="btn primary block" data-tpost>'+icon('pen', 16, 'var(--paper)')+'この山行を投稿する</button>')+'<button type="button" class="btn secondary block" data-copy>この持ち物で次の計画を作る</button>'
         : '<button type="button" class="btn secondary block" data-addgear>'+icon('plus', 16)+'ギアを追加</button><button type="button" class="btn primary block" data-done>山行を完了</button>')+'</div></div>';
@@ -1472,6 +1502,15 @@ async function onListClick(e, s, lid, setLeft){
   if (e.target.closest('[data-left]')) return setLeft();
   if (e.target.closest('[data-temp]')) return openTempSheet(l, () => { s._render(); renderLists(); });
   const cg = e.target.closest('[data-coldg]'); if (cg) return openDetail(cg.dataset.coldg, '戻る');
+  if (e.target.closest('[data-colddis]')) {
+    const c = coldCheck(l); if (!c) return;
+    const box = s.querySelector('.cold'); if (box) { box.style.height = box.offsetHeight + 'px'; void box.offsetHeight; box.classList.add('closing'); }
+    setTimeout(() => {
+      l.coldHidden = coldKey(l, c); s._render(); renderLists();
+      toast('知らせを隠しました。気温や寝袋が変わるとまた出ます', '元に戻す', () => { l.coldHidden = null; s._render(); renderLists(); });
+    }, 220);
+    return;
+  }
   if (e.target.closest('[data-winfo]')) {
     const base = listBase(l), pack = listPack(l), worn = listWorn(l), tot = listTotal(l);
     const consRows = l.items.filter(([gid]) => byId(gid) && tagIn(l, gid) === 'cons').map(([gid, q]) => '<div class="gr static"><span class="gt">＋ '+esc(byId(gid).name)+'</span><span class="gv">'+wTxt(byId(gid).w * q)+'</span></div>').join('');
@@ -1482,19 +1521,20 @@ async function onListClick(e, s, lid, setLeft){
       '<div class="gr static"><span class="gt"><b>＝ パックウェイト</b></span><span class="gv num" style="color:var(--ink)">'+wTxt(pack)+'</span></div>'+
       '<div class="gr static"><span class="gt">＋ 行動着</span><span class="gv">'+wTxt(worn)+'</span></div>'+
       '<div class="gr static"><span class="gt">＝ 全部（行動着も入れて）</span><span class="gv">'+wTxt(tot)+'</span></div></div>'+
-      '<p class="hint" style="margin-top:12px">持ち物の行にある「ベース」「行動着」「消耗品」を押すと、この山行での数え方を変えられます。ギアのいつもの数え方は、ギアの「重さ・出典」で決めます。</p>' });
+      '<p class="hint" style="margin-top:12px">持ち物の行を左にスワイプして「移動」を押すと、ベース・食料・水・行動着の間で移動できます（この山行だけ）。ギアのいつもの数え方は、ギアの「重さ・出典」で決めます。</p>' });
   }
-  const wt = e.target.closest('[data-wtag]');
-  if (wt) {
-    const gid = wt.dataset.wtag, x = byId(gid);
-    const r = await actionSheet([{ label:'ベース（装備）', value:'base' }, { label:'行動着（歩く時に着る服・靴など）', value:'worn' }, { label:'消耗品（食料・水・燃料など）', value:'cons' }]);
-    if (!r || r === tagIn(l, gid)) return;
-    const ob = listBase(l), op = listPack(l), ow = listWorn(l), oc = listCons(l);
-    l.wtag = l.wtag || {};
-    if (r === defaultTag(x)) delete l.wtag[gid]; else l.wtag[gid] = r;
+  const mv = e.target.closest('[data-mv]');
+  if (mv) {
+    const gid = mv.dataset.mv, x = byId(gid), cur = tagIn(l, gid);
+    const r = await actionSheet(TGROUPS.filter(g => g[0] !== cur).map(([tg, label]) => ({ label:label + ' へ移動', value:tg })));
+    if (!r) { const fg = s.querySelector('[data-row="'+gid+'"] .fg'); if (fg) fg.style.transform = ''; return; }
+    const ob = listBase(l), op = listPack(l), ow = listWorn(l), oc = listCons(l), before = (l.wtag || {})[gid];
+    const setTag = t => { l.wtag = l.wtag || {}; if (t === undefined || t === defaultTag(x)) delete l.wtag[gid]; else l.wtag[gid] = t; };
+    setTag(r);
     s._render(); renderLists();
     [['#l-base', ob, listBase(l)], ['#l-cons', oc, listCons(l)], ['#l-tot', op, listPack(l)], ['#l-worn', ow, listWorn(l)]].forEach(([q, o, n]) => { const el2 = s.querySelector(q); if (el2) { el2.dataset.v = o; countTo(el2, n); } });
-    toast('「' + x.name + '」を' + WTAG[r] + 'として数えます（この山行だけ）');
+    const row = s.querySelector('[data-row="'+gid+'"] .fg'); if (row) { row.classList.add('flash'); row.scrollIntoView({ block:'center', behavior:'smooth' }); }
+    toast('「' + x.name + '」を' + WTAG[r] + 'へ移動しました', '元に戻す', () => { setTag(before === undefined ? cur : before); s._render(); renderLists(); });
     return;
   }
 
@@ -1600,19 +1640,20 @@ function removeFromList(s, l, gid){
 }
 function rowSwipe(row){
   const fg = row.querySelector('.fg'); let x0 = null, y0 = 0, dx = 0, open = false, lock = null;
+  const acts = row.querySelector('.acts'), W = acts ? acts.offsetWidth || 152 : 84;
   fg.addEventListener('pointerdown', e => { if (e.target.closest('button')) return; x0 = e.clientX; y0 = e.clientY; dx = 0; lock = null; });
   fg.addEventListener('pointermove', e => {
     if (x0 === null) return;
     const mx = e.clientX - x0, my = e.clientY - y0;
     if (lock === null && (Math.abs(mx) > 8 || Math.abs(my) > 8)) { lock = Math.abs(mx) > Math.abs(my) ? 'x' : 'y'; if (lock === 'x') fg.setPointerCapture(e.pointerId); }
     if (lock !== 'x') return;
-    dx = Math.min(0, Math.max(-110, (open ? -84 : 0) + mx));
+    dx = Math.min(0, Math.max(-(W + 26), (open ? -W : 0) + mx));
     fg.style.transition = 'none'; fg.style.transform = 'translateX(' + dx + 'px)';
   });
   const end = e => {
     if (x0 === null) return; x0 = null;
     fg.style.transition = '';
-    if (lock === 'x') { open = dx < -42; fg.style.transform = open ? 'translateX(-84px)' : ''; e.preventDefault(); row._justSwiped = true; setTimeout(() => row._justSwiped = false, 50); }
+    if (lock === 'x') { open = dx < -W / 2; fg.style.transform = open ? 'translateX(' + (-W) + 'px)' : ''; e.preventDefault(); row._justSwiped = true; setTimeout(() => row._justSwiped = false, 50); }
   };
   fg.addEventListener('pointerup', end); fg.addEventListener('pointercancel', end);
   fg.addEventListener('click', e => { if (row._justSwiped) { e.stopPropagation(); } else if (open && !e.target.closest('button')) { open = false; fg.style.transform = ''; e.stopPropagation(); } }, true);
