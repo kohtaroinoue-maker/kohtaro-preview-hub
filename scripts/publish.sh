@@ -17,8 +17,10 @@ git pull -q --rebase --autostash
 
 # 1. 個人情報・鍵のチェック（公開リポなので1件でも出たら止める）
 PI='浩太郎|井上|kohtaro|kawase|川瀬|@gmail|@yahoo|@icloud|sk-[a-zA-Z0-9_-]{10,}|AIza[0-9A-Za-z_-]{20,}|ghp_[0-9A-Za-z]{20,}'
-if grep -rnE "$PI" "$PROJECT" --include='*' ; then
-  echo "❌ 個人情報・鍵らしき文字列があります。伏せてからやり直してください"; exit 1
+# リポ名と公開ドメインは URL として既に公開済みなので除外してから判定する
+HITS=$(grep -rnE "$PI" "$PROJECT" | sed -E 's/kohtaro-preview-hub|kohtaroinoue-maker\.github\.io//g' | grep -E "$PI" || true)
+if [ -n "$HITS" ]; then
+  echo "$HITS"; echo "❌ 個人情報・鍵らしき文字列があります。伏せてからやり直してください"; exit 1
 fi
 
 # 2. noindex の確認（HTML すべて）
