@@ -1577,8 +1577,9 @@ function openPostDetail(pid, back){
     const po = postById(pid); if (!po) return nav(back, '') + '<div class="scroll"></div>';
     let gearHtml;
     if (po.gear) gearHtml = po.gear.map(byId).filter(Boolean).map(x => '<div class="gr" data-open="'+x.id+'"><span class="gi">'+icon(x.cat, 22)+'</span><span class="gt">'+esc(x.name)+'</span><span class="gv">'+wTxt(x.w)+'</span>'+icon('chev', 16, 'var(--faint)')+'</div>').join('');
-    else gearHtml = po.items.map((it, i) => '<div class="gr static"><span class="gi">'+icon(it[1], 22)+'</span><span class="gt">'+esc(it[0])+'<small>'+wTxt(it[2])+'</small></span>'+
-      '<button type="button" class="mini'+(it[3] ? ' done' : '')+'" data-want="'+i+'">'+(it[3] ? '追加済み' : '気になる')+'</button></div>').join('');
+    else gearHtml = po.items.map((it, i) => { const had = S.gear.some(g => g.name === it[0]);
+      return '<div class="gr" data-pub="'+i+'"><span class="gi">'+icon(it[1], 22)+'</span><span class="gt">'+esc(it[0])+'<small>'+wTxt(it[2])+'</small></span>'+
+      '<button type="button" class="mini'+(had ? ' done' : '')+'" data-want="'+i+'">'+(had ? '追加済み' : '気になる')+'</button>'+icon('chev', 16, 'var(--faint)')+'</div>'; }).join('');
     const tagNames = [...new Set(Object.values(po.ptags || {}).flat())];
     return nav(back, po.list) + '<div class="scroll">'+postHtml(po, true).replace('class="post"', 'class="post" style="border-top:0"')+
       (tagNames.length ? '<div class="ghead" style="padding-top:8px"><b>写真に写っているギア</b><span class="label">TAGS</span></div><div class="catpick">'+tagNames.map(nm => '<button type="button" class="chip" data-gname="'+esc(nm)+'">'+icon('type', 13)+' '+esc(nm)+'</button>').join('')+'</div>' : '')+
@@ -1589,16 +1590,42 @@ function openPostDetail(pid, back){
   s.addEventListener('click', e => {
     if (postClick(e, '戻る')) return;
     const gn = e.target.closest('[data-gname]');
-    if (gn) { const g = S.gear.find(x => x.name === gn.dataset.gname); if (g) openDetail(g.id, '戻る'); else toast('自分のギアには無いギアです。下の「気になる」から入れられます'); return; }
+    if (gn) { const po = postById(pid), it = (po.items || []).find(i => i[0] === gn.dataset.gname), g = S.gear.find(x => x.name === gn.dataset.gname);
+      return openGearPage(gn.dataset.gname, it ? it[1] : (g ? g.cat : 'other'), it ? it[2] : (g ? g.w : 0), '戻る'); }
     const w = e.target.closest('[data-want]');
-    if (w) {
-      const po = postById(pid), it = po.items[+w.dataset.want]; if (it[3]) return;
-      it[3] = true;
-      S.gear.push({ id:'n' + (seq++), name:it[0], brand:'—', cat:it[1], type:null, w:it[2], src:'un', fav:false, status:'wish', use:null });
-      refreshAll(); toast('「気になるギア」に入れました');
-      return;
-    }
+    if (w) { const it = postById(pid).items[+w.dataset.want]; addInterest(it[0], it[1], it[2]); return; }
+    const pb = e.target.closest('[data-pub]');
+    if (pb) { const it = postById(pid).items[+pb.dataset.pub]; return openGearPage(it[0], it[1], it[2], '戻る'); }
     const o = e.target.closest('[data-open]'); if (o) openDetail(o.dataset.open, '戻る');
+  });
+}
+// 「気になる」に入れる（同じ名前のギアが既にあれば何もしない）
+function addInterest(name, cat, w){
+  if (S.gear.some(g => g.name === name)) return toast('もう入っています');
+  S.gear.push({ id:'n' + (seq++), name, brand:'—', cat, type:null, w, src:'un', fav:false, status:'wish', use:null });
+  refreshAll(); toast('「気になるギア」に入れました');
+}
+// ギアのページ。自分のギア（持っている・気になる・手放した）ならいつもの詳細、持っていないギアはみんなのギアのページ
+function openGearPage(name, cat, w, back){
+  const mine = S.gear.find(g => g.name === name);
+  if (mine) return openDetail(mine.id, back);
+  const s = push(() => {
+    const had = S.gear.find(g => g.name === name);
+    const x = { name, cat, w, type:null }, c = CAT[cat] || CAT.other, [n, u] = fmtW(w), cm = community(x);
+    const ag = wishAgainst(x);
+    return nav(back, name) + '<div class="scroll">'+gearPhotos(x)+
+      '<div class="dhead"><div class="label">'+c.en+' ・ '+c.label+'</div><div class="dname"><h2>'+esc(name)+'</h2></div><div class="brand">[ブランド]</div>'+
+        '<div class="bigw"><span class="num">'+n+'</span><span class="u">'+u+'</span></div>'+
+        (ag ? '<div class="wishline">今の'+esc(ag.name)+'より '+delta(w - ag.w)+'</div>' : '')+
+        '<div class="comm"><span><b class="num">'+cm.own+'</b> 人が持っている</span><span><b class="num">'+cm.interest+'</b> 人が気になる</span></div></div>'+
+      '<div class="btnrow" style="padding-bottom:20px">'+(had ? '<button type="button" class="btn secondary block" data-mine>'+icon('check', 16)+'気になるギアに入っています</button>'
+        : '<button type="button" class="btn primary block" data-interest>'+icon('plus', 16, 'var(--paper)')+'気になるに追加</button>')+'</div>'+
+      gearPosts(x)+'</div>';
+  });
+  s.addEventListener('click', e => {
+    if (postClick(e, name.length > 8 ? '戻る' : name)) return;
+    if (e.target.closest('[data-interest]')) return addInterest(name, cat, w);
+    if (e.target.closest('[data-mine]')) { const g = S.gear.find(x => x.name === name); if (g) openDetail(g.id, '戻る'); }
   });
 }
 function openProfile(uid, back){
@@ -1611,7 +1638,7 @@ function openProfile(uid, back){
     if (me) gearList = groupedRows(S.gear.filter(x => x.status === 'owned'), false);
     else {
       const seen = new Map(); posts.forEach(po => po.items.forEach(it => { if (!seen.has(it[0])) seen.set(it[0], it); }));
-      gearList = [...seen.values()].map(it => '<div class="row" style="cursor:default"><span class="ic">'+icon(it[1], 24)+'</span><div class="rm"><div class="nm">'+esc(it[0])+'</div><div class="sub">'+CAT[it[1]].label+'</div></div><div class="w"><span class="num">'+fmtW(it[2])[0]+'</span><small>'+fmtW(it[2])[1]+'</small></div></div>').join('');
+      gearList = [...seen.values()].map(it => '<div class="row" data-pubg="'+esc(it[0])+'" data-pc="'+it[1]+'" data-pw="'+it[2]+'"><span class="ic">'+icon(it[1], 24)+'</span><div class="rm"><div class="nm">'+esc(it[0])+'</div><div class="sub">'+CAT[it[1]].label+'</div></div><div class="w"><span class="num">'+fmtW(it[2])[0]+'</span><small>'+fmtW(it[2])[1]+'</small></div></div>').join('');
     }
     const nGear = me ? S.gear.filter(x => x.status === 'owned').length : (gearList.match(/class="row"/g) || []).length;
     return nav(back, u.name, right) + '<div class="scroll">'+
@@ -1636,6 +1663,7 @@ function openProfile(uid, back){
     if (e.target.closest('[data-pmore]')) return actionSheet([{ label:'リンクをコピー', value:'c' }, { label:'ミュート', value:'m' }, { label:'報告する', value:'r', danger:true }]).then(r => { if (r) toast('この試作では省略しています'); });
     const ownUser = e.target.closest('[data-user]'); if (ownUser && ownUser.dataset.user === uid) return;
     if (postClick(e, u.name)) return;
+    const pg = e.target.closest('[data-pubg]'); if (pg) return openGearPage(pg.dataset.pubg, pg.dataset.pc, +pg.dataset.pw, u.name);
     const f = e.target.closest('[data-fav]'); if (f) return toggleFav(f.dataset.fav);
     const o = e.target.closest('[data-open]'); if (o) openDetail(o.dataset.open, u.name);
   });
